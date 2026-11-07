@@ -494,6 +494,7 @@ details li { margin-bottom: 7px; }
 @media (max-width: 760px) {
   .workspace {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 52%) minmax(0, 48%);
     height: calc(100dvh - 128px);
     min-height: 0;
