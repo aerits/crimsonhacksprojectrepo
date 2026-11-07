@@ -184,6 +184,7 @@ $('#settings-content').append($('#voice-section'), $('#settings'));
 const affirmationStyles = new Set(['neutral', 'girl', 'boy', 'enby']);
 let voices = [];
 let selectedVoice;
+const VOICE_STORAGE_KEY = 'mommy-maps-selected-voice';
 const selectedPlaces = { start: null, end: null };
 let currentLocation = null;
 let route = null;
@@ -251,6 +252,7 @@ function selectVoice(id) {
   const voice = voices.find((item) => item.id === id);
   if (!voice) return;
   selectedVoice = id;
+  try { localStorage.setItem(VOICE_STORAGE_KEY, id); } catch { /* The current selection still works for this visit. */ }
   $('#intro-voice-name').textContent = voice.name?.trim() || 'your chosen voice';
   const portrait = voicePortrait(voice, voices.indexOf(voice));
   $('#header-voice-portrait').src = portrait.src;
@@ -861,7 +863,12 @@ async function loadVoices() {
   $('#intro-voice-name').textContent = 'your chosen voice';
   try {
     voices = await speech.voices();
-    selectedVoice = voices.find((voice) => voice.id === selectedVoice)?.id || voices.find((voice) => voice.configured)?.id || voices[0]?.id;
+    let savedVoice;
+    try { savedVoice = localStorage.getItem(VOICE_STORAGE_KEY); } catch { /* A configured voice remains a safe fallback. */ }
+    selectedVoice = voices.find((voice) => voice.id === savedVoice)?.id
+      || voices.find((voice) => voice.id === selectedVoice)?.id
+      || voices.find((voice) => voice.configured)?.id
+      || voices[0]?.id;
     voicePicker.render(voices, selectedVoice);
     $('#retry-voices').hidden = voices.length > 0;
     $('#sample').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
