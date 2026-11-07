@@ -28,30 +28,30 @@ document.querySelector('#app').innerHTML = `
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
         <label for="start">Starting address <span>A</span></label>
-        <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="off" aria-controls="start-results" required /><button id="locate" type="button" class="location-search" aria-label="Use my GPS location" title="Use my GPS location">⌖</button><button type="button" class="address-search" data-search="start">Search</button></div>
+        <div class="input-row"><input id="start" name="start" value="Finding your current locationâ€¦" placeholder="Street address, place, or city" autocomplete="off" aria-controls="start-results" required /><button id="locate" type="button" class="location-search" aria-label="Use my GPS location" title="Use my GPS location">âŒ–</button><button type="button" class="address-search" data-search="start">Search</button></div>
         <div id="start-results" class="address-results" aria-live="polite"></div>
         <label for="end">Your destination <span>B</span></label>
         <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="off" aria-controls="end-results" required /><button type="button" class="address-search" data-search="end">Search</button></div>
         <div id="end-results" class="address-results" aria-live="polite"></div>
-        <div class="route-options"><button type="button" id="swap" class="text-button">⇅ Swap</button></div>
-        <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
+        <div class="route-options"><button type="button" id="swap" class="text-button">â‡… Swap</button></div>
+        <button type="submit" class="primary" id="plan">Show my route on the map <span>â†—</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
       <section class="voice-section" aria-labelledby="voice-heading">
-        <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
+        <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all â†—</button></div>
         <label class="voice-select-label" for="voice-select">Your navigation voice</label>
         <div class="voice-select-wrap"><select id="voice-select" aria-describedby="voice-summary" disabled><option>Loading your guides…</option></select></div>
         <p id="selected-voice-name" class="selected-voice-name" aria-live="polite" aria-atomic="true">Loading your guide…</p>
         <p id="voice-summary" class="voice-summary">A little company for the road.</p>
-        <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>▷ Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
+        <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>â–· Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
-        <p id="voice-status" class="hint" role="status">Choose the voice you’d like beside you.</p>
+        <p id="voice-status" class="hint" role="status">Choose the voice youâ€™d like beside you.</p>
       </section>
       <section class="settings card" aria-labelledby="settings-heading">
         <div class="section-title"><h2 id="settings-heading">User settings</h2><span class="tiny">YOUR WAY</span></div>
         <fieldset class="preference-group">
           <legend>Navigation preferences</legend>
-          <p class="hint">We’ll use these when finding your next route.</p>
+          <p class="hint">Weâ€™ll use these when finding your next route.</p>
           <label class="switch-row" for="avoid-tolls"><span>Avoid Tolls</span><input id="avoid-tolls" type="checkbox" role="switch" data-avoid="toll" /><span class="switch-control" aria-hidden="true"></span></label>
           <label class="switch-row" for="avoid-highways"><span>Avoid Highways/Freeways</span><input id="avoid-highways" type="checkbox" role="switch" data-avoid="motorway" /><span class="switch-control" aria-hidden="true"></span></label>
           <label class="switch-row" for="avoid-ferries"><span>Avoid Ferries</span><input id="avoid-ferries" type="checkbox" role="switch" data-avoid="ferry" /><span class="switch-control" aria-hidden="true"></span></label>
@@ -78,7 +78,7 @@ document.querySelector('#app').innerHTML = `
           <p id="phrase-help" class="hint">Your encouragements join the built-in collection after spoken directions. Save up to 20 phrases in this browser.</p>
           <form id="phrase-form">
             <label for="custom-phrase">Your encouragement</label>
-            <textarea id="custom-phrase" rows="3" maxlength="160" required placeholder="You’ve got this, one turn at a time." aria-describedby="phrase-help phrase-characters phrase-status"></textarea>
+            <textarea id="custom-phrase" rows="3" maxlength="160" required placeholder="Youâ€™ve got this, one turn at a time." aria-describedby="phrase-help phrase-characters phrase-status"></textarea>
             <div class="phrase-editor-footer"><span id="phrase-characters" class="tiny"></span><div><button id="save-phrase" type="submit" class="secondary">Add phrase</button><button id="cancel-phrase" type="button" class="text-button" hidden>Cancel</button></div></div>
           </form>
           <p id="phrase-status" class="hint" role="status"></p>
@@ -90,7 +90,7 @@ document.querySelector('#app').innerHTML = `
           <p id="arrival-phrase-help" class="hint">These are only spoken after the arrival direction. Save up to 20 phrases in this browser.</p>
           <form id="arrival-phrase-form">
             <label for="arrival-custom-phrase">Your arrival encouragement</label>
-            <textarea id="arrival-custom-phrase" rows="3" maxlength="160" required placeholder="You made it. I’m proud of you." aria-describedby="arrival-phrase-help arrival-phrase-characters arrival-phrase-status"></textarea>
+            <textarea id="arrival-custom-phrase" rows="3" maxlength="160" required placeholder="You made it. Iâ€™m proud of you." aria-describedby="arrival-phrase-help arrival-phrase-characters arrival-phrase-status"></textarea>
             <div class="phrase-editor-footer"><span id="arrival-phrase-characters" class="tiny"></span><div><button id="save-arrival-phrase" type="submit" class="secondary">Add phrase</button><button id="cancel-arrival-phrase" type="button" class="text-button" hidden>Cancel</button></div></div>
           </form>
           <p id="arrival-phrase-status" class="hint" role="status"></p>
@@ -99,14 +99,14 @@ document.querySelector('#app').innerHTML = `
         </details>
         <fieldset class="trivia-group">
           <legend>Roadside trivia</legend>
-          <p class="hint">On a quiet, steady stretch, we’ll share a note about the place around you no more than once every 18 minutes.</p>
+          <p class="hint">On a quiet, steady stretch, weâ€™ll share a note about the place around you no more than once every 18 minutes.</p>
           <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
-          <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
+          <p id="ambient-note" class="hint" role="status">Start ambient guidance when youâ€™re ready to drive.</p>
         </fieldset>
         <fieldset class="trivia-group"><legend>Saved places</legend><p class="hint">Save the current destination, then use it with one tap.</p><div class="trivia-actions"><button id="save-home" type="button" class="text-button">Save as home</button><button id="save-work" type="button" class="text-button">Save as work</button><button id="save-favorite" type="button" class="text-button">Save favorite</button></div><ul id="saved-places" class="custom-phrases" aria-label="Saved places"></ul></fieldset>
         <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
       </section>
-      <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
+      <p class="sidebar-footer">Made for the journey, not just the destination. â™¡</p>
     </aside>
     <section class="map-panel" aria-label="Map and route preview">
       <div id="map" aria-label="Interactive route map"></div>
@@ -115,23 +115,23 @@ document.querySelector('#app').innerHTML = `
       <section id="journey" class="journey" hidden aria-labelledby="journey-heading">
         <div class="section-title"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="journey-heading"></h2><p id="journey-eta" class="journey-eta" aria-live="polite"></p></div><span class="small-pill">Route preview</span></div>
         <p class="hint">Step through the route and hear each direction.</p>
-        <p id="glare-note" class="hint" role="status" hidden>☀ Sun glare may be likely for this turn — sunglasses on.</p><p id="conditions-note" class="hint" role="status" hidden></p>
-        <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
-        <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
-        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
+        <p id="glare-note" class="hint" role="status" hidden>â˜€ Sun glare may be likely for this turn â€” sunglasses on.</p><p id="conditions-note" class="hint" role="status" hidden></p>
+        <div class="current-step"><span class="turn-icon">â†±</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
+        <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">â†</button><button type="button" id="speak" class="primary">â–· Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">â†’</button></div>
+        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">â–· Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
         <button type="button" id="start-guidance" class="ambient-guidance" disabled>Start ambient guidance</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
-      <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
+      <span class="map-note">SLOW DOWN. YOUâ€™RE ON YOUR WAY.</span>
     </section>
   </main>
   <section id="voices-panel" class="voice-library" role="tabpanel" aria-labelledby="voices-tab" hidden>
-    <div class="library-heading"><div><p class="eyebrow">A LITTLE COMPANY FOR THE ROAD</p><h1>Find your kind <em>of calm.</em></h1><p>Meet your guides. A different voice, the same gentle way home.</p></div><button id="back-to-route" type="button" class="secondary">Back to my route ↗</button></div>
+    <div class="library-heading"><div><p class="eyebrow">A LITTLE COMPANY FOR THE ROAD</p><h1>Find your kind <em>of calm.</em></h1><p>Meet your guides. A different voice, the same gentle way home.</p></div><button id="back-to-route" type="button" class="secondary">Back to my route â†—</button></div>
     <div class="library-section-heading"><h2>Good company comes in a few voices.</h2><p id="library-selection">Choose a little company for the road.</p></div>
-    <div id="voice-gallery" class="voice-gallery"><p class="library-empty">Getting your guides ready…</p></div>
-    <div class="library-player"><span class="player-symbol" aria-hidden="true">♫</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
-    <div class="library-note"><p>AI-generated voices, made for a softer journey. Voice previews need a configured Fish Audio connection.</p><button id="retry-voices" type="button" class="text-button" hidden>Retry loading voices ↻</button></div>
+    <div id="voice-gallery" class="voice-gallery"><p class="library-empty">Getting your guides readyâ€¦</p></div>
+    <div class="library-player"><span class="player-symbol" aria-hidden="true">â™«</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
+    <div class="library-note"><p>AI-generated voices, made for a softer journey. Voice previews need a configured Fish Audio connection.</p><button id="retry-voices" type="button" class="text-button" hidden>Retry loading voices â†»</button></div>
     <details class="dev-tts">
       <summary>Developer: test TTS</summary>
       <label for="tts-test-text">Test text</label>
@@ -139,7 +139,7 @@ document.querySelector('#app').innerHTML = `
       <button id="tts-test" type="button" class="secondary">Generate with selected voice</button>
       <p class="hint">Uses the selected voice and the same server endpoint as route guidance.</p>
     </details>
-    <p class="library-footer">A little guidance. A lot of comfort. <span aria-hidden="true">♡</span></p>
+    <p class="library-footer">A little guidance. A lot of comfort. <span aria-hidden="true">â™¡</span></p>
   </section>`;
 
 document.querySelector('#app').insertAdjacentHTML('beforeend', `
@@ -150,7 +150,9 @@ document.querySelector('#app').insertAdjacentHTML('beforeend', `
 
 const $ = (selector) => document.querySelector(selector);
 const formatArrivalTime = (durationSeconds) => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + durationSeconds * 1000));
-const destinationName = (label) => label.split(',')[0] || 'your destination';
+const destinationName = (label) => label === 'Your GPS location'
+  ? 'your GPS location'
+  : label.split(',')[0] || 'your destination';
 const status = (message) => { $('#map-status').textContent = message; };
 const voiceStatus = (message) => {
   $('#voice-status').textContent = message;
@@ -251,7 +253,7 @@ function stopSimulation(message) {
   simulationRunning = false;
   map?.clearSimulationPoint();
   speech.stop();
-  $('#simulate').textContent = '▷ Simulate route';
+  $('#simulate').textContent = 'â–· Simulate route';
   if (message) $('#simulation-status').textContent = message;
 }
 
@@ -276,7 +278,7 @@ function scheduleSimulationStep() {
   const delay = Number($('#simulation-speed').value);
   simulationTimer = setTimeout(() => {
     if (!simulationRunning || !route) return;
-    if (stepIndex >= route.steps.length - 1) return stopSimulation('Simulation complete. You’ve arrived.');
+    if (stepIndex >= route.steps.length - 1) return stopSimulation('Simulation complete. Youâ€™ve arrived.');
     stepIndex += 1;
     playSimulationStep();
     scheduleSimulationStep();
@@ -315,7 +317,7 @@ function invalidateRoute() {
   map?.clearRoute();
   $('#journey').hidden = true;
   $('#plan').disabled = false;
-  $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
+  $('#plan').innerHTML = 'Show my route on the map <span>â†—</span>';
   stopAmbientGuidance();
   $('#start-guidance').disabled = true;
   $('#conditions-note').hidden = true;
@@ -360,7 +362,7 @@ async function loadConditions(start, end, plannedRoute) {
 
 function showStep({ focus = true } = {}) {
   const step = route.steps[stepIndex];
-  $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} · ${formatDistance(step.distance)}`;
+  $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} Â· ${formatDistance(step.distance)}`;
   $('#instruction').textContent = step.instruction;
   $('#previous').disabled = stepIndex === 0;
   $('#next').disabled = stepIndex === route.steps.length - 1;
@@ -415,9 +417,9 @@ function useCurrentLocation({ userInitiated = false } = {}) {
     if (input.value.startsWith('Finding your')) input.value = '';
     return status('GPS requires HTTPS (or localhost). Open this app securely, then try again.');
   }
-  input.value = 'Finding your GPS location…';
+  input.value = 'Finding your GPS locationâ€¦';
   locate.disabled = true;
-  status(userInitiated ? 'Checking your GPS location…' : 'Finding your GPS location…');
+  status(userInitiated ? 'Checking your GPS locationâ€¦' : 'Finding your GPS locationâ€¦');
   navigator.geolocation.getCurrentPosition(({ coords }) => {
     if (requestId !== locationRequestId) return;
     locate.disabled = false;
@@ -457,7 +459,7 @@ function renderAddressResults(kind, results, origin, message) {
   note.className = 'address-results-note';
   note.id = kind + '-results-note';
   note.textContent = origin
-    ? 'Nearest matches · Straight-line distance from ' + origin.label + '.'
+    ? 'Nearest matches Â· Straight-line distance from ' + origin.label + '.'
     : kind === 'end' ? 'Choose a starting address to see nearby matches and distances.'
       : 'Allow location access to see nearby starting addresses and distances.';
   const list = document.createElement('ul');
@@ -507,7 +509,7 @@ async function searchAddress(kind, automatic = false) {
   const origin = addressSearchOrigin(kind, selectedPlaces.start, currentLocation);
   const button = document.querySelector('[data-search="' + kind + '"]');
   button.disabled = true;
-  if (!automatic) status('Searching for your ' + (kind === 'start' ? 'starting address' : 'destination') + '…');
+  if (!automatic) status('Searching for your ' + (kind === 'start' ? 'starting address' : 'destination') + 'â€¦');
   try {
     const { results } = await searchAddresses(query, { origin, signal });
     if (signal.aborted || suggestionRequests[kind] !== controller || input.value.trim() !== query) return;
@@ -550,7 +552,7 @@ for (const kind of ['start', 'end']) $('#' + kind).addEventListener('input', () 
   invalidateRoute();
   const changedOrigin = kind === 'start' && selectedPlaces.start !== null;
   selectedPlaces[kind] = null;
-  status('Your addresses changed. Search for a new route when you’re ready.');
+  status('Your addresses changed. Search for a new route when youâ€™re ready.');
   scheduleSuggestions(kind);
   if (changedOrigin) refreshSuggestions(['end']);
 });
@@ -569,7 +571,7 @@ $('#swap').addEventListener('click', () => {
   resetAddressSearch('start');
   resetAddressSearch('end');
   refreshSuggestions();
-  status('Swapped. Let’s find the way back.');
+  status('Swapped. Letâ€™s find the way back.');
 });
 
 $('#route-form').addEventListener('submit', async (event) => {
@@ -587,12 +589,12 @@ $('#route-form').addEventListener('submit', async (event) => {
       throw new Error('Choose a destination from the search results.');
     }
     $('#plan').disabled = true;
-    $('#plan').textContent = 'Finding your route…';
+    $('#plan').textContent = 'Finding your routeâ€¦';
     const start = selectedPlaces.start;
     const end = selectedPlaces.end;
     map?.setPoint('start', start);
     map?.setPoint('end', end);
-    status('Putting the turns together…');
+    status('Putting the turns togetherâ€¦');
     const avoid = [...document.querySelectorAll('[data-avoid]:checked')].map((input) => input.dataset.avoid);
     const result = await getRoute(start, end, { signal: AbortSignal.any([current.signal, AbortSignal.timeout(20000)]), avoid });
     if (request !== current) return;
@@ -606,7 +608,7 @@ $('#route-form').addEventListener('submit', async (event) => {
     stepIndex = 0;
     const estimatedDuration = formatDuration(route.duration);
     const arrivalTime = formatArrivalTime(route.duration);
-    $('#journey-heading').textContent = `${estimatedDuration} · ${formatDistance(route.distance)}`;
+    $('#journey-heading').textContent = `${estimatedDuration} Â· ${formatDistance(route.distance)}`;
     $('#journey-eta').textContent = `Estimated arrival: ${arrivalTime}`;
     $('#steps').replaceChildren(...route.steps.map((step) => {
       const item = document.createElement('li');
@@ -632,7 +634,7 @@ $('#route-form').addEventListener('submit', async (event) => {
   } finally {
     if (request === current) {
       $('#plan').disabled = false;
-      $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
+      $('#plan').innerHTML = 'Show my route on the map <span>â†—</span>';
     }
   }
 });
@@ -651,7 +653,7 @@ $('#simulate').addEventListener('click', () => {
     stepIndex = 0;
   }
   simulationRunning = true;
-  $('#simulate').textContent = 'Ⅱ Pause simulation';
+  $('#simulate').textContent = 'â…¡ Pause simulation';
   playSimulationStep();
   scheduleSimulationStep();
 });
@@ -685,7 +687,7 @@ $('#start-guidance').addEventListener('click', () => {
   $('#ambient-note').textContent = 'Watching for a calm stretch of road. Trivia begins after five minutes above 45 mph with no maneuver within five miles.';
   locationWatcher = navigator.geolocation.watchPosition((position) => { lastPosition = position; considerAmbientTrivia(position); }, () => {
     stopAmbientGuidance();
-    $('#ambient-note').textContent = 'We couldn’t read your live location, so ambient guidance is paused.';
+    $('#ambient-note').textContent = 'We couldnâ€™t read your live location, so ambient guidance is paused.';
   }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
 });
 setInterval(() => { if (lastPosition) considerAmbientTrivia(lastPosition); }, 60_000);
@@ -701,7 +703,7 @@ $('#wellness').addEventListener('change', () => {
   wellnessReminder.reset();
   $('#wellness-note').textContent = $('#wellness').checked ? 'Gentle check-ins will start while this page is open.' : 'Optional check-ins are off.';
 });
-$('#skip-trivia').addEventListener('click', () => { speech.stop(); ambientTrivia.skip(); $('#ambient-note').textContent = 'Skipped. We’ll wait before sharing another note.'; });
+$('#skip-trivia').addEventListener('click', () => { speech.stop(); ambientTrivia.skip(); $('#ambient-note').textContent = 'Skipped. Weâ€™ll wait before sharing another note.'; });
 $('#mute-trivia').addEventListener('click', () => {
   triviaMuted = !triviaMuted;
   $('#mute-trivia').textContent = triviaMuted ? 'Unmute trivia' : 'Mute trivia';
