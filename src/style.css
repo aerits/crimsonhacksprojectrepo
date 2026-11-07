@@ -667,6 +667,8 @@ details li { margin-bottom: 7px; }
   #journey-panel.compact-journey .journey .current-step { margin: 8px 0; }
   #journey-panel.compact-journey .journey .small-pill { display: none; }
   #journey-panel.compact-journey .journey details ol { max-height: 64px; }
+  #journey-panel.compact-journey .journey-actions { margin-top: 6px; }
+  #journey-panel.compact-journey .journey-actions :is(.ambient-guidance, .secondary) { min-height: 36px; padding-block: 7px; }
 
   /* Opening every direction should not grow below the bottom sheet. Keep the
      sheet compact and place a scrollable list in the open map space above it. */
@@ -677,7 +679,8 @@ details li { margin-bottom: 7px; }
     right: 14px;
     bottom: calc(100% + 10px);
     left: 14px;
-    max-height: min(360px, calc(100dvh - 350px));
+    /* Reserve room for the route controls below, including Cancel route. */
+    max-height: min(300px, calc(100dvh - 410px));
     margin: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
