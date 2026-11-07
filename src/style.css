@@ -418,3 +418,5 @@ details li { margin-bottom: 7px; }
   .step-actions .secondary, .step-actions .primary { min-height: 40px; padding: 8px; }
   .journey details { margin-top: 6px; }
 }
+/* Avoid an extra outer scrollbar on compact mobile route sheets. */
+@media (max-width: 460px) { .journey { overflow-y: hidden; } }
