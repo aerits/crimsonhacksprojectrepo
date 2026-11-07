@@ -92,6 +92,7 @@ let request;
 let map;
 let simulationTimer;
 let simulationRunning = false;
+let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
 
@@ -137,6 +138,22 @@ function stopSimulation(message) {
   if (message) $('#simulation-status').textContent = message;
 }
 
+function stopDrivingFollow() {
+  if (drivingLocationWatch !== undefined) navigator.geolocation?.clearWatch(drivingLocationWatch);
+  drivingLocationWatch = undefined;
+  map?.clearLiveLocation();
+}
+
+function startDrivingFollow() {
+  stopDrivingFollow();
+  if (!navigator.geolocation) return;
+  drivingLocationWatch = navigator.geolocation.watchPosition(({ coords }) => {
+    const point = { lat: coords.latitude, lng: coords.longitude };
+    map?.setLiveLocation(point);
+    if (!simulationRunning) map?.focus(point, 17);
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
+}
+
 function scheduleSimulationStep() {
   const delay = Number($('#simulation-speed').value);
   simulationTimer = setTimeout(() => {
@@ -165,6 +182,7 @@ function playSimulationStep() {
 
 function invalidateRoute() {
   stopSimulation();
+  stopDrivingFollow();
   request?.abort();
   request = null;
   route = null;
@@ -249,7 +267,7 @@ async function searchAddress(kind) {
   clearResults(kind);
   status(`Searching for your ${kind === 'start' ? 'starting address' : 'destination'}…`);
   try {
-    const { results } = await searchAddresses(query, { signal: request?.signal });
+    const { results } = await searchAddresses(query, { signal: request?.signal, bias: kind === 'end' ? selectedPlaces.start : undefined });
     renderAddressResults(kind, results, `Choose the ${kind === 'start' ? 'starting address' : 'destination'} that looks right.`);
   } finally { button.disabled = false; }
 }
@@ -263,7 +281,7 @@ function scheduleSuggestions(kind) {
     const controller = new AbortController();
     suggestionRequests[kind] = controller;
     try {
-      const { results } = await searchAddresses(query, { signal: controller.signal });
+      const { results } = await searchAddresses(query, { signal: controller.signal, bias: kind === 'end' ? selectedPlaces.start : undefined });
       if ($(`#${kind}`).value.trim() === query && !controller.signal.aborted) renderAddressResults(kind, results);
     } catch (error) {
       if (error.name !== 'AbortError') clearResults(kind);
@@ -330,6 +348,7 @@ $('#route-form').addEventListener('submit', async (event) => {
     $('#journey').hidden = false;
     showStep();
     map?.drawRoute(route.geometry);
+    startDrivingFollow();
     status('Your route is ready. Take it one turn at a time.');
   } catch (error) {
     if (request === current && error.name !== 'AbortError') status(error.name === 'TimeoutError' ? 'Routing took too long. Please try again.' : error.message);
@@ -400,4 +419,4 @@ async function loadVoices() {
   } finally { $('#retry-voices').disabled = false; }
 }
 loadVoices();
-window.addEventListener('pagehide', () => { stopSimulation(); speech.stop(); request?.abort(); });
+window.addEventListener('pagehide', () => { stopSimulation(); stopDrivingFollow(); speech.stop(); request?.abort(); });

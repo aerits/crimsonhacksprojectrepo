@@ -9,6 +9,7 @@ export function createMap(element) {
   const markers = {};
   let routeLayer;
   let simulationMarker;
+  let liveMarker;
   let simulationAnimation;
   const pointAt = (from, to, amount) => ({
     lat: from.lat + (to.lat - from.lat) * amount,
@@ -20,6 +21,12 @@ export function createMap(element) {
       simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#ce82a7', fillOpacity: 1 })
         .addTo(map).bindTooltip('Simulated location', { direction: 'top' });
     } else simulationMarker.setLatLng(point);
+  };
+  const setLiveLocation = (point) => {
+    if (!liveMarker) {
+      liveMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#557bc7', fillOpacity: 1 })
+        .addTo(map).bindTooltip('Your location', { direction: 'top' });
+    } else liveMarker.setLatLng(point);
   };
   return {
     resize() { map.invalidateSize({ pan: false }); },
@@ -39,12 +46,16 @@ export function createMap(element) {
       const total = lengths.reduce((sum, length) => sum + length, 0);
       if (!total) return setSimulationPoint(points.at(-1));
       const startedAt = performance.now();
+      let lastFollowAt = startedAt;
+      map.setView(points[0], Math.max(map.getZoom(), 17), { animate: true });
       const frame = (now) => {
         const distance = Math.min(1, (now - startedAt) / duration) * total;
         let travelled = 0;
         for (let index = 0; index < lengths.length; index += 1) {
           if (travelled + lengths[index] >= distance) {
-            setSimulationPoint(pointAt(points[index], points[index + 1], (distance - travelled) / lengths[index]));
+            const point = pointAt(points[index], points[index + 1], (distance - travelled) / lengths[index]);
+            setSimulationPoint(point);
+            if (now - lastFollowAt >= 250) { map.panTo(point, { animate: false }); lastFollowAt = now; }
             break;
           }
           travelled += lengths[index];
@@ -56,11 +67,13 @@ export function createMap(element) {
       simulationAnimation = requestAnimationFrame(frame);
     },
     clearSimulationPoint() { cancelAnimationFrame(simulationAnimation); simulationMarker?.remove(); simulationMarker = null; },
+    setLiveLocation,
+    clearLiveLocation() { liveMarker?.remove(); liveMarker = null; },
     drawRoute(geometry) {
       routeLayer?.remove();
       routeLayer = L.geoJSON(geometry, { style: { color: '#9471b8', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
       map.fitBounds(routeLayer.getBounds(), { padding: [45, 45] });
     },
-    focus(point) { map.flyTo(point, 15); },
+    focus(point, zoom = 15) { map.flyTo(point, zoom); },
   };
 }

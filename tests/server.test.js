@@ -58,6 +58,17 @@ test('address search returns a map point and caches repeat requests', async (t) 
   assert.equal(calls, 1);
 });
 
+test('address search forwards a valid origin as a Photon location bias', async (t) => {
+  const api = await withServer(t, { fetcher: async (url) => {
+    assert.equal(url.searchParams.get('lat'), '40.7649');
+    assert.equal(url.searchParams.get('lon'), '-111.8421');
+    assert.equal(url.searchParams.get('zoom'), '13');
+    return Response.json({ features: [{ geometry: { coordinates: [-111.84, 40.76] }, properties: { name: 'Nearby place' } }] });
+  } });
+  const response = await api.get('/api/geocode?q=coffee&lat=40.7649&lng=-111.8421');
+  assert.equal(response.status, 200);
+});
+
 test('address search rejects missing input and no matches', async (t) => {
   const api = await withServer(t, { fetcher: async () => Response.json([]) });
   assert.equal((await api.get('/api/geocode')).status, 400);

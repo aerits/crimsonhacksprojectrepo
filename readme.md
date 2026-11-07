@@ -42,7 +42,7 @@ Add further voices in `server/voices.js`, referencing a new entry under `fish.vo
 
 ## Address search
 
-Address suggestions appear after three characters through the server’s `/api/geocode` endpoint, which uses Photon’s search-as-you-type geocoder. The **Search** buttons are also available to repeat a lookup. Select the intended match before submitting a route. Address text is sent to Photon; use a production geocoding provider before deploying at scale.
+Address suggestions appear after three characters through the server’s `/api/geocode` endpoint, which uses Photon’s search-as-you-type geocoder. Destination searches are biased toward the selected starting address or your current location. The **Search** buttons are also available to repeat a lookup. Select the intended match before submitting a route. Address text is sent to Photon; use a production geocoding provider before deploying at scale.
 
 Requests are limited to 600 text characters, two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
 

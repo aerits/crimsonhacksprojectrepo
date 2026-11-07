@@ -44,13 +44,18 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
       if (req.method === 'GET' && url.pathname === '/api/geocode') {
         const query = url.searchParams.get('q')?.trim();
         if (!query || query.length > 200) return json(res, 400, { error: 'Enter an address, place, or city up to 200 characters.' });
-        const cached = geocodeCache.get(query.toLowerCase());
+        const latParam = url.searchParams.get('lat');
+        const lngParam = url.searchParams.get('lng');
+        const bias = latParam !== null && lngParam !== null ? { lat: Number(latParam), lng: Number(lngParam) } : null;
+        if (bias && (!Number.isFinite(bias.lat) || !Number.isFinite(bias.lng) || Math.abs(bias.lat) > 90 || Math.abs(bias.lng) > 180)) return json(res, 400, { error: 'Invalid search location.' });
+        const cacheKey = `${query.toLowerCase()}|${bias ? `${bias.lat},${bias.lng}` : ''}`;
+        const cached = geocodeCache.get(cacheKey);
         if (cached) return json(res, 200, cached);
         const wait = Math.max(0, nextGeocodeAt - Date.now());
         nextGeocodeAt = Math.max(Date.now(), nextGeocodeAt) + 1000;
         if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
         const searchUrl = new URL('https://photon.komoot.io/api/');
-        searchUrl.search = new URLSearchParams({ q: query, limit: '5', lang: 'en' });
+        searchUrl.search = new URLSearchParams({ q: query, limit: '5', lang: 'en', ...(bias && { lat: String(bias.lat), lon: String(bias.lng), zoom: '13', location_bias_scale: '0.1' }) });
         const upstream = await fetcher(searchUrl, { headers: { Accept: 'application/json', 'User-Agent': 'Mommy-Maps/0.1' } });
         if (!upstream.ok) {
           await upstream.body?.cancel();
@@ -67,7 +72,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           .filter((place) => Number.isFinite(place.lat) && Number.isFinite(place.lng));
         if (!results.length) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
         const result = { results };
-        geocodeCache.set(query.toLowerCase(), result);
+        geocodeCache.set(cacheKey, result);
         return json(res, 200, result);
       }
       if (req.method === 'POST' && url.pathname === '/api/tts') {
