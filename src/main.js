@@ -18,7 +18,7 @@ document.querySelector('#app').innerHTML = `
   </header>
   <main id="journey-panel" class="workspace" role="tabpanel" aria-labelledby="journey-tab">
     <aside class="sidebar">
-      <div class="intro"><p class="eyebrow">MAKE YOURSELF COMFORTABLE</p><h1>Let’s take the<br><em>soft way home.</em></h1><p>Your route, a reassuring voice, and a little less rush.</p></div>
+      <div class="intro"><h1>Where do you<br>want to go?</h1><p class="intro-guide" aria-live="polite" aria-atomic="true">Let <span id="intro-voice-name">your chosen voice</span> guide you.</p></div>
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
         <label for="start">Starting address <span>A</span></label>
@@ -124,6 +124,7 @@ function selectVoice(id) {
   const voice = voices.find((item) => item.id === id);
   if (!voice) return;
   selectedVoice = id;
+  $('#intro-voice-name').textContent = voice.name?.trim() || 'your chosen voice';
   speech.stop();
   voicePicker.setSelected(id);
   $('#sample').disabled = !voice.configured;
@@ -480,6 +481,7 @@ $('#retry-voices').addEventListener('click', loadVoices);
 
 async function loadVoices() {
   $('#retry-voices').disabled = true;
+  $('#intro-voice-name').textContent = 'your chosen voice';
   try {
     voices = await speech.voices();
     selectedVoice = voices.find((voice) => voice.id === selectedVoice)?.id || voices.find((voice) => voice.configured)?.id || voices[0]?.id;
