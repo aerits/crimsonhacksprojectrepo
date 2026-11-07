@@ -182,7 +182,7 @@ function startDrivingFollow() {
     const point = { lat: coords.latitude, lng: coords.longitude };
     currentLocation = point;
     map?.setLiveLocation(point);
-    if (!simulationRunning) map?.focus(point, 17);
+    if (!simulationRunning) map?.follow(point, 17);
   }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
 }
 
