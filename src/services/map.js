@@ -1,4 +1,5 @@
 import { utahMapDestinations } from '../data/utah-landmarks.js';
+import { mapCategoryColors } from '../data/map-categories.js';
 
 const ROUTE_COLORS = Object.freeze({
   light: '#9471b8',
@@ -80,10 +81,9 @@ export function createMap(element) {
     addLandmarkMarkers(onSelect, categories = new Set(['parks', 'trails', 'landmarks'])) {
       landmarkMarkers?.remove();
       landmarkMarkers = L.layerGroup().addTo(map);
-      const colors = { parks: '#607d43', trails: '#317a8a', landmarks: '#9c6a9f' };
       for (const place of utahMapDestinations) {
         if (!categories.has(place.category)) continue;
-        L.circleMarker([place.lat, place.lng], { radius: 8, color: '#ffffff', weight: 2, fillColor: colors[place.category], fillOpacity: 1 })
+        L.circleMarker([place.lat, place.lng], { radius: 8, color: '#ffffff', weight: 2, fillColor: mapCategoryColors[place.category], fillOpacity: 1 })
           .addTo(landmarkMarkers)
           .bindTooltip(place.name, { direction: 'top', offset: [0, -7] })
           .on('click', () => onSelect({ ...place, label: `${place.name}, Utah` }));
