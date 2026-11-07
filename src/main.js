@@ -34,6 +34,7 @@ document.querySelector('#app').innerHTML = `
         <label for="end">Your destination <span>B</span></label>
         <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="off" aria-controls="end-results" required /><button type="button" class="address-search" data-search="end">Search</button></div>
         <div id="end-results" class="address-results" aria-live="polite"></div>
+        <div class="quick-destinations" aria-label="Saved destinations"><button id="go-home" type="button" class="secondary">Home</button><button id="go-work" type="button" class="secondary">Work</button><button id="go-favorite" type="button" class="secondary">Favorite</button></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇆ Swap</button></div>
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
@@ -391,6 +392,12 @@ function renderSavedPlaces() {
     item.append(use, remove); return item;
   }));
   if (!savedPlaces.length) { const item = document.createElement('li'); item.textContent = 'No saved places yet.'; list.append(item); }
+  for (const [id, name] of [['go-home', 'Home'], ['go-work', 'Work'], ['go-favorite', 'Favorite']]) {
+    const place = savedPlaces.find((item) => item.id === name.toLowerCase());
+    const button = $('#' + id);
+    button.disabled = !place;
+    button.title = place ? `Set destination to ${place.label}` : `Save a ${name.toLowerCase()} location in settings first.`;
+  }
 }
 function saveCurrentPlace(name) {
   const place = selectedPlaces.end;
@@ -398,6 +405,12 @@ function saveCurrentPlace(name) {
   savedPlaces = upsertPlace(savedPlaces, { ...place, id: name.toLowerCase(), name }); saveSavedPlaces(savedPlaces); renderSavedPlaces(); status(`${name} saved for your next trip.`);
 }
 for (const [id, name] of [['save-home', 'Home'], ['save-work', 'Work'], ['save-favorite', 'Favorite']]) $('#' + id).addEventListener('click', () => saveCurrentPlace(name));
+for (const [id, name] of [['go-home', 'Home'], ['go-work', 'Work'], ['go-favorite', 'Favorite']]) $('#' + id).addEventListener('click', () => {
+  const place = savedPlaces.find((item) => item.id === name.toLowerCase());
+  if (!place) return status(`Save a ${name.toLowerCase()} location in settings first.`);
+  selectPlace('end', place);
+  status(`${name} is set as your destination.`);
+});
 renderSavedPlaces();
 
 try {
