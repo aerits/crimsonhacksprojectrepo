@@ -11,7 +11,11 @@
       "willow": "8dc931e03ee14910ae2a5c22c18abd48",
       "rose": "8eb09ccd081b4e898cdf0d177df07539",
       "ember": "3c5505311f354dabb3d9f18af899c76a",
-      "verity": ""
+      "verity": "d7a1ecc265644bb4965243ab1c9b520e"
     }
+  },
+  "conditions": {
+    "udotApiKey": "",
+    "airNowApiKey": ""
   }
 }

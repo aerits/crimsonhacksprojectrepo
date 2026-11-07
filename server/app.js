@@ -6,6 +6,7 @@ import { getVoices, publicVoices } from './voices.js';
 import { distanceBetween, isValidPoint } from '../src/utils/location.js';
 import voicePhrases from '../voice-phrases.json' with { type: 'json' };
 import { normalizeCustomPhrases } from '../src/utils/phrases.js';
+import { getAirQuality, getRouteConditions } from './conditions.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SOURCE = resolve(ROOT, 'src');
@@ -44,6 +45,19 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
       }
       if (req.method === 'GET' && url.pathname === '/api/runtime') {
         return json(res, 200, { simulator: Boolean(config.simulator) });
+      }
+      if (req.method === 'POST' && url.pathname === '/api/conditions') {
+        if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Use application/json.' });
+        const body = await bodyOf(req);
+        try { return json(res, 200, await getRouteConditions({ geometry: body?.geometry, destinationId: body?.destinationId, apiKey: config.conditions?.udotApiKey, fetcher })); }
+        catch (error) { return json(res, 502, { error: error.message || 'Conditions are unavailable.' }); }
+      }
+      if (req.method === 'POST' && url.pathname === '/api/air-quality') {
+        if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Use application/json.' });
+        const body = await bodyOf(req);
+        if (!isValidPoint(body?.start) || !isValidPoint(body?.end)) return json(res, 400, { error: 'Start and destination coordinates are required.' });
+        try { return json(res, 200, await getAirQuality({ start: body.start, end: body.end, apiKey: config.conditions?.airNowApiKey, fetcher })); }
+        catch (error) { return json(res, 502, { error: error.message || 'Air quality is unavailable.' }); }
       }
       if (req.method === 'GET' && url.pathname === '/api/geocode') {
         const query = url.searchParams.get('q')?.trim();

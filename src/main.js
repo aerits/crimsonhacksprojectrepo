@@ -8,6 +8,9 @@ import { addressSearchOrigin } from './utils/location.js';
 import { setupTabs } from './ui/tabs.js';
 import { createVoicePicker } from './ui/voices.js';
 import { createPhraseSettings } from './ui/phrases.js';
+import { sunGlare } from './utils/sun.js';
+import { loadSavedPlaces, removePlace, saveSavedPlaces, upsertPlace } from './utils/saved-places.js';
+import { createReminder } from './utils/reminders.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
@@ -86,6 +89,8 @@ document.querySelector('#app').innerHTML = `
           <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
+        <fieldset class="trivia-group"><legend>Saved places</legend><p class="hint">Save the current destination, then use it with one tap.</p><div class="trivia-actions"><button id="save-home" type="button" class="text-button">Save as home</button><button id="save-work" type="button" class="text-button">Save as work</button><button id="save-favorite" type="button" class="text-button">Save favorite</button></div><ul id="saved-places" class="custom-phrases" aria-label="Saved places"></ul></fieldset>
+        <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -96,6 +101,7 @@ document.querySelector('#app').innerHTML = `
       <section id="journey" class="journey" hidden aria-labelledby="journey-heading">
         <div class="section-title"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="journey-heading"></h2><p id="journey-eta" class="journey-eta" aria-live="polite"></p></div><span class="small-pill">Route preview</span></div>
         <p class="hint">Step through the route and hear each direction.</p>
+        <p id="glare-note" class="hint" role="status" hidden>☀ Sun glare may be likely for this turn — sunglasses on.</p><p id="conditions-note" class="hint" role="status" hidden></p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
         <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
@@ -155,6 +161,8 @@ let triviaMuted = false;
 let locationWatcher;
 let lastPosition;
 const ambientTrivia = createAmbientTrivia();
+let savedPlaces = loadSavedPlaces();
+const wellnessReminder = createReminder();
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -271,6 +279,8 @@ function invalidateRoute() {
   $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
   stopAmbientGuidance();
   $('#start-guidance').disabled = true;
+  $('#conditions-note').hidden = true;
+  $('#glare-note').hidden = true;
 }
 
 function stopAmbientGuidance() {
@@ -291,6 +301,24 @@ function considerAmbientTrivia(position) {
   if (voices.find((voice) => voice.id === selectedVoice)?.configured) speech.speak(fact.text, selectedVoice);
 }
 
+async function loadConditions(start, end, plannedRoute) {
+  const note = $('#conditions-note');
+  note.hidden = true;
+  try {
+    const [conditionsResponse, airResponse] = await Promise.all([
+      fetch('/api/conditions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ geometry: plannedRoute.geometry, destinationId: destinationName(end.label).replace(/\s+/g, '') }) }),
+      fetch('/api/air-quality', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ start, end }) }),
+    ]);
+    const conditions = conditionsResponse.ok ? await conditionsResponse.json() : null;
+    const air = airResponse.ok ? await airResponse.json() : null;
+    const messages = [];
+    if (conditions?.configured && conditions.alerts?.length) messages.push(`${conditions.alerts.length} UDOT update${conditions.alerts.length === 1 ? '' : 's'} nearby: ${conditions.alerts[0].description}`);
+    const reading = air?.destination || air?.start;
+    if (air?.configured && reading) messages.push(`Air quality: AQI ${reading.aqi} (${reading.category}).`);
+    if (messages.length) { note.textContent = messages.join(' '); note.hidden = false; }
+  } catch { /* Conditions are optional and must never interrupt routing. */ }
+}
+
 function showStep({ focus = true } = {}) {
   const step = route.steps[stepIndex];
   $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} · ${formatDistance(step.distance)}`;
@@ -298,11 +326,32 @@ function showStep({ focus = true } = {}) {
   $('#previous').disabled = stepIndex === 0;
   $('#next').disabled = stepIndex === route.steps.length - 1;
   $('#speak').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
+  $('#glare-note').hidden = !step.glare;
   if (focus && step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
     map?.focus({ lat, lng });
   }
 }
+
+function renderSavedPlaces() {
+  const list = $('#saved-places');
+  list.replaceChildren(...savedPlaces.map((place) => {
+    const item = document.createElement('li');
+    const use = document.createElement('button'); use.type = 'button'; use.className = 'text-button'; use.textContent = `Use ${place.name}: ${place.label}`;
+    use.addEventListener('click', () => selectPlace('end', place));
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-button'; remove.textContent = 'Remove';
+    remove.addEventListener('click', () => { savedPlaces = removePlace(savedPlaces, place.id); saveSavedPlaces(savedPlaces); renderSavedPlaces(); });
+    item.append(use, remove); return item;
+  }));
+  if (!savedPlaces.length) { const item = document.createElement('li'); item.textContent = 'No saved places yet.'; list.append(item); }
+}
+function saveCurrentPlace(name) {
+  const place = selectedPlaces.end;
+  if (!place) return status('Choose a destination before saving a place.');
+  savedPlaces = upsertPlace(savedPlaces, { ...place, id: name.toLowerCase(), name }); saveSavedPlaces(savedPlaces); renderSavedPlaces(); status(`${name} saved for your next trip.`);
+}
+for (const [id, name] of [['save-home', 'Home'], ['save-work', 'Work'], ['save-favorite', 'Favorite']]) $('#' + id).addEventListener('click', () => saveCurrentPlace(name));
+renderSavedPlaces();
 
 try {
   map = createMap($('#map'));
@@ -510,6 +559,11 @@ $('#route-form').addEventListener('submit', async (event) => {
     if (request !== current) return;
     if (!result.steps.length) throw new Error('No directions returned. Try different points.');
     route = result;
+    for (const step of route.steps) {
+      const location = step.maneuver?.location;
+      const next = step.geometry?.coordinates?.at(-1);
+      if (location && next) step.glare = sunGlare({ lat: location[1], lng: location[0] }, { lat: next[1], lng: next[0] }, Date.now()).glare;
+    }
     stepIndex = 0;
     const estimatedDuration = formatDuration(route.duration);
     const arrivalTime = formatArrivalTime(route.duration);
@@ -524,6 +578,7 @@ $('#route-form').addEventListener('submit', async (event) => {
     $('#start-guidance').disabled = false;
     showStep();
     map?.drawRoute(route.geometry);
+    loadConditions(start, end, route);
     if (window.matchMedia('(max-width: 760px)').matches) {
       requestAnimationFrame(() => $('#journey').scrollIntoView({ behavior: 'smooth', block: 'end' }));
     }
@@ -595,6 +650,18 @@ $('#start-guidance').addEventListener('click', () => {
   }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
 });
 setInterval(() => { if (lastPosition) considerAmbientTrivia(lastPosition); }, 60_000);
+setInterval(() => {
+  const enabled = $('#wellness').checked;
+  const minutes = Number($('#wellness-interval').value);
+  if (!wellnessReminder.due(minutes, enabled)) return;
+  const message = 'Quick check-in: relax your shoulders, take a sip of water, and keep your eyes on the road.';
+  $('#wellness-note').textContent = message;
+  if (voices.find((voice) => voice.id === selectedVoice)?.configured) speech.speak(message, selectedVoice);
+}, 60_000);
+$('#wellness').addEventListener('change', () => {
+  wellnessReminder.reset();
+  $('#wellness-note').textContent = $('#wellness').checked ? 'Gentle check-ins will start while this page is open.' : 'Optional check-ins are off.';
+});
 $('#skip-trivia').addEventListener('click', () => { speech.stop(); ambientTrivia.skip(); $('#ambient-note').textContent = 'Skipped. We’ll wait before sharing another note.'; });
 $('#mute-trivia').addEventListener('click', () => {
   triviaMuted = !triviaMuted;

@@ -418,3 +418,34 @@ details li { margin-bottom: 7px; }
   .step-actions .secondary, .step-actions .primary { min-height: 40px; padding: 8px; }
   .journey details { margin-top: 6px; }
 }
+
+/* Keep the journey view inside the viewport. Long, optional controls scroll
+   inside their own pane instead of making the document or map drift away. */
+@media (min-width: 761px) {
+  .workspace { height: calc(100dvh - 88px); min-height: 0; overflow: hidden; }
+  .sidebar { height: 100%; max-height: none; overscroll-behavior: contain; }
+  .map-panel { min-height: 0; height: 100%; }
+}
+
+@media (max-width: 760px) {
+  .workspace {
+    display: grid;
+    grid-template-rows: minmax(0, 52%) minmax(0, 48%);
+    height: calc(100dvh - 128px);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .sidebar {
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .map-panel { min-height: 0; height: auto; }
+}
+
+@media (max-width: 460px) {
+  .workspace { height: calc(100dvh - 116px); grid-template-rows: minmax(0, 54%) minmax(0, 46%); }
+  .sidebar { padding-bottom: 16px; }
+}

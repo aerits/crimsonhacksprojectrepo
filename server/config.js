@@ -24,5 +24,9 @@ export async function loadConfig() {
       ...local.fish,
       voices: { ...defaults.fish?.voices, ...local.fish?.voices },
     },
+    conditions: {
+      ...defaults.conditions,
+      ...local.conditions,
+    },
   };
 }

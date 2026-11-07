@@ -26,9 +26,9 @@ export function getVoices(config = {}) {
       referenceId: voiceIds.ember, speed: 0.88, cue: '[soft tone][gentle]',
       description: 'Ember has a slow-burning charm: bold enough to hold your attention, gentle enough to make the whole drive feel easy.',
       sample: 'Take your time, love. You’re safe, and you’re on your way.' },
-    { id: 'verity', name: 'Verity', initial: 'V', color: '#f4df8c', mood: 'Bright & reassuring',
-      referenceId: voiceIds.verity, speed: 0.92, cue: '[warm][clear]',
-      description: 'Verity is bright, grounded, and attentive—a clear, reassuring companion for every part of the drive.',
+    { id: 'verity', name: 'VERITY', initial: 'V', color: '#f4df8c', mood: 'Bright & energetic',
+      referenceId: voiceIds.verity, speed: 0.92, cue: '[friendly][clear]',
+      description: 'VERITY is a bright, energetic, conversational guide with a playful confidence for the road ahead.',
       sample: 'You’re right where you need to be. Let’s take the next turn together.' },
   ];
 }

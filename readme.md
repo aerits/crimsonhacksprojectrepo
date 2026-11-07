@@ -44,7 +44,7 @@ The browser never receives the Fish Audio key:
 Browser → POST /api/tts → Node server → Fish Audio → MP3 → browser Audio playback
 ```
 
-Seven voice personas are available: Velvet, Honey, Luna, Willow, Rose, Ember, and Verity. Configure the API key and voice IDs under `fish` in the config files. Verity ships as a local configuration slot, so add a Fish Audio reference ID you are authorized to use in `config.local.json` before it can play. Persona text, delivery cues, and speeds are in `server/voices.js`; the browser discovers safe metadata from `GET /api/voices`.
+Seven voice personas are available: Velvet, Honey, Luna, Willow, Rose, Ember, and VERITY. Configure the API key and voice IDs under `fish` in the config files. VERITY uses the public Fish Audio reference configured in `config.json`; a local `fish.voices.verity` value can override it. Persona text, delivery cues, and speeds are in `server/voices.js`; the browser discovers safe metadata from `GET /api/voices`.
 
 The app uses an in-memory `Audio` object, not a visible HTML player. Previews, route turns, ambient trivia, and Developer TTS testing can consume Fish Audio credit. The Voice library compares and previews configured voices; its selected voice and volume stay synchronized with the journey view.
 
