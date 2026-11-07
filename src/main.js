@@ -565,9 +565,11 @@ document.querySelectorAll('[data-search]').forEach((button) => button.addEventLi
 $('#swap').addEventListener('click', () => {
   invalidateRoute();
   const start = $('#start').value;
+  const swappingCurrentLocation = selectedPlaces.start === currentLocation;
   $('#start').value = $('#end').value;
-  $('#end').value = start;
+  $('#end').value = swappingCurrentLocation ? 'Your GPS location' : start;
   [selectedPlaces.start, selectedPlaces.end] = [selectedPlaces.end, selectedPlaces.start];
+  if (swappingCurrentLocation) selectedPlaces.end = currentLocation;
   resetAddressSearch('start');
   resetAddressSearch('end');
   refreshSuggestions();

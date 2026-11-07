@@ -24,6 +24,40 @@ export function instructionFor(step) {
   return `Continue ${direction || 'straight'}${road}.`;
 }
 
+const isMergeableManeuver = (step) => !['depart', 'arrive'].includes(step?.maneuver?.type);
+const startLowercase = (text) => text ? text[0].toLowerCase() + text.slice(1) : text;
+
+export function combineNearbySteps(steps, maximumDistance = 300) {
+  const combined = [];
+  for (let index = 0; index < steps.length; index += 1) {
+    const first = steps[index];
+    const second = steps[index + 1];
+    const shouldCombine = second
+      && first.distance <= maximumDistance
+      && isMergeableManeuver(first)
+      && isMergeableManeuver(second);
+
+    if (!shouldCombine) {
+      combined.push(first);
+      continue;
+    }
+
+    const firstCoordinates = first.geometry?.coordinates || [];
+    const secondCoordinates = second.geometry?.coordinates || [];
+    combined.push({
+      ...first,
+      distance: first.distance + second.distance,
+      duration: first.duration + second.duration,
+      geometry: firstCoordinates.length && secondCoordinates.length
+        ? { ...first.geometry, coordinates: [...firstCoordinates, ...secondCoordinates.slice(1)] }
+        : first.geometry,
+      instruction: `${first.instruction.replace(/\.$/, '')}, then ${startLowercase(second.instruction)}`,
+    });
+    index += 1;
+  }
+  return combined;
+}
+
 export const formatDistance = (meters) => meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
 export const formatDuration = (seconds) => {
   const totalMinutes = Math.max(1, Math.round(seconds / 60));
