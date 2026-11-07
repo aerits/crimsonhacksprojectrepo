@@ -53,7 +53,8 @@ export function createVoicePicker({ select, summary, gallery, selection, onSelec
         '/images/guide-iris.png',
         '/images/guide-sage.png',
         '/images/guide-amber.png',
-      ][index % 5];
+        '/images/guide-ember.png',
+      ][index % 6];
       portrait.alt = `Illustrated anime portrait of ${voice.name}`;
       portrait.loading = 'lazy';
       const badge = element('span', 'selected-badge', '✓ Your voice');
