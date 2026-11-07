@@ -1,16 +1,14 @@
 # Mommy Maps
 
-Mommy Maps is a local JavaScript driving-route prototype with address autocomplete, Leaflet maps, Fish Audio navigation voices, personal after-turn phrases, ambient roadside trivia, and a development-only route simulator.
+Mommy Maps is a local, map-first driving-route prototype for planning a trip with address autocomplete, Leaflet/OpenStreetMap, optional Fish Audio voice guidance, Utah outdoor discovery, and a development-only route simulator. It plans and previews routes; it is not production navigation software.
 
-It can plan and preview a route; it is not production navigation software.
+## Run locally
 
-## Run
-
-Requires Node.js 22.9 or later and a modern browser. There are no npm dependencies.
+Requires Node.js 22.9+ and a modern browser. The project has no npm dependencies.
 
 ```sh
 cp config.local.example.json config.local.json
-# Add fish.apiKey to config.local.json to enable generated voice playback.
+# Add fish.apiKey in config.local.json to enable generated voice playback.
 npm run dev
 ```
 
@@ -19,80 +17,76 @@ Open <http://127.0.0.1:3000>.
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Watch and run the local server. |
-| `npm run dev:simulate` | Also expose the route simulator. |
-| `npm start` | Run without watching or simulator controls. |
-| `npm test` | Run all Node tests. |
+| `npm run dev:simulate` | Also expose the development route simulator. |
+| `npm start` | Run without file watching or simulator controls. |
+| `npm test` | Run the Node test suite. |
 
-`config.json` is the committed default configuration. `config.local.json` is Git-ignored and overrides it at startup. Keep Fish API keys only in the local file.
+`config.json` is committed and contains safe defaults. `config.local.json` is ignored and overrides it at startup. Keep API keys in the local file only.
 
-## Using the app
+## What it does
 
-1. Allow browser location access, or enter a starting address.
-2. Type a destination. Suggestions appear after three characters; choose a result before planning the route.
-3. Optionally avoid tolls, highways/freeways, or ferries, then choose **Show my route on the map**.
-4. Review turns with the arrow buttons or use **Hear this turn**.
+- Uses GPS as the preferred start point when permission is granted; a typed start address also works.
+- Shows address suggestions while typing, ranked around the GPS/start location. Utah landmarks are prioritized for matching landmark searches, then results are ordered by distance and name.
+- Plans driving routes through OSRM and displays them on a Leaflet/OpenStreetMap map.
+- Supports swapping and clearing endpoints, avoiding tolls/highways/ferries, route cancellation, live-location following, route-turn previews, and optional ambient guidance.
+- Includes a Parks, Trails, and Landmarks legend/filter. Utah state parks and trail ideas live in Settings; choosing one opens its official planning page before a route is set.
+- Uses themed route lines for Light, Pink, Verity, and Dark themes. Selecting VERITY changes the visible and browser title to **verity maps.**
 
-Address results come from Photon. When an origin is known, results are ranked by straight-line distance; destination searches prioritize the selected start and start searches prioritize GPS. The five closest unique matches are shown. Distances are estimates, not driving distances.
+To plan a route, choose one autocomplete suggestion for the start and destination, then select **Show my route on the map**. The route card shows the current direction, route summary, estimated arrival, optional route conditions, and all directions. On smaller screens it becomes a compact map sheet.
 
-Routes come from OSRM and are displayed with Leaflet/OpenStreetMap. During a planned route, GPS can update a live marker and smoothly follow it. On small screens, the directions panel becomes a compact bottom sheet so the map remains visible.
+## Voices and phrases
 
-## Voices, phrases, and audio
-
-The browser never receives the Fish Audio key:
+Voice playback is optional. The browser never receives the Fish API key:
 
 ```text
 Browser → POST /api/tts → Node server → Fish Audio → MP3 → browser Audio playback
 ```
 
-Seven voice personas are available: Velvet, Honey, Luna, Willow, Rose, Ember, and VERITY. Configure the API key and voice IDs under `fish` in the config files. VERITY uses the public Fish Audio reference configured in `config.json`; a local `fish.voices.verity` value can override it. Persona text, delivery cues, and speeds are in `server/voices.js`; the browser discovers safe metadata from `GET /api/voices`.
+The voice library offers Velvet, Honey, Luna, Willow, Rose, Ember, and VERITY. Configure the Fish key and reference IDs under `fish` in configuration files. Voice metadata is exposed safely through `GET /api/voices`; provider IDs and keys are not.
 
-The app uses an in-memory `Audio` object, not a visible HTML player. Previews, route turns, ambient trivia, and Developer TTS testing can consume Fish Audio credit. The Voice library compares and previews configured voices; its selected voice and volume stay synchronized with the journey view.
+The app uses one in-memory `Audio` object rather than a visible audio element. A selected voice is saved locally when browser storage is available. Voice previews, route directions, ambient trivia, and Developer TTS tests can consume Fish Audio credit.
 
-`voice-phrases.json` contains shared route encouragement and affirmation presets. In **User settings → Journey encouragements**, users can add, edit, and remove up to 20 personal encouragements, each up to 160 characters. They are normalized, deduplicated, and stored in browser local storage when possible. Route and simulator speech sends the current personal list only with that request; the server validates it, selects one phrase from the built-in, selected affirmation, and personal pools, then appends it to the spoken instruction. Previews and Developer TTS use their supplied text unchanged.
+`voice-phrases.json` holds shared after-turn, arrival, and affirmation phrases. Settings lets users manage up to 20 local custom journey phrases and 20 arrival phrases (160 characters each). Neutral, Girl, Boy, and Enby affirmation styles are available. Personal phrases stay in local storage except when sent with the applicable TTS request.
 
-Choose Neutral, Girl, Boy, or Enby under **After-turn encouragement**. The selected encouragement style and theme are stored locally when browser storage is available.
+## Simulator and driving helpers
 
-## Simulator and ambient trivia
+`npm run dev:simulate` reveals **Simulate route** controls. The simulator animates a marker along route geometry at a selected MPH or route-relative pace and waits for each simulated instruction’s audio before advancing. It is intentionally unavailable in normal `dev` and `start` modes.
 
-Run `npm run dev:simulate` to show **Simulate route**. It advances route steps at relaxed, normal, or quick pace, animates a pink marker along route geometry, follows that marker, and speaks each instruction. It is hidden for `npm run dev` and `npm start`.
+**Start Navigation** starts high-accuracy location following and can enable ambient Utah trivia on sustained clear, highway-speed stretches. It waits five minutes before the first note and at least 18 minutes between notes. Mute or skip trivia from Settings. This is an experimental convenience feature, not real-time driving guidance.
 
-**Start ambient guidance** starts a high-accuracy location watch. On a sustained, roughly highway-speed stretch with a long distance before the next maneuver, it can speak a nearby regional fact. It waits five minutes before the first note and at least 18 minutes between notes. Use **Mute trivia** or **Skip next note** to control it. This is an experimental heuristic, not driving guidance.
-
-## Themes and accessibility
-
-Light, Pink, Verity, and Dark themes are available. Pink and Verity use decorative SVG assets documented in [ATTRIBUTIONS.md](ATTRIBUTIONS.md). Journey and Voice library are keyboard-accessible tabs; status updates, phrase editing, and controls include accessible labels and live regions.
-
-## API and limits
+## HTTP API
 
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/voices` | Public voice metadata and configuration status. |
-| `GET /api/runtime` | Whether the simulator is enabled. |
-| `GET /api/geocode?q=…&lat=…&lng=…` | Photon-backed address suggestions. |
+| `GET /api/runtime` | Whether simulator controls are enabled. |
+| `GET /api/geocode?q=…&lat=…&lng=…&categories=…` | Photon-backed nearby address and Utah-landmark suggestions. |
 | `POST /api/tts` | Fish Audio speech for a configured voice. |
+| `POST /api/conditions` | Optional UDOT route-condition lookup. |
+| `POST /api/air-quality` | Optional AirNow route air-quality lookup. |
 
-The server caches up to 200 geocoding lookups, rate-limits upstream geocoding to roughly one request per second, allows two concurrent TTS jobs, applies a 60-second TTS timeout, limits audio to 8 MB, and accepts JSON bodies up to 32 KB. Audio is held in memory for the response, not written to disk.
+Geocoding caches up to 200 lookups and limits provider traffic to roughly one request per second. The server permits two concurrent TTS jobs, limits TTS requests to 60 seconds and 8 MB of audio, and accepts JSON bodies up to 32 KB.
 
-## Structure
+## Project layout
 
 ```text
-config.json / config.local.json       Runtime defaults and local overrides
-voice-phrases.json                    Shared phrase and affirmation presets
+config.json / config.local.json       Default configuration and local overrides
+voice-phrases.json                    Shared voice phrases and affirmations
 ATTRIBUTIONS.md                       Decorative asset licensing notes
-server/                               Config, HTTP API, Fish TTS, voice registry
-src/main.js                           Route planner, GPS, settings, simulator, trivia
-src/services/                         Map, routing, search, speech, trivia, storage
+server/                               HTTP API, configuration, Fish TTS, voice registry
+src/data/                             Utah landmarks, outdoor suggestions, category metadata
+src/services/                         Map, routing, geocoding, speech, trivia, local storage
 src/ui/                               Tabs, voice library, phrase editor
-src/utils/                            Directions, location, phrase validation
+src/utils/                            Directions, locations, phrase validation
 public/images/                        Voice art and theme decorations
-tests/                                Node tests for APIs and client services
+tests/                                Node tests
 ```
 
 ## Prototype boundaries and privacy
 
-Mommy Maps does not reroute, provide traffic, guarantee road legality or safety, work offline, or replace attention to the road. It requires internet access for Leaflet assets, OpenStreetMap tiles, Photon, OSRM, and Fish Audio when voice playback is used.
+Mommy Maps does not reroute, provide guaranteed live traffic, guarantee road legality or safety, work offline, or replace attentive driving. It needs internet access for map tiles, Photon, OSRM, and Fish Audio when voice playback is enabled.
 
-Address searches are sent to Photon, route coordinates to OSRM, and spoken text plus the selected Fish reference ID to Fish Audio. GPS remains in the browser except when used as a route endpoint or Photon location bias. Personal phrases remain browser-local except for applicable TTS requests. The server binds to localhost by default; add authentication, per-user limits, production providers, monitoring, and privacy controls before public deployment.
+Address searches go to Photon; route coordinates go to OSRM; and spoken text plus the selected Fish reference ID go to Fish Audio. GPS stays in the browser except when used as a route endpoint, provider search bias, or optional route-condition lookup. Add authentication, production rate limits, monitoring, privacy controls, and production-grade providers before public deployment.
 
 ## References
 
