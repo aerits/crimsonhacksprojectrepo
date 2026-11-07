@@ -141,7 +141,7 @@ document.querySelector('#app').innerHTML = `
     <div class="library-heading"><div><p class="eyebrow">A LITTLE COMPANY FOR THE ROAD</p><h1>Find your kind <em>of calm.</em></h1><p>Meet your guides. A different voice, the same gentle way home.</p></div><button id="back-to-route" type="button" class="secondary">Back to my route ↗</button></div>
     <div class="library-section-heading"><h2>Good company comes in a few voices.</h2><p id="library-selection">Choose a little company for the road.</p></div>
     <div id="voice-gallery" class="voice-gallery"><p class="library-empty">Getting your guides ready…</p></div>
-    <div class="library-player"><span class="player-symbol" aria-hidden="true">♫</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
+    <div class="library-player"><span class="player-symbol" aria-hidden="true">♫</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label><button id="library-preview" type="button" class="primary">▷ Preview selected voice</button><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
     <div class="library-note"><p>AI-generated voices, made for a softer journey. Voice previews need a configured Fish Audio connection.</p><button id="retry-voices" type="button" class="text-button" hidden>Retry loading voices ↻</button></div>
     <details class="dev-tts">
       <summary>Developer: test TTS</summary>
@@ -246,8 +246,12 @@ $('#settings-back-to-route').addEventListener('click', () => activateTab('journe
 const voicePicker = createVoicePicker({
   select: $('#voice-select'), summary: $('#voice-summary'), gallery: $('#voice-gallery'),
   selection: $('#library-selection'), onSelect: selectVoice,
-  onPreview: (voice) => speech.speak(voice.sample, voice.id),
+  onPreview: previewVoice,
 });
+function previewVoice(voice) {
+  if (!voice?.configured) return voiceStatus('Choose a voice that is ready to play first.');
+  speech.speak(voice.sample, voice.id);
+}
 function selectVoice(id) {
   const voice = voices.find((item) => item.id === id);
   if (!voice) return;
@@ -817,6 +821,7 @@ for (const id of ['volume', 'library-volume']) $('#'+id).addEventListener('input
   $('#library-volume').value = event.target.value;
 });
 $('#library-stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
+$('#library-preview').addEventListener('click', () => previewVoice(voices.find((item) => item.id === selectedVoice)));
 $('#retry-voices').addEventListener('click', loadVoices);
 $('#start-navigation').addEventListener('click', () => {
   if (!route) return;
