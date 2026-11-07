@@ -397,3 +397,11 @@ details li { margin-bottom: 7px; }
   .journey details ol { max-height: 120px; }
   .map-note { display: none; }
 }
+
+
+/* Keep the map cues visible while scrolling on phones. */
+@media (max-width: 760px) {
+  .topbar { position: relative; top: auto; }
+  .map-label, .map-status { z-index: 2; }
+  .journey { z-index: 3; }
+}

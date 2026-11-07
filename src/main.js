@@ -94,7 +94,7 @@ document.querySelector('#app').innerHTML = `
       <div class="map-label"><span class="location-dot"></span><div><strong>Start exploring the University of Utah</strong><span>Search two addresses to plan your route.</span></div></div>
       <div id="map-status" class="map-status" role="status">Your next little journey starts here.</div>
       <section id="journey" class="journey" hidden aria-labelledby="journey-heading">
-        <div class="section-title"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="journey-heading"></h2></div><span class="small-pill">Route preview</span></div>
+        <div class="section-title"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="journey-heading"></h2><p id="journey-eta" class="journey-eta" aria-live="polite"></p></div><span class="small-pill">Route preview</span></div>
         <p class="hint">Step through the route and hear each direction.</p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
@@ -123,6 +123,8 @@ document.querySelector('#app').innerHTML = `
   </section>`;
 
 const $ = (selector) => document.querySelector(selector);
+const formatArrivalTime = (durationSeconds) => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + durationSeconds * 1000));
+const destinationName = (label) => label.split(',')[0] || 'your destination';
 const status = (message) => { $('#map-status').textContent = message; };
 const voiceStatus = (message) => {
   $('#voice-status').textContent = message;
@@ -509,7 +511,10 @@ $('#route-form').addEventListener('submit', async (event) => {
     if (!result.steps.length) throw new Error('No directions returned. Try different points.');
     route = result;
     stepIndex = 0;
-    $('#journey-heading').textContent = `${formatDuration(route.duration)} · ${formatDistance(route.distance)}`;
+    const estimatedDuration = formatDuration(route.duration);
+    const arrivalTime = formatArrivalTime(route.duration);
+    $('#journey-heading').textContent = `${estimatedDuration} · ${formatDistance(route.distance)}`;
+    $('#journey-eta').textContent = `Estimated arrival: ${arrivalTime}`;
     $('#steps').replaceChildren(...route.steps.map((step) => {
       const item = document.createElement('li');
       item.textContent = `${step.instruction} (${formatDistance(step.distance)})`;
@@ -520,7 +525,11 @@ $('#route-form').addEventListener('submit', async (event) => {
     showStep();
     map?.drawRoute(route.geometry);
     startDrivingFollow();
-    status('Your route is ready. Take it one turn at a time.');
+    const voice = voices.find((item) => item.id === selectedVoice);
+    if (voice?.configured) {
+      speech.speak(`Your route to ${destinationName(end.label)} is ready. It will take about ${estimatedDuration}. You should arrive around ${arrivalTime}. Let's get going.`, selectedVoice);
+    }
+    status(`Your route is ready. ${estimatedDuration} to ${destinationName(end.label)}.`);
   } catch (error) {
     if (request === current && error.name !== 'AbortError') status(error.name === 'TimeoutError' ? 'Routing took too long. Please try again.' : error.message);
   } finally {
