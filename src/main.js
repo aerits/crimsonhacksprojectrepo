@@ -11,6 +11,7 @@ import { createPhraseSettings } from './ui/phrases.js';
 import { sunGlare } from './utils/sun.js';
 import { loadSavedPlaces, removePlace, saveSavedPlaces, upsertPlace } from './utils/saved-places.js';
 import { createReminder } from './utils/reminders.js';
+import { nationalParkPromptFor } from './data/national-park-prompts.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
@@ -322,7 +323,7 @@ function playSimulationStep() {
   }
   const voice = voices.find((item) => item.id === selectedVoice);
   const speechDone = voice?.configured
-    ? speech.speak(step.instruction, selectedVoice, { ...speechOptionsForStep(step), waitForPlayback: true })
+    ? speech.speak(spokenInstructionForStep(step), selectedVoice, { ...speechOptionsForStep(step), waitForPlayback: true })
     : Promise.resolve();
   $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length} at ${simulationSpeedLabel()}.`;
   return { duration, speechDone };
@@ -343,6 +344,11 @@ function speechOptionsForStep(step) {
     return { arrivalPhrase: true, customArrivalPhrases: arrivalPhraseSettings.getPhrases() };
   }
   return { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases(), affirmation: $('#affirmation-style').value };
+}
+
+function spokenInstructionForStep(step) {
+  if (step.maneuver?.type !== 'arrive') return step.instruction;
+  return nationalParkPromptFor(selectedPlaces.end)?.arrival || step.instruction;
 }
 
 function invalidateRoute() {
@@ -851,7 +857,10 @@ $('#simulate').addEventListener('click', () => {
   runSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
-  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, speechOptionsForStep(route.steps[stepIndex]));
+  if (route) {
+    const step = route.steps[stepIndex];
+    speech.speak(spokenInstructionForStep(step), selectedVoice, speechOptionsForStep(step));
+  }
 });
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);
@@ -893,7 +902,10 @@ $('#start-navigation').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);
   const end = selectedPlaces.end;
   if (voice?.configured && end) {
-    speech.speak(`Navigation started. Your route to ${destinationName(end.label)} will take about ${formatDuration(route.duration)}. You should arrive around ${formatArrivalTime(route.duration)}. Let's get going.`, selectedVoice);
+    const parkPrompt = nationalParkPromptFor(end);
+    const startMessage = parkPrompt?.start
+      || `Navigation started. Your route to ${destinationName(end.label)} will take about ${formatDuration(route.duration)}. You should arrive around ${formatArrivalTime(route.duration)}. Let's get going.`;
+    speech.speak(startMessage, selectedVoice);
   }
   status('Navigation started. Follow the route when you’re ready.');
 });
