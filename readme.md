@@ -42,7 +42,11 @@ Add further voices in `server/voices.js`, referencing a new entry under `fish.vo
 
 ## Address search
 
-Address suggestions appear after three characters through the server’s `/api/geocode` endpoint, which uses Photon’s search-as-you-type geocoder. Destination searches are biased toward the selected starting address or your current location. The **Search** buttons are also available to repeat a lookup. Select the intended match before submitting a route. Address text is sent to Photon; use a production geocoding provider before deploying at scale.
+Address suggestions appear after three characters through the server’s `/api/geocode` endpoint, which uses Photon’s search-as-you-type geocoder. The **Search** buttons are also available to repeat a lookup. Select the intended match before submitting a route.
+
+When a location is known, the app asks Photon for nearby matches, sorts them by straight-line distance, and shows the closest five with a distance badge beside the full address. Destination searches use the selected starting point, falling back to browser location. Starting-address searches use browser location. The caption identifies the reference point; these distances are estimates, not driving distances. Changing the start refreshes open destination suggestions, and stale searches are canceled when you type, select, or swap addresses.
+
+If location access is unavailable, address search still works without distance badges. Select a starting address to enable nearby destination results. Address text and the reference coordinates (when available) are sent to Photon. The server caches results separately for each query and reference point, retaining up to 200 searches. Use a production geocoding provider before deploying at scale.
 
 Requests are limited to 600 text characters, two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
 
@@ -63,12 +67,13 @@ src/
   services/routing.js      OSRM driving route adapter
   services/speech.js       Fetch generated audio, cancel and play
   utils/directions.js      Coordinates, maneuver text and formatting
+  utils/location.js        Search reference points and straight-line distance
 tests/                     Routing and HTTP API tests with mocked Fish responses
 ```
 
 ## Prototype boundaries
 
-This is a route planner and manual spoken route preview. It does not track driving progress, reroute automatically, provide traffic data, geocode addresses, or issue background navigation prompts. Current location only sets the starting point. Those features can build on the route and speech services.
+This is a route planner and manual spoken route preview. It does not track driving progress, reroute automatically, provide traffic data, or issue background navigation prompts. Current location sets the starting point and helps rank address suggestions. Those features can build on the route and speech services.
 
 Leaflet loads from a CDN, map tiles come from OpenStreetMap, addresses are searched with Photon, and routes come from the public OSRM demo service; internet access is required. Use production map, geocoding, and routing providers before deploying for sustained usage. Resolved coordinates are sent to OSRM when planning a route. The server binds to localhost by default. Add authentication and per-user rate limits before exposing the paid TTS endpoint publicly. This scaffold has no deployment configuration.
 
@@ -77,5 +82,6 @@ Leaflet loads from a CDN, map tiles come from OpenStreetMap, addresses are searc
 - [Fish Audio text-to-speech API](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech)
 - [Fish Audio delivery and emotion cues](https://docs.fish.audio/developer-guide/core-features/emotions)
 - [OSRM HTTP API](https://project-osrm.org/docs/v26.6.1/http.html)
+- [Photon search API and location bias](https://github.com/komoot/photon/blob/master/docs/api-v1.md)
 - [Leaflet quick start](https://leafletjs.com/examples/quick-start/)
 - [OpenStreetMap tile usage policy](https://operations.osmfoundation.org/policies/tiles/)

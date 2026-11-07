@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, extname, sep } from 'node:path';
 import { getVoices, publicVoices } from './voices.js';
+import { distanceBetween, isValidPoint } from '../src/utils/location.js';
 import voicePhrases from '../voice-phrases.json' with { type: 'json' };
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
@@ -46,18 +47,30 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
       if (req.method === 'GET' && url.pathname === '/api/geocode') {
         const query = url.searchParams.get('q')?.trim();
         if (!query || query.length > 200) return json(res, 400, { error: 'Enter an address, place, or city up to 200 characters.' });
-        const latParam = url.searchParams.get('lat');
-        const lngParam = url.searchParams.get('lng');
-        const bias = latParam !== null && lngParam !== null ? { lat: Number(latParam), lng: Number(lngParam) } : null;
-        if (bias && (!Number.isFinite(bias.lat) || !Number.isFinite(bias.lng) || Math.abs(bias.lat) > 90 || Math.abs(bias.lng) > 180)) return json(res, 400, { error: 'Invalid search location.' });
-        const cacheKey = `${query.toLowerCase()}|${bias ? `${bias.lat},${bias.lng}` : ''}`;
+        let origin;
+        if (url.searchParams.has('lat') || url.searchParams.has('lng')) {
+          const lat = url.searchParams.get('lat');
+          const lng = url.searchParams.get('lng');
+          origin = { lat: Number(lat), lng: Number(lng) };
+          if (!lat?.trim() || !lng?.trim() || !isValidPoint(origin)) {
+            return json(res, 400, { error: 'Search location needs a valid latitude and longitude.' });
+          }
+        }
+        // A query near one location must never reuse matches or distances from another.
+        const cacheKey = JSON.stringify([query.toLowerCase(), origin?.lat, origin?.lng]);
         const cached = geocodeCache.get(cacheKey);
         if (cached) return json(res, 200, cached);
         const wait = Math.max(0, nextGeocodeAt - Date.now());
         nextGeocodeAt = Math.max(Date.now(), nextGeocodeAt) + 1000;
         if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
         const searchUrl = new URL('https://photon.komoot.io/api/');
-        searchUrl.search = new URLSearchParams({ q: query, limit: '5', lang: 'en', ...(bias && { lat: String(bias.lat), lon: String(bias.lng), zoom: '13', location_bias_scale: '0.1' }) });
+        searchUrl.search = new URLSearchParams({ q: query, limit: origin ? '20' : '5', lang: 'en' });
+        if (origin) {
+          searchUrl.searchParams.set('lat', origin.lat);
+          searchUrl.searchParams.set('lon', origin.lng);
+          searchUrl.searchParams.set('zoom', '13');
+          searchUrl.searchParams.set('location_bias_scale', '0.1');
+        }
         const upstream = await fetcher(searchUrl, { headers: { Accept: 'application/json', 'User-Agent': 'Mommy-Maps/0.1' } });
         if (!upstream.ok) {
           await upstream.body?.cancel();
@@ -69,11 +82,22 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           const [lng, lat] = place.geometry?.coordinates || [];
           const street = [properties.housenumber, properties.street].filter(Boolean).join(' ');
           const locality = [properties.city || properties.district, properties.state, properties.country].filter(Boolean).join(', ');
-          return { lat: Number(lat), lng: Number(lng), label: [properties.name, street, locality].filter(Boolean).join(', ') };
+          return { lat, lng, label: [properties.name, street, locality].filter(Boolean).join(', ') };
         })
-          .filter((place) => Number.isFinite(place.lat) && Number.isFinite(place.lng));
+          .filter((place) => isValidPoint(place) && place.label);
+        if (origin) {
+          for (const place of results) place.distanceMeters = distanceBetween(origin, place);
+          results.sort((a, b) => a.distanceMeters - b.distanceMeters);
+        }
         if (!results.length) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
-        const result = { results };
+        const labels = new Set();
+        const uniqueResults = results.filter((place) => {
+          if (labels.has(place.label)) return false;
+          labels.add(place.label);
+          return true;
+        });
+        const result = { results: uniqueResults.slice(0, 5) };
+        if (geocodeCache.size >= 200) geocodeCache.delete(geocodeCache.keys().next().value);
         geocodeCache.set(cacheKey, result);
         return json(res, 200, result);
       }

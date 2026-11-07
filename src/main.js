@@ -3,6 +3,7 @@ import { getRoute } from './services/routing.js';
 import { searchAddresses } from './services/geocoding.js';
 import { createSpeechService } from './services/speech.js';
 import { formatDistance, formatDuration } from './utils/directions.js';
+import { addressSearchOrigin } from './utils/location.js';
 import { setupTabs } from './ui/tabs.js';
 import { createVoicePicker } from './ui/voices.js';
 
@@ -21,10 +22,10 @@ document.querySelector('#app').innerHTML = `
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
         <label for="start">Starting address <span>A</span></label>
-        <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="street-address" required /><button id="locate" type="button" class="location-search" aria-label="Use my GPS location" title="Use my GPS location">⌖</button><button type="button" class="address-search" data-search="start">Search</button></div>
+        <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="off" aria-controls="start-results" required /><button id="locate" type="button" class="location-search" aria-label="Use my GPS location" title="Use my GPS location">⌖</button><button type="button" class="address-search" data-search="start">Search</button></div>
         <div id="start-results" class="address-results" aria-live="polite"></div>
         <label for="end">Your destination <span>B</span></label>
-        <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="end">Search</button></div>
+        <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="off" aria-controls="end-results" required /><button type="button" class="address-search" data-search="end">Search</button></div>
         <div id="end-results" class="address-results" aria-live="polite"></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇅ Swap</button></div>
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
@@ -86,6 +87,7 @@ const speech = createSpeechService(audio, voiceStatus);
 let voices = [];
 let selectedVoice;
 const selectedPlaces = { start: null, end: null };
+let currentLocation = null;
 let route = null;
 let stepIndex = 0;
 let request;
@@ -150,6 +152,7 @@ function startDrivingFollow() {
   if (!navigator.geolocation) return;
   drivingLocationWatch = navigator.geolocation.watchPosition(({ coords }) => {
     const point = { lat: coords.latitude, lng: coords.longitude };
+    currentLocation = point;
     map?.setLiveLocation(point);
     if (!simulationRunning) map?.focus(point, 17);
   }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
@@ -241,12 +244,14 @@ function useCurrentLocation({ userInitiated = false } = {}) {
       return status('GPS returned an invalid position. Try again or enter a starting address.');
     }
     const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your GPS location' };
+    currentLocation = place;
     selectedPlaces.start = place;
     input.value = place.label;
     map?.setPoint('start', place);
     map?.setLiveLocation(place);
     map?.focus(place);
     status('Starting from your GPS location. Search for a destination to begin.');
+    refreshSuggestions();
   }, (error) => {
     if (requestId !== locationRequestId) return;
     locate.disabled = false;
@@ -257,73 +262,115 @@ function useCurrentLocation({ userInitiated = false } = {}) {
 $('#locate').addEventListener('click', () => useCurrentLocation({ userInitiated: true }));
 useCurrentLocation();
 
-function clearResults(kind) { $(`#${kind}-results`).replaceChildren(); }
+function resetAddressSearch(kind) {
+  clearTimeout(suggestionTimers[kind]);
+  suggestionRequests[kind]?.abort();
+  suggestionRequests[kind] = null;
+  document.querySelector('[data-search="' + kind + '"]').disabled = false;
+  $('#' + kind + '-results').replaceChildren();
+}
 
-function renderAddressResults(kind, results, message) {
+function renderAddressResults(kind, results, origin, message) {
+  const note = document.createElement('p');
+  note.className = 'address-results-note';
+  note.id = kind + '-results-note';
+  note.textContent = origin
+    ? 'Nearest matches · Straight-line distance from ' + origin.label + '.'
+    : kind === 'end' ? 'Choose a starting address to see nearby matches and distances.'
+      : 'Allow location access to see nearby starting addresses and distances.';
   const list = document.createElement('ul');
   list.className = 'address-result-list';
   for (const place of results) {
     const item = document.createElement('li');
     const choose = document.createElement('button');
     choose.type = 'button';
-    choose.textContent = place.label;
+    choose.setAttribute('aria-describedby', note.id);
+    const label = document.createElement('span');
+    label.className = 'address-result-label';
+    label.textContent = place.label;
+    choose.append(label);
+    if (origin && Number.isFinite(place.distanceMeters)) {
+      const distance = document.createElement('span');
+      distance.className = 'address-result-distance';
+      distance.textContent = formatDistance(place.distanceMeters) + ' away';
+      choose.append(distance);
+    }
     choose.addEventListener('click', () => selectPlace(kind, place));
     item.append(choose);
     list.append(item);
   }
-  $(`#${kind}-results`).replaceChildren(list);
+  $('#' + kind + '-results').replaceChildren(note, list);
   if (message) status(message);
 }
 
 function selectPlace(kind, place) {
+  invalidateRoute();
   selectedPlaces[kind] = place;
-  $(`#${kind}`).value = place.label;
-  clearResults(kind);
+  $('#' + kind).value = place.label;
+  resetAddressSearch(kind);
   map?.setPoint(kind, place);
   map?.focus(place);
-  status(`${kind === 'start' ? 'Starting address' : 'Destination'} selected. Search the other address or find your route.`);
+  if (kind === 'start') refreshSuggestions(['end']);
+  status((kind === 'start' ? 'Starting address' : 'Destination') + ' selected. Search the other address or find your route.');
 }
 
-async function searchAddress(kind) {
-  const query = $(`#${kind}`).value.trim();
-  if (!query) throw new Error(`Enter a ${kind === 'start' ? 'starting address' : 'destination'} first.`);
-  const button = document.querySelector(`[data-search="${kind}"]`);
+async function searchAddress(kind, automatic = false) {
+  const input = $('#' + kind);
+  const query = input.value.trim();
+  if (!query) throw new Error('Enter a ' + (kind === 'start' ? 'starting address' : 'destination') + ' first.');
+  resetAddressSearch(kind);
+  const controller = new AbortController();
+  suggestionRequests[kind] = controller;
+  const signal = request ? AbortSignal.any([controller.signal, request.signal]) : controller.signal;
+  const origin = addressSearchOrigin(kind, selectedPlaces.start, currentLocation);
+  const button = document.querySelector('[data-search="' + kind + '"]');
   button.disabled = true;
-  clearResults(kind);
-  status(`Searching for your ${kind === 'start' ? 'starting address' : 'destination'}…`);
+  if (!automatic) status('Searching for your ' + (kind === 'start' ? 'starting address' : 'destination') + '…');
   try {
-    const { results } = await searchAddresses(query, { signal: request?.signal, bias: kind === 'end' ? selectedPlaces.start : undefined });
-    renderAddressResults(kind, results, `Choose the ${kind === 'start' ? 'starting address' : 'destination'} that looks right.`);
-  } finally { button.disabled = false; }
+    const { results } = await searchAddresses(query, { origin, signal });
+    if (signal.aborted || suggestionRequests[kind] !== controller || input.value.trim() !== query) return;
+    renderAddressResults(kind, results, origin, automatic ? null
+      : 'Choose the ' + (kind === 'start' ? 'starting address' : 'destination') + ' that looks right.');
+  } catch (error) {
+    if (signal.aborted || suggestionRequests[kind] !== controller) return;
+    if (!automatic) throw error;
+    const note = document.createElement('p');
+    note.className = 'address-results-note';
+    note.textContent = error.message;
+    $('#' + kind + '-results').replaceChildren(note);
+  } finally {
+    if (suggestionRequests[kind] === controller) {
+      suggestionRequests[kind] = null;
+      button.disabled = false;
+    }
+  }
 }
 
 function scheduleSuggestions(kind) {
-  clearTimeout(suggestionTimers[kind]);
-  suggestionRequests[kind]?.abort();
-  const query = $(`#${kind}`).value.trim();
-  if (query.length < 3) return clearResults(kind);
-  suggestionTimers[kind] = setTimeout(async () => {
-    const controller = new AbortController();
-    suggestionRequests[kind] = controller;
-    try {
-      const { results } = await searchAddresses(query, { signal: controller.signal, bias: kind === 'end' ? selectedPlaces.start : undefined });
-      if ($(`#${kind}`).value.trim() === query && !controller.signal.aborted) renderAddressResults(kind, results);
-    } catch (error) {
-      if (error.name !== 'AbortError') clearResults(kind);
-    }
-  }, 350);
+  resetAddressSearch(kind);
+  if ($('#' + kind).value.trim().length < 3) return;
+  suggestionTimers[kind] = setTimeout(() => searchAddress(kind, true), 350);
 }
 
-for (const kind of ['start', 'end']) $(`#${kind}`).addEventListener('input', () => {
+function refreshSuggestions(kinds = ['start', 'end']) {
+  for (const kind of kinds) {
+    if (!selectedPlaces[kind] || suggestionRequests[kind] || $('#' + kind + '-results').childElementCount) {
+      scheduleSuggestions(kind);
+    }
+  }
+}
+
+for (const kind of ['start', 'end']) $('#' + kind).addEventListener('input', () => {
   if (kind === 'start') {
     locationRequestId += 1;
     $('#locate').disabled = false;
   }
   invalidateRoute();
+  const changedOrigin = kind === 'start' && selectedPlaces.start !== null;
   selectedPlaces[kind] = null;
-  clearResults(kind);
   status('Your addresses changed. Search for a new route when you’re ready.');
   scheduleSuggestions(kind);
+  if (changedOrigin) refreshSuggestions(['end']);
 });
 
 document.querySelectorAll('[data-search]').forEach((button) => button.addEventListener('click', async () => {
@@ -337,8 +384,9 @@ $('#swap').addEventListener('click', () => {
   $('#start').value = $('#end').value;
   $('#end').value = start;
   [selectedPlaces.start, selectedPlaces.end] = [selectedPlaces.end, selectedPlaces.start];
-  clearResults('start');
-  clearResults('end');
+  resetAddressSearch('start');
+  resetAddressSearch('end');
+  refreshSuggestions();
   status('Swapped. Let’s find the way back.');
 });
 
@@ -448,4 +496,11 @@ async function loadVoices() {
   } finally { $('#retry-voices').disabled = false; }
 }
 loadVoices();
-window.addEventListener('pagehide', () => { stopSimulation(); stopDrivingFollow(); speech.stop(); request?.abort(); });
+window.addEventListener('pagehide', () => {
+  stopSimulation();
+  stopDrivingFollow();
+  speech.stop();
+  request?.abort();
+  resetAddressSearch('start');
+  resetAddressSearch('end');
+});

@@ -55,8 +55,12 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .address-results { margin-top: 5px; }
 .address-result-list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: #fffafd; }
 .address-result-list li + li { border-top: 1px solid var(--line); }
-.address-result-list button { width: 100%; border: 0; padding: 10px; background: transparent; color: #6e5c7c; text-align: left; font-size: 11px; line-height: 1.45; }
+.address-result-list button { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 9px; width: 100%; border: 0; padding: 10px; background: transparent; color: #6e5c7c; text-align: left; font-size: 11px; line-height: 1.45; }
 .address-result-list button:hover { background: #f3eaf9; }
+.address-result-list button:focus-visible { outline-offset: -3px; }
+.address-results-note { color: var(--muted); font-size: 10px; line-height: 1.5; margin: 8px 0; }
+.address-result-label { overflow-wrap: anywhere; }
+.address-result-distance { padding: 3px 6px; border-radius: 7px; background: var(--lavender); color: var(--purple-dark); font-size: 10px; font-weight: 600; white-space: nowrap; }
 .route-options { display: flex; justify-content: flex-end; margin: 7px 0 13px; }
 .text-button { border: 0; background: transparent; color: #876498; font-size: 11px; padding: 6px 0; }
 .primary { background: var(--purple); border: 1px solid transparent; border-radius: 10px; color: white; padding: 13px 14px; font-size: 12px; font-weight: 500; box-shadow: 0 4px 10px #82639f13; }
