@@ -412,8 +412,9 @@ function renderSavedPlaces() {
   for (const [id, name] of [['go-home', 'Home'], ['go-work', 'Work'], ['go-favorite', 'Favorite']]) {
     const place = savedPlaces.find((item) => item.id === name.toLowerCase());
     const button = $('#' + id);
-    button.disabled = !place;
-    button.title = place ? `Set destination to ${place.label}` : `Save a ${name.toLowerCase()} location in settings first.`;
+    button.classList.toggle('is-unset', !place);
+    button.textContent = place ? name : `Set ${name}`;
+    button.title = place ? `Set destination to ${place.label}` : `Save the selected destination as ${name}.`;
   }
 }
 function savePlace(name, place) {
@@ -491,7 +492,11 @@ for (const form of document.querySelectorAll('.saved-place-editor')) form.addEve
 });
 for (const [id, name] of [['go-home', 'Home'], ['go-work', 'Work'], ['go-favorite', 'Favorite']]) $('#' + id).addEventListener('click', () => {
   const place = savedPlaces.find((item) => item.id === name.toLowerCase());
-  if (!place) return status(`Save a ${name.toLowerCase()} location in settings first.`);
+  if (!place) {
+    const destination = selectedPlaces.end;
+    if (!destination) return status(`Choose a destination from the search results, then tap Set ${name}.`);
+    return savePlace(name, destination);
+  }
   selectPlace('end', place);
   status(`${name} is set as your destination.`);
 });
