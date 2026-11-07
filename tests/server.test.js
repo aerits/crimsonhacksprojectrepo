@@ -75,6 +75,60 @@ test('address search rejects missing input and no matches', async (t) => {
   assert.equal((await api.get('/api/geocode?q=not-a-real-place')).status, 404);
 });
 
+const addressFeature = (lng, lat = 0, name = String(lng)) => ({
+  geometry: { coordinates: [lng, lat] },
+  properties: { name, housenumber: '10', street: 'Main Street', city: 'Test City' },
+});
+
+test('nearby search biases the provider and returns the closest five with distances and addresses', async (t) => {
+  const api = await withServer(t, { fetcher: async (url) => {
+    assert.equal(url.searchParams.get('lat'), '0');
+    assert.equal(url.searchParams.get('lon'), '0');
+    assert.equal(url.searchParams.get('limit'), '20');
+    assert.equal(url.searchParams.get('location_bias_scale'), '0.1');
+    return Response.json({ features: [
+      ...[0.1, 0.05, 0.02, 0.04, 0.01, 0.03].map((lng) => addressFeature(lng)),
+      addressFeature(0.015, 0, '0.01'), // Duplicate address must not occupy a suggestion slot.
+      addressFeature(null), addressFeature(181), addressFeature(0, 91), {},
+    ] });
+  } });
+  const response = await api.get('/api/geocode?q=Main&lat=0&lng=0');
+  assert.equal(response.status, 200);
+  const { results } = await response.json();
+  assert.deepEqual(results.map((place) => place.lng), [0.01, 0.02, 0.03, 0.04, 0.05]);
+  assert.ok(Math.abs(results[0].distanceMeters - 1111.95) < 1);
+  assert.ok(results.every((place) => place.label.includes('10 Main Street, Test City')));
+  assert.ok(results.every((place, index) => index === 0 || place.distanceMeters >= results[index - 1].distanceMeters));
+});
+
+test('cache keeps distances and nearby candidates separate for each origin and for unlocated searches', async (t) => {
+  let calls = 0;
+  const api = await withServer(t, { fetcher: async () => {
+    calls += 1;
+    return Response.json({ features: [addressFeature(0.01), addressFeature(0.09)] });
+  } });
+  const first = await (await api.get('/api/geocode?q=Main&lat=0&lng=0')).json();
+  const second = await (await api.get('/api/geocode?q=Main&lat=0&lng=0.1')).json();
+  assert.equal(first.results[0].lng, 0.01);
+  assert.equal(second.results[0].lng, 0.09);
+  assert.notEqual(first.results[0].distanceMeters, second.results[1].distanceMeters);
+  assert.deepEqual(await (await api.get('/api/geocode?q=main&lat=0&lng=0')).json(), first);
+  assert.equal(calls, 2);
+  const unlocated = await (await api.get('/api/geocode?q=Main')).json();
+  assert.equal(unlocated.results[0].distanceMeters, undefined);
+  assert.equal(calls, 3);
+});
+
+test('incomplete or invalid search origins are rejected before contacting the provider', async (t) => {
+  let calls = 0;
+  const api = await withServer(t, { fetcher: () => { calls += 1; return Response.json({ features: [] }); } });
+  for (const location of ['lat=0', 'lng=0', 'lat=&lng=0', 'lat=0&lng=',
+    'lat=91&lng=0', 'lat=0&lng=-181', 'lat=Infinity&lng=0', 'lat=nope&lng=0']) {
+    assert.equal((await api.get('/api/geocode?q=Main&' + location)).status, 400, location);
+  }
+  assert.equal(calls, 0);
+});
+
 test('server sends selected Fish voice and returns binary MP3', async (t) => {
   let calls = 0;
   const bytes = Uint8Array.of(73, 68, 51, 0, 1, 2);
