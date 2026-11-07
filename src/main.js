@@ -132,7 +132,6 @@ document.querySelector('#app').innerHTML = `
         <p class="hint">Step through the route and hear each direction.</p>
         <p id="glare-note" class="hint" role="status" hidden>☀ Sun glare may be likely for this turn — sunglasses on.</p><p id="conditions-note" class="hint" role="status" hidden></p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
-        <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
         <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Simulation speed <select id="simulation-speed"><option value="120">120 mph</option><option value="300" selected>300 mph</option><option value="600">600 mph</option><option value="relative-30">Route-relative (30×)</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
         <div class="journey-actions"><button type="button" id="start-navigation" class="ambient-guidance" disabled>Start Navigation</button><button type="button" id="cancel-route" class="secondary">Cancel route</button></div>
@@ -436,9 +435,6 @@ function showStep({ focus = true } = {}) {
   const step = route.steps[stepIndex];
   $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} · ${formatDistance(step.distance)}`;
   $('#instruction').textContent = step.instruction;
-  $('#previous').disabled = stepIndex === 0;
-  $('#next').disabled = stepIndex === route.steps.length - 1;
-  $('#speak').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
   $('#glare-note').hidden = !step.glare;
   if (focus && step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
@@ -876,19 +872,6 @@ $('#simulate').addEventListener('click', () => {
   simulationRunning = true;
   $('#simulate').textContent = 'Ⅱ Pause simulation';
   runSimulationStep();
-});
-for (const [id, delta] of [['previous', -1], ['next', 1]]) $(`#${id}`).addEventListener('click', () => {
-  if (!route) return;
-  stopSimulation();
-  speech.stop();
-  stepIndex = Math.max(0, Math.min(route.steps.length - 1, stepIndex + delta));
-  showStep();
-});
-$('#speak').addEventListener('click', () => {
-  if (route) {
-    const step = route.steps[stepIndex];
-    speech.speak(spokenInstructionForStep(step), selectedVoice, speechOptionsForStep(step));
-  }
 });
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);
