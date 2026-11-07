@@ -14,7 +14,7 @@ import { createReminder } from './utils/reminders.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark">m</span>mommy maps<span class="brand-dot">.</span></a>
+    <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span>mommy maps<span class="brand-dot">.</span></a>
     <nav class="view-tabs" role="tablist" aria-label="App views">
       <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
       <button id="voices-tab" type="button" role="tab" aria-selected="false" aria-controls="voices-panel" data-tab="voices" tabindex="-1">Voice library</button>
@@ -41,10 +41,7 @@ document.querySelector('#app').innerHTML = `
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
         <label class="voice-select-label" for="voice-select">Your navigation voice</label>
         <div class="voice-select-wrap"><select id="voice-select" aria-describedby="voice-summary" disabled><option>Loading your guides…</option></select></div>
-        <div class="selected-voice-display" aria-live="polite" aria-atomic="true">
-          <img id="selected-voice-portrait" class="selected-voice-portrait" src="/images/guide-luna.png" alt="Illustrated portrait of your selected navigation voice" />
-          <div><span class="selected-voice-label">Selected guide</span><strong id="selected-voice-name">Loading your guide…</strong></div>
-        </div>
+        <p id="selected-voice-name" class="selected-voice-name" aria-live="polite" aria-atomic="true">Loading your guide…</p>
         <p id="voice-summary" class="voice-summary">A little company for the road.</p>
         <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>▷ Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
@@ -147,7 +144,7 @@ document.querySelector('#app').innerHTML = `
 
 document.querySelector('#app').insertAdjacentHTML('beforeend', `
   <section id="settings-panel" class="settings-page" role="tabpanel" aria-labelledby="settings-tab" hidden>
-    <div class="settings-page-heading"><p class="eyebrow">YOUR WAY</p><h1>Set up your <em>journey.</em></h1><p>Keep your route, voice, and comfort settings in one calm place.</p></div>
+    <div class="settings-page-heading"><div><p class="eyebrow">YOUR WAY</p><h1>Set up your <em>journey.</em></h1><p>Keep your route, voice, and comfort settings in one calm place.</p></div><button id="settings-back-to-route" type="button" class="secondary">Back to my route ↗</button></div>
     <div id="settings-content"></div>
   </section>`);
 
@@ -226,6 +223,7 @@ const activateTab = setupTabs((name) => {
 });
 $('#browse-voices').addEventListener('click', () => activateTab('voices', { focus: true }));
 $('#back-to-route').addEventListener('click', () => activateTab('journey', { focus: true }));
+$('#settings-back-to-route').addEventListener('click', () => activateTab('journey', { focus: true }));
 const voicePicker = createVoicePicker({
   select: $('#voice-select'), summary: $('#voice-summary'), gallery: $('#voice-gallery'),
   selection: $('#library-selection'), onSelect: selectVoice,
@@ -237,8 +235,8 @@ function selectVoice(id) {
   selectedVoice = id;
   $('#intro-voice-name').textContent = voice.name?.trim() || 'your chosen voice';
   const portrait = voicePortrait(voice, voices.indexOf(voice));
-  $('#selected-voice-portrait').src = portrait.src;
-  $('#selected-voice-portrait').alt = portrait.alt;
+  $('#header-voice-portrait').src = portrait.src;
+  $('#header-voice-portrait').alt = portrait.alt;
   $('#selected-voice-name').textContent = voice.name?.trim() || 'Your selected guide';
   speech.stop();
   voicePicker.setSelected(id);
