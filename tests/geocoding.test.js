@@ -62,5 +62,6 @@ test('geocoding without a known origin still searches and reports errors', async
 test('Utah landmark lookup ranks exact and alias matches before broad matches', () => {
   assert.equal(findUtahLandmarks('arches').at(0).name, 'Arches National Park');
   assert.equal(findUtahLandmarks('u of u').at(0).name, 'University of Utah');
+  assert.equal(findUtahLandmarks('angels', new Set(['trails'])).at(0).name, 'Angels Landing Trailhead');
   assert.equal(findUtahLandmarks('not a Utah landmark').length, 0);
 });

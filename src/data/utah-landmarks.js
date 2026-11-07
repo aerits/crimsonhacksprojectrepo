@@ -22,7 +22,9 @@ export function findUtahLandmarks(query, categories) {
   if (!needle) return [];
   const candidates = categories ? utahMapDestinations.filter((place) => categories.has(place.category)) : landmarks;
   return candidates.map((landmark) => {
-    const names = [landmark.name, ...landmark.aliases].map(normalize);
+    // Trails need only a display name; landmarks may optionally have aliases.
+    // Keep mixed category searches from failing on alias-less trail records.
+    const names = [landmark.name, ...(landmark.aliases || [])].map(normalize);
     const score = names.reduce((best, name) => {
       if (name === needle) return 0;
       if (name.startsWith(needle)) return Math.min(best, 1);
