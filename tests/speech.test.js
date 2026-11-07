@@ -31,6 +31,17 @@ test('server audio becomes a playable object URL and stop clears it', async (t) 
   assert.equal(audio.paused, true);
 });
 
+test('turn speech requests an after-turn phrase', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  globalThis.fetch = async (_url, options) => {
+    assert.deepEqual(JSON.parse(options.body), { text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true });
+    return new Response('audio');
+  };
+  const service = createSpeechService(fakeAudio());
+  await service.speak('Turn left.', 'velvet', { afterTurnPhrase: true });
+});
+
 test('stopped generation cannot play a late response', async (t) => {
   const original = globalThis.fetch;
   t.after(() => { globalThis.fetch = original; });

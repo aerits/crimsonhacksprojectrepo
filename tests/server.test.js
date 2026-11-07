@@ -85,6 +85,15 @@ test('server sends selected Fish voice and returns binary MP3', async (t) => {
   assert.equal(calls, 1);
 });
 
+test('navigation turns receive one random configured after-turn phrase', async (t) => {
+  const api = await withServer(t, { config, random: () => 0, phrases: { afterTurn: ['You’re right on track.'] }, fetcher: async (_url, options) => {
+    const body = JSON.parse(options.body);
+    assert.match(body.text, /Turn left\. You’re right on track\.$/);
+    return new Response(Uint8Array.of(73, 68, 51));
+  } });
+  assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true })).status, 200);
+});
+
 test('invalid input and missing voice configuration never call Fish', async (t) => {
   const api = await withServer(t, { config: {}, fetcher: () => { throw new Error('Must not call Fish'); } });
   for (const body of [null, {}, { text: '  ' }, { text: 42 }, { text: 'x'.repeat(601) }, { text: 'Hi', voiceId: 'unknown' }]) {

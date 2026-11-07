@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, extname, sep } from 'node:path';
 import { getVoices, publicVoices } from './voices.js';
+import voicePhrases from '../voice-phrases.json' with { type: 'json' };
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
@@ -25,7 +26,7 @@ async function bodyOf(req) {
   catch { throw Object.assign(new Error('Expected a JSON request.'), { status: 400 }); }
 }
 
-export function createApp({ config = {}, fetcher = fetch } = {}) {
+export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases, random = Math.random } = {}) {
   const voices = getVoices(config);
   const fish = config.fish || {};
   let active = 0;
@@ -89,7 +90,7 @@ export function createApp({ config = {}, fetcher = fetch } = {}) {
           const upstream = await fetcher('https://api.fish.audio/v1/tts', {
             method: 'POST',
             headers: { Authorization: `Bearer ${fish.apiKey}`, 'Content-Type': 'application/json', model: fish.model || 's2.1-pro' },
-            body: JSON.stringify({ text: `${voice.cue} ${body.text.trim()}`, reference_id: voice.referenceId,
+            body: JSON.stringify({ text: `${voice.cue} ${body.text.trim()}${body.afterTurnPhrase === true && phrases.afterTurn?.length ? ` ${phrases.afterTurn[Math.floor(random() * phrases.afterTurn.length)]}` : ''}`, reference_id: voice.referenceId,
               format: 'mp3', prosody: { speed: voice.speed }, normalize: true }),
             signal: AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]),
           });

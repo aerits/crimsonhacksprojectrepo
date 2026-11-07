@@ -159,7 +159,7 @@ function playSimulationStep() {
     map?.setSimulationPoint({ lat, lng });
   }
   const voice = voices.find((item) => item.id === selectedVoice);
-  if (voice?.configured) speech.speak(step.instruction, selectedVoice);
+  if (voice?.configured) speech.speak(step.instruction, selectedVoice, { afterTurnPhrase: true });
   $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
 }
 
@@ -360,7 +360,7 @@ $('#simulate').addEventListener('click', () => {
   scheduleSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
-  if (route) speech.speak(`${route.steps[stepIndex].instruction} You’re doing lovely, sweetheart.`, selectedVoice);
+  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, { afterTurnPhrase: true });
 });
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);

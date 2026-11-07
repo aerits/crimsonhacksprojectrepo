@@ -34,6 +34,8 @@ Fish Audio → MP3 bytes → Node server → browser playback
 
 `config.json` is the committed default configuration: host, port, Fish model, and six public voice IDs. The first Mommy voice is the highest-use nurturing/ASMR result in the public Fish Audio catalog at the time of configuration. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
 
+`voice-phrases.json` contains the committed after-turn phrase presets. Whenever navigation or the simulator speaks a direction, the server randomly selects one phrase and appends it after the instruction. Voice previews and developer TTS tests use only the entered text.
+
 The default synthesis model is `s2.1-pro`; change `fish.model` in `config.json` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
 
 Add further voices in `server/voices.js`, referencing a new entry under `fish.voices` in the configuration. The client discovers them from `GET /api/voices`. API keys and provider IDs stay on the server. The app makes a paid provider request only when you press a speech button; the client plays the resulting audio directly. Text is sent to Fish Audio for synthesis.
