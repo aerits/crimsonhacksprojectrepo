@@ -50,8 +50,8 @@ document.querySelector('#app').innerHTML = `
         <p class="hint">Step through the route and hear each direction.</p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
-        <div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
-        <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p>
+        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
+        <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
@@ -94,6 +94,16 @@ let simulationTimer;
 let simulationRunning = false;
 const suggestionTimers = {};
 const suggestionRequests = {};
+
+async function loadRuntime() {
+  try {
+    const response = await fetch('/api/runtime');
+    if (!response.ok) return;
+    const runtime = await response.json();
+    $('#simulation-tools').hidden = !runtime.simulator;
+  } catch { /* Simulator stays hidden outside the development command. */ }
+}
+loadRuntime();
 
 const activateTab = setupTabs((name) => {
   if (name === 'voices' && simulationRunning) stopSimulation('Simulation paused while you browse voices.');

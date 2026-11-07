@@ -37,6 +37,9 @@ export function createApp({ config = {}, fetcher = fetch } = {}) {
       if (req.method === 'GET' && url.pathname === '/api/voices') {
         return json(res, 200, publicVoices(voices, fish.apiKey));
       }
+      if (req.method === 'GET' && url.pathname === '/api/runtime') {
+        return json(res, 200, { simulator: Boolean(config.simulator) });
+      }
       if (req.method === 'GET' && url.pathname === '/api/geocode') {
         const query = url.searchParams.get('q')?.trim();
         if (!query || query.length > 200) return json(res, 400, { error: 'Enter an address, place, or city up to 200 characters.' });

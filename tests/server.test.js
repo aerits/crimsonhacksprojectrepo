@@ -36,6 +36,11 @@ test('voice list exposes setup status without keys or provider IDs', async (t) =
   assert.equal(voices[2].configured, false);
 });
 
+test('runtime endpoint exposes simulator mode without exposing configuration', async (t) => {
+  const api = await withServer(t, { config: { simulator: true } });
+  assert.deepEqual(await (await api.get('/api/runtime')).json(), { simulator: true });
+});
+
 test('address search returns a map point and caches repeat requests', async (t) => {
   let calls = 0;
   const api = await withServer(t, { fetcher: async (url, options) => {

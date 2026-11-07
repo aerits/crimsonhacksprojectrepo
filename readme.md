@@ -14,7 +14,7 @@ npm run dev
 
 Open http://127.0.0.1:3000. The app requests your browser location for the starting point and leaves the destination empty. Type any other starting address or a destination to see suggestions before using the Search buttons, then select a result and use the arrows and **Hear this turn** to preview the route. Audio plays directly from the voice controls.
 
-Use **Simulate route** in the route preview to automatically advance through each turn, focus the map on the current maneuver, and play the selected voice’s route guidance. A pink marker shows the simulated location. Choose a relaxed, normal, or quick pace. Each simulated direction sends a Fish Audio TTS request and may consume provider credit.
+Run `npm run dev:simulate` to expose **Simulate route** in the route preview. It automatically advances through each turn, focuses the map on the current maneuver, and plays the selected voice’s route guidance. A pink marker shows the simulated location. Choose a relaxed, normal, or quick pace. Each simulated direction sends a Fish Audio TTS request and may consume provider credit. The controls stay hidden under `npm start` and `npm run dev`.
 
 Choose your navigation voice from the dropdown on **Your journey**. Open **Voice library** to compare each voice’s mood and sample phrase, preview configured voices, or select a voice for the route. Selection and listening volume stay in sync across both tabs. Switching to the library pauses an active simulation; returning keeps your addresses and route. Tabs support the arrow, Home, and End keys.
 
