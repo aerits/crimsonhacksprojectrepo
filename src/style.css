@@ -62,6 +62,8 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .address-results-note { color: var(--muted); font-size: 10px; line-height: 1.5; margin: 8px 0; }
 .address-result-label { overflow-wrap: anywhere; }
 .address-result-distance { padding: 3px 6px; border-radius: 7px; background: var(--lavender); color: var(--purple-dark); font-size: 10px; font-weight: 600; white-space: nowrap; }
+.quick-destinations { display: flex; gap: 8px; margin-top: 9px; }
+.quick-destinations .secondary { flex: 1; padding: 8px 10px; font-size: 10px; }
 .route-options { display: flex; justify-content: flex-end; margin: 7px 0 13px; }
 .text-button { border: 0; background: transparent; color: #876498; font-size: 11px; padding: 6px 0; }
 .primary { background: var(--purple); border: 1px solid transparent; border-radius: 10px; color: white; padding: 13px 14px; font-size: 12px; font-weight: 500; box-shadow: 0 4px 10px #82639f13; }
