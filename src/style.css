@@ -82,7 +82,7 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .switch-row input:checked + .switch-control::after { transform: translateX(14px); }
 .switch-row input:focus-visible + .switch-control, .theme-options input:focus-visible + span { outline: 3px solid #ac84c7; outline-offset: 3px; }
 .theme-group { border-top: 1px solid var(--line) !important; margin-top: 5px !important; padding-top: 12px !important; }
-.theme-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
+.theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 8px; }
 .theme-options label { position: relative; cursor: pointer; }
 .theme-options input { position: absolute; opacity: 0; }
 .theme-options span { display: block; padding: 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 11px; text-align: center; }
@@ -138,6 +138,31 @@ details li { margin-bottom: 7px; }
 :root[data-theme='dark'] .address-search, :root[data-theme='dark'] .location-search { background: #473752; color: #e2c9ec; border-color: var(--line); }
 :root[data-theme='dark'] .journey, :root[data-theme='dark'] .map-label, :root[data-theme='dark'] .map-status, :root[data-theme='dark'] .map-note { background: #30263af2; border-color: var(--line); color: #eadfeb; }
 :root[data-theme='dark'] .leaflet-tile-pane { filter: saturate(.55) brightness(.68) contrast(1.1); }
+
+:root[data-theme='pink'] { color-scheme: light; color: #5b3043; background: #fff0f6; --purple: #c54b7e; --purple-dark: #a83465; --pink: #e36f9b; --muted: #8c6174; --line: #f0cad9; --surface: #fff9fc; --lavender: #fde1ec; --rose: #ffe3ee; }
+:root[data-theme='pink'] body { background: #fff0f6; }
+:root[data-theme='pink'] .topbar { background: #fffafd; border-color: var(--line); }
+:root[data-theme='pink'] .brand { color: #71334f; }
+:root[data-theme='pink'] .brand-mark { background: linear-gradient(135deg, #ffd9e8, #f7b8d1); color: #b43c70; }
+:root[data-theme='pink'] .brand-dot, :root[data-theme='pink'] h1 em { color: #d65787; }
+:root[data-theme='pink'] .view-tabs { background: #fff1f6; border-color: #f6d7e3; }
+:root[data-theme='pink'] .view-tabs button[aria-selected=true] { background: #ffdce9; color: #9c315c; box-shadow: 0 2px 5px #c4457520; }
+:root[data-theme='pink'] .sidebar { background: linear-gradient(155deg, #ffe8f0, #fff5f8); border-color: var(--line); scrollbar-color: #edb6ca transparent; }
+:root[data-theme='pink'] .card, :root[data-theme='pink'] .secondary, :root[data-theme='pink'] #voice-select, :root[data-theme='pink'] .address-result-list { background: #fffafd; border-color: var(--line); }
+:root[data-theme='pink'] .input-row { background: #fff5f9; border-color: var(--line); }
+:root[data-theme='pink'] .input-row:focus-within { border-color: #df7ca4; }
+:root[data-theme='pink'] .address-search, :root[data-theme='pink'] .location-search { background: #fde0eb; color: #a63d68; border-color: var(--line); }
+:root[data-theme='pink'] .location-search:hover:not(:disabled), :root[data-theme='pink'] .address-result-list button:hover { background: #ffdce9; }
+:root[data-theme='pink'] .map-panel, :root[data-theme='pink'] .leaflet-container { background: #f9dce8; }
+:root[data-theme='pink'] .leaflet-tile-pane { filter: saturate(.7) sepia(.08) hue-rotate(300deg); }
+:root[data-theme='pink'] .map-label, :root[data-theme='pink'] .map-status, :root[data-theme='pink'] .journey, :root[data-theme='pink'] .map-note { background: #fffafdef; border-color: #f4d7e2; }
+:root[data-theme='pink'] .turn-icon { background: linear-gradient(135deg, #ffddea, #f9c9da); color: #c54b7e; }
+:root[data-theme='pink'] .map-pin { border-color: #d75a89; color: #c34475; }
+:root[data-theme='pink'] .map-pin.end { background: #d75a89; border-color: #d75a89; }
+:root[data-theme='pink'] .voice-library { background: radial-gradient(ellipse at 90% 0%, #ffd5e5 0, transparent 48%), linear-gradient(140deg, #fff0f6, #fff8fa); }
+:root[data-theme='pink'] .library-card { border-color: #f1cedb; background: #fffafd; }
+:root[data-theme='pink'] .library-card.selected { border-color: #df7ca4; box-shadow: 0 0 0 2px #df7ca424, 0 10px 30px #c34d790b; }
+:root[data-theme='pink'] .library-card.selected .choose-voice { background: #c54b7e; border-color: #c54b7e; }
 
 /* Voice library */
 .voice-library { min-height: calc(100dvh - 88px); padding: 46px clamp(24px, 6vw, 96px) 24px; background: radial-gradient(ellipse at 90% 0%, #f8e6f1 0, transparent 48%), linear-gradient(140deg, #f6f0fc, #fdf4f9); }
