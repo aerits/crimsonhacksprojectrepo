@@ -16,14 +16,14 @@ document.querySelector('#app').innerHTML = `
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
         <label for="start">Starting address <span>A</span></label>
-        <div class="input-row"><input id="start" name="start" value="University of Utah, Salt Lake City, UT" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="start">Search</button></div>
+        <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="start">Search</button></div>
         <div id="start-results" class="address-results" aria-live="polite"></div>
         <label for="end">Your destination <span>B</span></label>
-        <div class="input-row"><input id="end" name="end" value="Rice-Eccles Stadium, Salt Lake City, UT" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="end">Search</button></div>
+        <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="end">Search</button></div>
         <div id="end-results" class="address-results" aria-live="polite"></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇅ Swap</button></div>
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
-        <p class="hint">Search each address and choose a result, then find your route.</p>
+        <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
       <section class="voice-section" aria-labelledby="voice-heading">
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><span class="tiny">MOMMY ASMR</span></div>
@@ -138,6 +138,28 @@ function showStep() {
 try {
   map = createMap($('#map'));
 } catch (error) { status(error.message); }
+
+function useCurrentLocation() {
+  const startAtRequest = $('#start').value;
+  if (!navigator.geolocation) {
+    $('#start').value = '';
+    return status('Current location is unavailable. Search for a starting address.');
+  }
+  navigator.geolocation.getCurrentPosition(({ coords }) => {
+    if ($('#start').value !== startAtRequest) return;
+    const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your current location' };
+    selectedPlaces.start = place;
+    $('#start').value = place.label;
+    map?.setPoint('start', place);
+    map?.focus(place);
+    status('Starting from your current location. Search for a destination to begin.');
+  }, () => {
+    if ($('#start').value !== startAtRequest) return;
+    $('#start').value = '';
+    status('Location permission was not granted. Search for a starting address.');
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+}
+useCurrentLocation();
 
 function clearResults(kind) { $(`#${kind}-results`).replaceChildren(); }
 
