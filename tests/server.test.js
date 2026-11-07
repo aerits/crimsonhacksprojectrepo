@@ -160,8 +160,8 @@ test('navigation turns receive one random configured after-turn phrase', async (
 });
 
 test('navigation turns use the selected encouragement style', async (t) => {
-  const api = await withServer(t, { config, random: () => 0, phrases: { afterTurn: [], affirmations: { enby: ['Good enby.'] } }, fetcher: async (_url, options) => {
-    assert.match(JSON.parse(options.body).text, /Turn left\. Good enby\.$/);
+  const api = await withServer(t, { config, random: () => 0, phrases: { afterTurn: [], affirmations: { enby: ['You’re doing beautifully, enby.'] } }, fetcher: async (_url, options) => {
+    assert.match(JSON.parse(options.body).text, /Turn left\. You’re doing beautifully, enby\.$/);
     return new Response(Uint8Array.of(73, 68, 51));
   } });
   assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true, affirmation: 'enby' })).status, 200);
