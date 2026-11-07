@@ -461,6 +461,9 @@ $('#route-form').addEventListener('submit', async (event) => {
     $('#journey').hidden = false;
     showStep();
     map?.drawRoute(route.geometry);
+    if (window.matchMedia('(max-width: 760px)').matches) {
+      requestAnimationFrame(() => $('#journey').scrollIntoView({ behavior: 'smooth', block: 'end' }));
+    }
     startDrivingFollow();
     const voice = voices.find((item) => item.id === selectedVoice);
     if (voice?.configured) {
