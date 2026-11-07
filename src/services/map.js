@@ -1,7 +1,7 @@
 export function createMap(element) {
   const L = window.L;
   if (!L) throw new Error('The map library could not load. Check your internet connection and reload.');
-  const map = L.map(element, { zoomControl: false }).setView([33.2098, -87.5532], 14);
+  const map = L.map(element, { zoomControl: false }).setView([40.7649, -111.8421], 14);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);

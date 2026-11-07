@@ -1,6 +1,6 @@
 import { createMap } from './services/map.js';
 import { getRoute } from './services/routing.js';
-import { geocodeAddress } from './services/geocoding.js';
+import { searchAddresses } from './services/geocoding.js';
 import { createSpeechService } from './services/speech.js';
 import { formatDistance, formatDuration } from './utils/directions.js';
 
@@ -16,12 +16,14 @@ document.querySelector('#app').innerHTML = `
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
         <label for="start">Starting address <span>A</span></label>
-        <div class="input-row"><input id="start" name="start" value="Bryant-Denny Stadium, Tuscaloosa, AL" placeholder="Street address, place, or city" autocomplete="street-address" required /></div>
+        <div class="input-row"><input id="start" name="start" value="University of Utah, Salt Lake City, UT" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="start">Search</button></div>
+        <div id="start-results" class="address-results" aria-live="polite"></div>
         <label for="end">Your destination <span>B</span></label>
-        <div class="input-row"><input id="end" name="end" value="Tuscaloosa Amphitheater, Tuscaloosa, AL" placeholder="Street address, place, or city" autocomplete="street-address" required /></div>
+        <div class="input-row"><input id="end" name="end" value="Rice-Eccles Stadium, Salt Lake City, UT" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="end">Search</button></div>
+        <div id="end-results" class="address-results" aria-live="polite"></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇅ Swap</button></div>
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
-        <p class="hint">Enter two addresses, places, or cities, then search for a route.</p>
+        <p class="hint">Search each address and choose a result, then find your route.</p>
       </form>
       <section class="voice-section" aria-labelledby="voice-heading">
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><span class="tiny">MOMMY ASMR</span></div>
@@ -41,7 +43,7 @@ document.querySelector('#app').innerHTML = `
     </aside>
     <section class="map-panel" aria-label="Map and route preview">
       <div id="map" aria-label="Interactive route map"></div>
-      <div class="map-label"><span class="location-dot"></span><div><strong>A little adventure in Tuscaloosa</strong><span>Search two addresses to plan your route.</span></div></div>
+      <div class="map-label"><span class="location-dot"></span><div><strong>Start exploring the University of Utah</strong><span>Search two addresses to plan your route.</span></div></div>
       <div id="map-status" class="map-status" role="status">Your next little journey starts here.</div>
       <section id="journey" class="journey" hidden aria-labelledby="journey-heading">
         <div class="section-title"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="journey-heading"></h2></div><span class="small-pill">Route preview</span></div>
@@ -63,6 +65,7 @@ audio.volume = 0.7;
 const speech = createSpeechService(audio, voiceStatus);
 let voices = [];
 let selectedVoice = 'velvet';
+const selectedPlaces = { start: null, end: null };
 let route = null;
 let stepIndex = 0;
 let request;
@@ -96,16 +99,62 @@ try {
   map = createMap($('#map'));
 } catch (error) { status(error.message); }
 
+function clearResults(kind) { $(`#${kind}-results`).replaceChildren(); }
+
+function selectPlace(kind, place) {
+  selectedPlaces[kind] = place;
+  $(`#${kind}`).value = place.label;
+  clearResults(kind);
+  map?.setPoint(kind, place);
+  map?.focus(place);
+  status(`${kind === 'start' ? 'Starting address' : 'Destination'} selected. Search the other address or find your route.`);
+}
+
+async function searchAddress(kind) {
+  const query = $(`#${kind}`).value.trim();
+  if (!query) throw new Error(`Enter a ${kind === 'start' ? 'starting address' : 'destination'} first.`);
+  const button = document.querySelector(`[data-search="${kind}"]`);
+  button.disabled = true;
+  clearResults(kind);
+  status(`Searching for your ${kind === 'start' ? 'starting address' : 'destination'}…`);
+  try {
+    const { results } = await searchAddresses(query, { signal: request?.signal });
+    const list = document.createElement('ul');
+    list.className = 'address-result-list';
+    for (const place of results) {
+      const item = document.createElement('li');
+      const choose = document.createElement('button');
+      choose.type = 'button';
+      choose.textContent = place.label;
+      choose.addEventListener('click', () => selectPlace(kind, place));
+      item.append(choose);
+      list.append(item);
+    }
+    $(`#${kind}-results`).append(list);
+    status(`Choose the ${kind === 'start' ? 'starting address' : 'destination'} that looks right.`);
+  } finally { button.disabled = false; }
+}
+
 for (const kind of ['start', 'end']) $(`#${kind}`).addEventListener('input', () => {
   invalidateRoute();
+  selectedPlaces[kind] = null;
+  clearResults(kind);
   status('Your addresses changed. Search for a new route when you’re ready.');
 });
+
+document.querySelectorAll('[data-search]').forEach((button) => button.addEventListener('click', async () => {
+  try { await searchAddress(button.dataset.search); }
+  catch (error) { if (error.name !== 'AbortError') status(error.message); }
+}));
 
 $('#swap').addEventListener('click', () => {
   invalidateRoute();
   const start = $('#start').value;
   $('#start').value = $('#end').value;
   $('#end').value = start;
+  [selectedPlaces.start, selectedPlaces.end] = [selectedPlaces.end, selectedPlaces.start];
+  clearResults('start');
+  clearResults('end');
   status('Swapped. Let’s find the way back.');
 });
 
@@ -115,17 +164,18 @@ $('#route-form').addEventListener('submit', async (event) => {
   const current = new AbortController();
   request = current;
   try {
-    const startAddress = $('#start').value.trim();
-    const endAddress = $('#end').value.trim();
-    if (!startAddress || !endAddress) throw new Error('Enter both a starting address and destination.');
+    if (!selectedPlaces.start) {
+      await searchAddress('start');
+      throw new Error('Choose a starting address from the search results.');
+    }
+    if (!selectedPlaces.end) {
+      await searchAddress('end');
+      throw new Error('Choose a destination from the search results.');
+    }
     $('#plan').disabled = true;
-    $('#plan').textContent = 'Finding your addresses…';
-    status('Finding your starting address…');
-    const start = await geocodeAddress(startAddress, { signal: current.signal });
-    if (request !== current) return;
-    status('Finding your destination…');
-    const end = await geocodeAddress(endAddress, { signal: current.signal });
-    if (request !== current) return;
+    $('#plan').textContent = 'Finding your route…';
+    const start = selectedPlaces.start;
+    const end = selectedPlaces.end;
     map?.setPoint('start', start);
     map?.setPoint('end', end);
     status('Putting the turns together…');

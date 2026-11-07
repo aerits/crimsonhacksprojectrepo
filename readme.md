@@ -12,7 +12,7 @@ cp config.local.example.json config.local.json
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. Search for a starting address and destination, then use the arrows and **Hear this turn** to preview the route. Audio plays directly from the voice controls.
+Open http://127.0.0.1:3000. The map starts at the University of Utah. Search for a starting address and destination, select a result for each, then use the arrows and **Hear this turn** to preview the route. Audio plays directly from the voice controls.
 
 The map and routing work without Fish credentials. Voice cards show `SETUP` until configured. `npm start` runs without file watching. `npm test` runs the Node test suite.
 
@@ -36,7 +36,7 @@ Add further voices in `server/voices.js`, referencing a new entry under `fish.vo
 
 ## Address search
 
-Submitting a route searches each entered address through the server’s `/api/geocode` endpoint, which uses Nominatim. Searches are triggered only by the route form, cached for repeat queries, and paced to one provider request per second. Address text is sent to Nominatim; use a production geocoding provider before deploying at scale.
+The **Search** buttons retrieve up to five matches for each entered address through the server’s `/api/geocode` endpoint, which uses Nominatim. Select the intended match before submitting a route. Searches are explicitly user-triggered (not autocomplete), cached for repeat queries, and paced to one provider request per second. Address text is sent to Nominatim; use a production geocoding provider before deploying at scale.
 
 Requests are limited to 600 text characters, two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
 

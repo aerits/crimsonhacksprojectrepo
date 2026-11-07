@@ -42,13 +42,14 @@ test('address search returns a map point and caches repeat requests', async (t) 
     calls += 1;
     assert.equal(url.hostname, 'nominatim.openstreetmap.org');
     assert.equal(url.pathname, '/search');
-    assert.equal(url.searchParams.get('q'), 'Bryant-Denny Stadium');
+    assert.equal(url.searchParams.get('q'), 'University of Utah');
     assert.equal(url.searchParams.get('format'), 'jsonv2');
+    assert.equal(url.searchParams.get('limit'), '5');
     assert.equal(options.headers['User-Agent'], 'Mommy-Maps/0.1');
-    return Response.json([{ lat: '33.2083', lon: '-87.5504', display_name: 'Bryant-Denny Stadium, Tuscaloosa, Alabama' }]);
+    return Response.json([{ lat: '40.7649', lon: '-111.8421', display_name: 'University of Utah, Salt Lake City, Utah' }]);
   } });
-  const path = '/api/geocode?q=Bryant-Denny%20Stadium';
-  assert.deepEqual(await (await api.get(path)).json(), { lat: 33.2083, lng: -87.5504, label: 'Bryant-Denny Stadium, Tuscaloosa, Alabama' });
+  const path = '/api/geocode?q=University%20of%20Utah';
+  assert.deepEqual(await (await api.get(path)).json(), { results: [{ lat: 40.7649, lng: -111.8421, label: 'University of Utah, Salt Lake City, Utah' }] });
   assert.equal((await api.get(path)).status, 200);
   assert.equal(calls, 1);
 });

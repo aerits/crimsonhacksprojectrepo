@@ -46,17 +46,17 @@ export function createApp({ config = {}, fetcher = fetch } = {}) {
         nextGeocodeAt = Math.max(Date.now(), nextGeocodeAt) + 1000;
         if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
         const searchUrl = new URL('https://nominatim.openstreetmap.org/search');
-        searchUrl.search = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1' });
+        searchUrl.search = new URLSearchParams({ q: query, format: 'jsonv2', limit: '5' });
         const upstream = await fetcher(searchUrl, { headers: { Accept: 'application/json', 'User-Agent': 'Mommy-Maps/0.1' } });
         if (!upstream.ok) {
           await upstream.body?.cancel();
           return json(res, 502, { error: 'Address search is unavailable. Please try again.' });
         }
-        const [place] = await upstream.json();
-        const lat = Number(place?.lat);
-        const lng = Number(place?.lon);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
-        const result = { lat, lng, label: place.display_name };
+        const places = await upstream.json();
+        const results = (Array.isArray(places) ? places : []).map((place) => ({ lat: Number(place.lat), lng: Number(place.lon), label: place.display_name }))
+          .filter((place) => Number.isFinite(place.lat) && Number.isFinite(place.lng));
+        if (!results.length) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
+        const result = { results };
         geocodeCache.set(query.toLowerCase(), result);
         return json(res, 200, result);
       }
