@@ -39,6 +39,7 @@ document.querySelector('#app').innerHTML = `
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
+      <fieldset id="map-category-filter" class="map-category-filter"><legend>Map places</legend><label><input type="checkbox" value="parks" checked /> Parks</label><label><input type="checkbox" value="trails" checked /> Trails</label><label><input type="checkbox" value="landmarks" checked /> Landmarks</label></fieldset>
       <button id="edit-route" type="button" class="edit-route" aria-label="Edit route" hidden>⌕ <span>Edit route</span></button>
       <section id="voice-section" class="voice-section" aria-labelledby="voice-heading">
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
@@ -120,7 +121,6 @@ document.querySelector('#app').innerHTML = `
     </aside>
     <section class="map-panel" aria-label="Map and route preview">
       <div id="map" aria-label="Interactive route map"></div>
-      <fieldset id="map-category-filter" class="map-category-filter"><legend>Map places</legend><label><input type="checkbox" value="parks" checked /> Parks</label><label><input type="checkbox" value="trails" checked /> Trails</label><label><input type="checkbox" value="landmarks" checked /> Landmarks</label></fieldset>
       <div class="map-label"><span class="location-dot"></span><div><strong>Start exploring the University of Utah</strong><span>Search two addresses to plan your route.</span></div></div>
       <div id="map-status" class="map-status" role="status">Your next little journey starts here.</div>
       <section id="journey" class="journey" hidden aria-labelledby="journey-heading">
