@@ -39,7 +39,7 @@ document.querySelector('#app').innerHTML = `
         <div id="end-results" class="address-results" aria-live="polite"></div>
         <div class="quick-destinations" aria-label="Saved destinations"><button id="go-home" type="button" class="secondary">Home</button><button id="go-work" type="button" class="secondary">Work</button><button id="go-favorite" type="button" class="secondary">Favorite</button></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇆ Swap</button></div>
-        <fieldset id="map-category-filter" class="map-category-filter"><legend>Map place legend</legend><span class="map-category-title" aria-hidden="true">Map legend</span>${mapCategories.map(({ id, label, color }) => `<label style="--map-category-color: ${color}"><input type="checkbox" value="${id}" checked /><span class="map-category-swatch" aria-hidden="true"></span>${label}</label>`).join('')}</fieldset>
+        <fieldset id="map-category-filter" class="map-category-filter"><legend>Map place legend</legend><span class="map-category-title" aria-hidden="true">Map legend</span>${mapCategories.map(({ id, label, color }) => `<label style="--map-category-color: ${color}"><input type="checkbox" value="${id}" checked />${label}</label>`).join('')}</fieldset>
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
