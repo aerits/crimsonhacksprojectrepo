@@ -47,7 +47,7 @@ document.querySelector('#app').innerHTML = `
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
         <p id="voice-status" class="hint" role="status">Choose the voice youâ€™d like beside you.</p>
       </section>
-      <section class="settings card" aria-labelledby="settings-heading">
+      <section id="settings" class="settings card" aria-labelledby="settings-heading">
         <div class="section-title"><h2 id="settings-heading">User settings</h2><span class="tiny">YOUR WAY</span></div>
         <fieldset class="preference-group">
           <legend>Navigation preferences</legend>
