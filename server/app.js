@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, extname, sep } from 'node:path';
 import { getVoices, publicVoices } from './voices.js';
 import { distanceBetween, isValidPoint } from '../src/utils/location.js';
+import { findUtahLandmarks } from '../src/data/utah-landmarks.js';
 import voicePhrases from '../voice-phrases.json' with { type: 'json' };
 import { normalizeCustomPhrases } from '../src/utils/phrases.js';
 import { getAirQuality, getRouteConditions } from './conditions.js';
@@ -92,7 +93,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           return json(res, 502, { error: 'Address search is unavailable. Please try again.' });
         }
         const places = await upstream.json();
-        const results = (Array.isArray(places.features) ? places.features : []).map((place) => {
+        const photonResults = (Array.isArray(places.features) ? places.features : []).map((place) => {
           const properties = place.properties || {};
           const [lng, lat] = place.geometry?.coordinates || [];
           const street = [properties.housenumber, properties.street].filter(Boolean).join(' ');
@@ -100,9 +101,19 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           return { lat, lng, label: [properties.name, street, locality].filter(Boolean).join(', ') };
         })
           .filter((place) => isValidPoint(place) && place.label);
+        const photonLabels = photonResults.map((place) => place.label.toLowerCase());
+        const landmarks = findUtahLandmarks(query)
+          .filter(({ name }) => !photonLabels.some((label) => label.startsWith(name.toLowerCase())))
+          .map(({ name, lat, lng, score }) => ({
+            lat, lng, label: `${name}, Utah`, landmarkScore: score,
+          }));
+        const results = [...landmarks, ...photonResults].filter((place) => isValidPoint(place) && place.label);
         if (origin) {
           for (const place of results) place.distanceMeters = distanceBetween(origin, place);
-          results.sort((a, b) => a.distanceMeters - b.distanceMeters);
+          results.sort((a, b) => (a.landmarkScore ?? Infinity) - (b.landmarkScore ?? Infinity)
+            || a.distanceMeters - b.distanceMeters);
+        } else {
+          results.sort((a, b) => (a.landmarkScore ?? Infinity) - (b.landmarkScore ?? Infinity));
         }
         if (!results.length) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
         const labels = new Set();
@@ -111,7 +122,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           labels.add(place.label);
           return true;
         });
-        const result = { results: uniqueResults.slice(0, 5) };
+        const result = { results: uniqueResults.slice(0, 5).map(({ landmarkScore, ...place }) => place) };
         if (geocodeCache.size >= 200) geocodeCache.delete(geocodeCache.keys().next().value);
         geocodeCache.set(cacheKey, result);
         return json(res, 200, result);
@@ -125,6 +136,9 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         let customPhrases;
         try { customPhrases = normalizeCustomPhrases(body.customAfterTurnPhrases); }
         catch (error) { return json(res, 400, { error: error.message }); }
+        let customArrivalPhrases;
+        try { customArrivalPhrases = normalizeCustomPhrases(body.customArrivalPhrases); }
+        catch (error) { return json(res, 400, { error: error.message }); }
         const affirmation = body.affirmation || 'neutral';
         if (typeof affirmation !== 'string' || !['neutral', 'girl', 'boy', 'enby'].includes(affirmation)) {
           return json(res, 400, { error: 'Choose a valid after-turn encouragement style.' });
@@ -136,9 +150,11 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         }
         if (active >= 2) return json(res, 429, { error: 'The voice server is busy. Try again shortly.' });
         // Build a per-request pool so personal phrases never affect another user's turns.
-        const phrasePool = body.afterTurnPhrase === true
-          ? [...new Map([...(phrases.afterTurn || []), ...(phrases.affirmations?.[affirmation] || []), ...customPhrases].map((phrase) => [phrase.toLowerCase(), phrase])).values()]
-          : [];
+        const phrasePool = body.arrivalPhrase === true
+          ? [...new Map([...(phrases.arrival || []), ...customArrivalPhrases].map((phrase) => [phrase.toLowerCase(), phrase])).values()]
+          : body.afterTurnPhrase === true
+            ? [...new Map([...(phrases.afterTurn || []), ...(phrases.affirmations?.[affirmation] || []), ...customPhrases].map((phrase) => [phrase.toLowerCase(), phrase])).values()]
+            : [];
         const afterTurn = phrasePool.length ? phrasePool[Math.floor(random() * phrasePool.length)] : '';
         const spokenText = voice.cue + ' ' + body.text.trim() + (afterTurn ? ' ' + afterTurn : '');
         active += 1;

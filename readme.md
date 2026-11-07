@@ -48,7 +48,7 @@ Seven voice personas are available: Velvet, Honey, Luna, Willow, Rose, Ember, an
 
 The app uses an in-memory `Audio` object, not a visible HTML player. Previews, route turns, ambient trivia, and Developer TTS testing can consume Fish Audio credit. The Voice library compares and previews configured voices; its selected voice and volume stay synchronized with the journey view.
 
-`voice-phrases.json` contains shared after-turn and affirmation presets. In **User settings → After-turn phrases**, users can add, edit, and remove up to 20 personal phrases, each up to 160 characters. They are normalized, deduplicated, and stored in browser local storage when possible. Route and simulator speech sends the current personal list only with that request; the server validates it, selects one phrase from the built-in, selected affirmation, and personal pools, then appends it to the spoken instruction. Previews and Developer TTS use their supplied text unchanged.
+`voice-phrases.json` contains shared route encouragement and affirmation presets. In **User settings → Journey encouragements**, users can add, edit, and remove up to 20 personal encouragements, each up to 160 characters. They are normalized, deduplicated, and stored in browser local storage when possible. Route and simulator speech sends the current personal list only with that request; the server validates it, selects one phrase from the built-in, selected affirmation, and personal pools, then appends it to the spoken instruction. Previews and Developer TTS use their supplied text unchanged.
 
 Choose Neutral, Girl, Boy, or Enby under **After-turn encouragement**. The selected encouragement style and theme are stored locally when browser storage is available.
 

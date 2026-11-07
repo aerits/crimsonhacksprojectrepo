@@ -80,6 +80,13 @@ const addressFeature = (lng, lat = 0, name = String(lng)) => ({
   properties: { name, housenumber: '10', street: 'Main Street', city: 'Test City' },
 });
 
+test('Utah landmarks are prioritized ahead of generic geocoder matches', async (t) => {
+  const api = await withServer(t, { fetcher: async () => Response.json({ features: [addressFeature(-111.9, 40.7, 'Arches Apartments')] }) });
+  const { results } = await (await api.get('/api/geocode?q=arches')).json();
+  assert.equal(results[0].label, 'Arches National Park, Utah');
+  assert.equal(results[1].label, 'Arches Apartments, 10 Main Street, Test City');
+});
+
 test('nearby search biases the provider and returns the closest five with distances and addresses', async (t) => {
   const api = await withServer(t, { fetcher: async (url) => {
     assert.equal(url.searchParams.get('lat'), '0');
@@ -166,6 +173,20 @@ test('navigation turns use the selected encouragement style', async (t) => {
   } });
   assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true, affirmation: 'enby' })).status, 200);
   assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true, affirmation: 'invalid' })).status, 400);
+});
+
+test('arrival directions use only the arrival phrase collection', async (t) => {
+  const spoken = [];
+  const api = await withServer(t, { config, random: () => 0.999, phrases: {
+    afterTurn: ['Turn phrase.'], arrival: ['Preset arrival phrase.'], affirmations: { neutral: ['Style phrase.'] },
+  }, fetcher: async (_url, options) => {
+    spoken.push(JSON.parse(options.body).text);
+    return new Response(Uint8Array.of(73, 68, 51));
+  } });
+  assert.equal((await api.post({ text: 'You have arrived.', voiceId: 'velvet', arrivalPhrase: true,
+    customArrivalPhrases: ['Personal arrival phrase.'] })).status, 200);
+  assert.match(spoken[0], /You have arrived\. Personal arrival phrase\.$/);
+  assert.doesNotMatch(spoken[0], /Turn phrase|Style phrase/);
 });
 
 test('custom turn phrases join the preset pool without leaking into later requests', async (t) => {

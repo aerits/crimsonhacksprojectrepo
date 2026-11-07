@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { distanceBetween, isValidPoint, addressSearchOrigin } from '../src/utils/location.js';
 import { searchAddresses } from '../src/services/geocoding.js';
+import { findUtahLandmarks } from '../src/data/utah-landmarks.js';
 
 test('straight-line distances handle identical points, the dateline, and antipodes', () => {
   assert.equal(distanceBetween({ lat: 0, lng: 0 }, { lat: 0, lng: 0 }), 0);
@@ -56,4 +57,10 @@ test('geocoding without a known origin still searches and reports errors', async
     assert.equal(url.searchParams.has('lng'), false);
     return Response.json({ error: 'No address match found.' }, { status: 404 });
   } }), /No address match found/);
+});
+
+test('Utah landmark lookup ranks exact and alias matches before broad matches', () => {
+  assert.equal(findUtahLandmarks('arches').at(0).name, 'Arches National Park');
+  assert.equal(findUtahLandmarks('u of u').at(0).name, 'University of Utah');
+  assert.equal(findUtahLandmarks('not a Utah landmark').length, 0);
 });

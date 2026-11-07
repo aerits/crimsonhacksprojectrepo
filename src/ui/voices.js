@@ -5,6 +5,25 @@ const element = (tag, className, text) => {
   return node;
 };
 
+const portraitSources = [
+  '/images/guide-luna.png',
+  '/images/guide-rose.png',
+  '/images/guide-iris.png',
+  '/images/guide-sage.png',
+  '/images/guide-amber.png',
+  '/images/guide-ember.png',
+];
+
+export function voicePortrait(voice, index = 0) {
+  if (voice?.id === 'verity') {
+    return { src: '/images/verity-smiley.svg', alt: 'Yellow smiley face for Verity' };
+  }
+  return {
+    src: portraitSources[index % portraitSources.length],
+    alt: `Illustrated anime portrait of ${voice?.name || 'your navigation voice'}`,
+  };
+}
+
 export function createVoicePicker({ select, summary, gallery, selection, onSelect, onPreview }) {
   let voices = [];
   const cards = new Map();
@@ -46,17 +65,10 @@ export function createVoicePicker({ select, summary, gallery, selection, onSelec
       card.setAttribute('aria-labelledby', titleId);
       const art = element('div', 'voice-art voice-art-' + index % 3);
       const portrait = document.createElement('img');
-      const isVerity = voice.id === 'verity';
-      portrait.className = 'voice-portrait' + (isVerity ? ' voice-portrait-verity' : '');
-      portrait.src = isVerity ? '/images/verity-smiley.svg' : [
-        '/images/guide-luna.png',
-        '/images/guide-rose.png',
-        '/images/guide-iris.png',
-        '/images/guide-sage.png',
-        '/images/guide-amber.png',
-        '/images/guide-ember.png',
-      ][index % 6];
-      portrait.alt = isVerity ? 'Yellow smiley face for Verity' : `Illustrated anime portrait of ${voice.name}`;
+      const portraitInfo = voicePortrait(voice, index);
+      portrait.className = 'voice-portrait' + (voice.id === 'verity' ? ' voice-portrait-verity' : '');
+      portrait.src = portraitInfo.src;
+      portrait.alt = portraitInfo.alt;
       portrait.loading = 'lazy';
       const badge = element('span', 'selected-badge', '✓ Your voice');
       art.append(portrait, badge);

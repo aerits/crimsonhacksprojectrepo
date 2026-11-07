@@ -6,7 +6,7 @@ import { createAmbientTrivia } from './services/trivia.js';
 import { formatDistance, formatDuration } from './utils/directions.js';
 import { addressSearchOrigin } from './utils/location.js';
 import { setupTabs } from './ui/tabs.js';
-import { createVoicePicker } from './ui/voices.js';
+import { createVoicePicker, voicePortrait } from './ui/voices.js';
 import { createPhraseSettings } from './ui/phrases.js';
 import { sunGlare } from './utils/sun.js';
 import { loadSavedPlaces, removePlace, saveSavedPlaces, upsertPlace } from './utils/saved-places.js';
@@ -18,6 +18,7 @@ document.querySelector('#app').innerHTML = `
     <nav class="view-tabs" role="tablist" aria-label="App views">
       <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
       <button id="voices-tab" type="button" role="tab" aria-selected="false" aria-controls="voices-panel" data-tab="voices" tabindex="-1">Voice library</button>
+      <button id="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settings-panel" data-tab="settings" tabindex="-1">Settings</button>
     </nav>
     <span class="prototype"><span></span> EARLY EXPLORER</span>
   </header>
@@ -40,6 +41,10 @@ document.querySelector('#app').innerHTML = `
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
         <label class="voice-select-label" for="voice-select">Your navigation voice</label>
         <div class="voice-select-wrap"><select id="voice-select" aria-describedby="voice-summary" disabled><option>Loading your guides…</option></select></div>
+        <div class="selected-voice-display" aria-live="polite" aria-atomic="true">
+          <img id="selected-voice-portrait" class="selected-voice-portrait" src="/images/guide-luna.png" alt="Illustrated portrait of your selected navigation voice" />
+          <div><span class="selected-voice-label">Selected guide</span><strong id="selected-voice-name">Loading your guide…</strong></div>
+        </div>
         <p id="voice-summary" class="voice-summary">A little company for the road.</p>
         <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>▷ Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
@@ -72,16 +77,28 @@ document.querySelector('#app').innerHTML = `
           </div>
         </fieldset>
         <details class="phrase-settings">
-          <summary>After-turn phrases <span id="phrase-count" class="tiny"></span></summary>
-          <p id="phrase-help" class="hint">Your phrases join the built-in collection after spoken directions. Save up to 20 phrases in this browser.</p>
+          <summary>Journey encouragements <span id="phrase-count" class="tiny"></span></summary>
+          <p id="phrase-help" class="hint">Your encouragements join the built-in collection after spoken directions. Save up to 20 phrases in this browser.</p>
           <form id="phrase-form">
-            <label for="custom-phrase">Your phrase</label>
+            <label for="custom-phrase">Your encouragement</label>
             <textarea id="custom-phrase" rows="3" maxlength="160" required placeholder="You’ve got this, one turn at a time." aria-describedby="phrase-help phrase-characters phrase-status"></textarea>
             <div class="phrase-editor-footer"><span id="phrase-characters" class="tiny"></span><div><button id="save-phrase" type="submit" class="secondary">Add phrase</button><button id="cancel-phrase" type="button" class="text-button" hidden>Cancel</button></div></div>
           </form>
           <p id="phrase-status" class="hint" role="status"></p>
-          <p id="phrases-empty" class="hint">No custom phrases yet. Built-in phrases will keep you company.</p>
-          <ul id="custom-phrases" class="custom-phrases" aria-label="Custom after-turn phrases"></ul>
+          <p id="phrases-empty" class="hint">No personal encouragements yet. Built-in encouragements will keep you company.</p>
+          <ul id="custom-phrases" class="custom-phrases" aria-label="Personal journey encouragements"></ul>
+        </details>
+        <details class="phrase-settings">
+          <summary>Arrival encouragements <span id="arrival-phrase-count" class="tiny"></span></summary>
+          <p id="arrival-phrase-help" class="hint">These are only spoken after the arrival direction. Save up to 20 phrases in this browser.</p>
+          <form id="arrival-phrase-form">
+            <label for="arrival-custom-phrase">Your arrival encouragement</label>
+            <textarea id="arrival-custom-phrase" rows="3" maxlength="160" required placeholder="You made it. I’m proud of you." aria-describedby="arrival-phrase-help arrival-phrase-characters arrival-phrase-status"></textarea>
+            <div class="phrase-editor-footer"><span id="arrival-phrase-characters" class="tiny"></span><div><button id="save-arrival-phrase" type="submit" class="secondary">Add phrase</button><button id="cancel-arrival-phrase" type="button" class="text-button" hidden>Cancel</button></div></div>
+          </form>
+          <p id="arrival-phrase-status" class="hint" role="status"></p>
+          <p id="arrival-phrases-empty" class="hint">No personal arrival encouragements yet.</p>
+          <ul id="arrival-custom-phrases" class="custom-phrases" aria-label="Personal arrival encouragements"></ul>
         </details>
         <fieldset class="trivia-group">
           <legend>Roadside trivia</legend>
@@ -128,6 +145,12 @@ document.querySelector('#app').innerHTML = `
     <p class="library-footer">A little guidance. A lot of comfort. <span aria-hidden="true">♡</span></p>
   </section>`;
 
+document.querySelector('#app').insertAdjacentHTML('beforeend', `
+  <section id="settings-panel" class="settings-page" role="tabpanel" aria-labelledby="settings-tab" hidden>
+    <div class="settings-page-heading"><p class="eyebrow">YOUR WAY</p><h1>Set up your <em>journey.</em></h1><p>Keep your route, voice, and comfort settings in one calm place.</p></div>
+    <div id="settings-content"></div>
+  </section>`);
+
 const $ = (selector) => document.querySelector(selector);
 const formatArrivalTime = (durationSeconds) => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + durationSeconds * 1000));
 const destinationName = (label) => label.split(',')[0] || 'your destination';
@@ -141,6 +164,13 @@ audio.preload = 'none';
 audio.volume = 0.7;
 const speech = createSpeechService(audio, voiceStatus);
 const phraseSettings = createPhraseSettings();
+const arrivalPhraseSettings = createPhraseSettings({
+  form: '#arrival-phrase-form', input: '#arrival-custom-phrase', list: '#arrival-custom-phrases',
+  empty: '#arrival-phrases-empty', count: '#arrival-phrase-count', characters: '#arrival-phrase-characters',
+  submit: '#save-arrival-phrase', cancel: '#cancel-arrival-phrase', status: '#arrival-phrase-status',
+  storageKey: 'mommy-maps-arrival-phrases',
+});
+$('#settings-content').append($('#settings'));
 const affirmationStyles = new Set(['neutral', 'girl', 'boy', 'enby']);
 let voices = [];
 let selectedVoice;
@@ -206,6 +236,10 @@ function selectVoice(id) {
   if (!voice) return;
   selectedVoice = id;
   $('#intro-voice-name').textContent = voice.name?.trim() || 'your chosen voice';
+  const portrait = voicePortrait(voice, voices.indexOf(voice));
+  $('#selected-voice-portrait').src = portrait.src;
+  $('#selected-voice-portrait').alt = portrait.alt;
+  $('#selected-voice-name').textContent = voice.name?.trim() || 'Your selected guide';
   speech.stop();
   voicePicker.setSelected(id);
   $('#sample').disabled = !voice.configured;
@@ -262,8 +296,15 @@ function playSimulationStep() {
     map?.setSimulationPoint({ lat, lng });
   }
   const voice = voices.find((item) => item.id === selectedVoice);
-  if (voice?.configured) speech.speak(step.instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases(), affirmation: $('#affirmation-style').value });
+  if (voice?.configured) speech.speak(step.instruction, selectedVoice, speechOptionsForStep(step));
   $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
+}
+
+function speechOptionsForStep(step) {
+  if (step.maneuver?.type === 'arrive') {
+    return { arrivalPhrase: true, customArrivalPhrases: arrivalPhraseSettings.getPhrases() };
+  }
+  return { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases(), affirmation: $('#affirmation-style').value };
 }
 
 function invalidateRoute() {
@@ -617,7 +658,7 @@ $('#simulate').addEventListener('click', () => {
   scheduleSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
-  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases(), affirmation: $('#affirmation-style').value });
+  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, speechOptionsForStep(route.steps[stepIndex]));
 });
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);

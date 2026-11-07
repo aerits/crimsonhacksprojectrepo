@@ -1,19 +1,24 @@
 import { MAX_CUSTOM_PHRASES, MAX_PHRASE_LENGTH, normalizeCustomPhrases } from '../utils/phrases.js';
 import { createPhraseStore } from '../services/phrase-preferences.js';
 
-export function createPhraseSettings() {
-  const form = document.querySelector('#phrase-form');
-  const input = document.querySelector('#custom-phrase');
-  const list = document.querySelector('#custom-phrases');
-  const empty = document.querySelector('#phrases-empty');
-  const count = document.querySelector('#phrase-count');
-  const characters = document.querySelector('#phrase-characters');
-  const submit = document.querySelector('#save-phrase');
-  const cancel = document.querySelector('#cancel-phrase');
-  const status = document.querySelector('#phrase-status');
+export function createPhraseSettings({
+  form: formSelector = '#phrase-form', input: inputSelector = '#custom-phrase', list: listSelector = '#custom-phrases',
+  empty: emptySelector = '#phrases-empty', count: countSelector = '#phrase-count', characters: charactersSelector = '#phrase-characters',
+  submit: submitSelector = '#save-phrase', cancel: cancelSelector = '#cancel-phrase', status: statusSelector = '#phrase-status',
+  storageKey,
+} = {}) {
+  const form = document.querySelector(formSelector);
+  const input = document.querySelector(inputSelector);
+  const list = document.querySelector(listSelector);
+  const empty = document.querySelector(emptySelector);
+  const count = document.querySelector(countSelector);
+  const characters = document.querySelector(charactersSelector);
+  const submit = document.querySelector(submitSelector);
+  const cancel = document.querySelector(cancelSelector);
+  const status = document.querySelector(statusSelector);
   let storage;
   try { storage = window.localStorage; } catch { /* Phrases still work for this visit. */ }
-  const store = createPhraseStore(storage);
+  const store = createPhraseStore(storage, storageKey);
   let editingIndex = null;
   input.maxLength = MAX_PHRASE_LENGTH;
 

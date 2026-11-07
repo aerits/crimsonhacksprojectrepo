@@ -42,6 +42,20 @@ test('turn speech requests an after-turn phrase', async (t) => {
   await service.speak('Turn left.', 'velvet', { afterTurnPhrase: true });
 });
 
+test('arrival speech sends only arrival phrase preferences', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  globalThis.fetch = async (_url, options) => {
+    assert.deepEqual(JSON.parse(options.body), {
+      text: 'You have arrived.', voiceId: 'velvet', arrivalPhrase: true,
+      customArrivalPhrases: ['You did it.'],
+    });
+    return new Response('audio');
+  };
+  const service = createSpeechService(fakeAudio());
+  await service.speak('You have arrived.', 'velvet', { arrivalPhrase: true, customArrivalPhrases: ['You did it.'] });
+});
+
 test('stopped generation cannot play a late response', async (t) => {
   const original = globalThis.fetch;
   t.after(() => { globalThis.fetch = original; });
