@@ -45,15 +45,21 @@ export function createApp({ config = {}, fetcher = fetch } = {}) {
         const wait = Math.max(0, nextGeocodeAt - Date.now());
         nextGeocodeAt = Math.max(Date.now(), nextGeocodeAt) + 1000;
         if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
-        const searchUrl = new URL('https://nominatim.openstreetmap.org/search');
-        searchUrl.search = new URLSearchParams({ q: query, format: 'jsonv2', limit: '5' });
+        const searchUrl = new URL('https://photon.komoot.io/api/');
+        searchUrl.search = new URLSearchParams({ q: query, limit: '5', lang: 'en' });
         const upstream = await fetcher(searchUrl, { headers: { Accept: 'application/json', 'User-Agent': 'Mommy-Maps/0.1' } });
         if (!upstream.ok) {
           await upstream.body?.cancel();
           return json(res, 502, { error: 'Address search is unavailable. Please try again.' });
         }
         const places = await upstream.json();
-        const results = (Array.isArray(places) ? places : []).map((place) => ({ lat: Number(place.lat), lng: Number(place.lon), label: place.display_name }))
+        const results = (Array.isArray(places.features) ? places.features : []).map((place) => {
+          const properties = place.properties || {};
+          const [lng, lat] = place.geometry?.coordinates || [];
+          const street = [properties.housenumber, properties.street].filter(Boolean).join(' ');
+          const locality = [properties.city || properties.district, properties.state, properties.country].filter(Boolean).join(', ');
+          return { lat: Number(lat), lng: Number(lng), label: [properties.name, street, locality].filter(Boolean).join(', ') };
+        })
           .filter((place) => Number.isFinite(place.lat) && Number.isFinite(place.lng));
         if (!results.length) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
         const result = { results };

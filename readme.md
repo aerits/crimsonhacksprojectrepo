@@ -38,7 +38,7 @@ Add further voices in `server/voices.js`, referencing a new entry under `fish.vo
 
 ## Address search
 
-The **Search** buttons retrieve up to five matches for each entered address through the server’s `/api/geocode` endpoint, which uses Nominatim. Select the intended match before submitting a route. Searches are explicitly user-triggered (not autocomplete), cached for repeat queries, and paced to one provider request per second. Address text is sent to Nominatim; use a production geocoding provider before deploying at scale.
+Address suggestions appear after three characters through the server’s `/api/geocode` endpoint, which uses Photon’s search-as-you-type geocoder. The **Search** buttons are also available to repeat a lookup. Select the intended match before submitting a route. Address text is sent to Photon; use a production geocoding provider before deploying at scale.
 
 Requests are limited to 600 text characters, two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
 
@@ -64,7 +64,7 @@ tests/                     Routing and HTTP API tests with mocked Fish responses
 
 This is a route planner and manual spoken route preview. It does not track driving progress, reroute automatically, provide traffic data, geocode addresses, or issue background navigation prompts. Current location only sets the starting point. Those features can build on the route and speech services.
 
-Leaflet loads from a CDN, map tiles come from OpenStreetMap, addresses are searched with Nominatim, and routes come from the public OSRM demo service; internet access is required. Use production map, geocoding, and routing providers before deploying for sustained usage. Resolved coordinates are sent to OSRM when planning a route. The server binds to localhost by default. Add authentication and per-user rate limits before exposing the paid TTS endpoint publicly. This scaffold has no deployment configuration.
+Leaflet loads from a CDN, map tiles come from OpenStreetMap, addresses are searched with Photon, and routes come from the public OSRM demo service; internet access is required. Use production map, geocoding, and routing providers before deploying for sustained usage. Resolved coordinates are sent to OSRM when planning a route. The server binds to localhost by default. Add authentication and per-user rate limits before exposing the paid TTS endpoint publicly. This scaffold has no deployment configuration.
 
 ## References
 

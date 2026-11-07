@@ -74,6 +74,8 @@ let request;
 let map;
 let simulationTimer;
 let simulationRunning = false;
+const suggestionTimers = {};
+const suggestionRequests = {};
 
 function stopSimulation(message) {
   clearTimeout(simulationTimer);
@@ -139,6 +141,22 @@ try {
 
 function clearResults(kind) { $(`#${kind}-results`).replaceChildren(); }
 
+function renderAddressResults(kind, results, message) {
+  const list = document.createElement('ul');
+  list.className = 'address-result-list';
+  for (const place of results) {
+    const item = document.createElement('li');
+    const choose = document.createElement('button');
+    choose.type = 'button';
+    choose.textContent = place.label;
+    choose.addEventListener('click', () => selectPlace(kind, place));
+    item.append(choose);
+    list.append(item);
+  }
+  $(`#${kind}-results`).replaceChildren(list);
+  if (message) status(message);
+}
+
 function selectPlace(kind, place) {
   selectedPlaces[kind] = place;
   $(`#${kind}`).value = place.label;
@@ -157,20 +175,25 @@ async function searchAddress(kind) {
   status(`Searching for your ${kind === 'start' ? 'starting address' : 'destination'}…`);
   try {
     const { results } = await searchAddresses(query, { signal: request?.signal });
-    const list = document.createElement('ul');
-    list.className = 'address-result-list';
-    for (const place of results) {
-      const item = document.createElement('li');
-      const choose = document.createElement('button');
-      choose.type = 'button';
-      choose.textContent = place.label;
-      choose.addEventListener('click', () => selectPlace(kind, place));
-      item.append(choose);
-      list.append(item);
-    }
-    $(`#${kind}-results`).append(list);
-    status(`Choose the ${kind === 'start' ? 'starting address' : 'destination'} that looks right.`);
+    renderAddressResults(kind, results, `Choose the ${kind === 'start' ? 'starting address' : 'destination'} that looks right.`);
   } finally { button.disabled = false; }
+}
+
+function scheduleSuggestions(kind) {
+  clearTimeout(suggestionTimers[kind]);
+  suggestionRequests[kind]?.abort();
+  const query = $(`#${kind}`).value.trim();
+  if (query.length < 3) return clearResults(kind);
+  suggestionTimers[kind] = setTimeout(async () => {
+    const controller = new AbortController();
+    suggestionRequests[kind] = controller;
+    try {
+      const { results } = await searchAddresses(query, { signal: controller.signal });
+      if ($(`#${kind}`).value.trim() === query && !controller.signal.aborted) renderAddressResults(kind, results);
+    } catch (error) {
+      if (error.name !== 'AbortError') clearResults(kind);
+    }
+  }, 350);
 }
 
 for (const kind of ['start', 'end']) $(`#${kind}`).addEventListener('input', () => {
@@ -178,6 +201,7 @@ for (const kind of ['start', 'end']) $(`#${kind}`).addEventListener('input', () 
   selectedPlaces[kind] = null;
   clearResults(kind);
   status('Your addresses changed. Search for a new route when you’re ready.');
+  scheduleSuggestions(kind);
 });
 
 document.querySelectorAll('[data-search]').forEach((button) => button.addEventListener('click', async () => {
