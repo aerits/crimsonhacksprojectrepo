@@ -40,6 +40,23 @@ document.querySelector('#app').innerHTML = `
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
         <p id="voice-status" class="hint" role="status">Choose the voice you’d like beside you.</p>
       </section>
+      <section class="settings card" aria-labelledby="settings-heading">
+        <div class="section-title"><h2 id="settings-heading">User settings</h2><span class="tiny">YOUR WAY</span></div>
+        <fieldset class="preference-group">
+          <legend>Navigation preferences</legend>
+          <p class="hint">We’ll use these when finding your next route.</p>
+          <label class="switch-row" for="avoid-tolls"><span>Avoid Tolls</span><input id="avoid-tolls" type="checkbox" role="switch" data-avoid="toll" /><span class="switch-control" aria-hidden="true"></span></label>
+          <label class="switch-row" for="avoid-highways"><span>Avoid Highways/Freeways</span><input id="avoid-highways" type="checkbox" role="switch" data-avoid="motorway" /><span class="switch-control" aria-hidden="true"></span></label>
+          <label class="switch-row" for="avoid-ferries"><span>Avoid Ferries</span><input id="avoid-ferries" type="checkbox" role="switch" data-avoid="ferry" /><span class="switch-control" aria-hidden="true"></span></label>
+        </fieldset>
+        <fieldset class="theme-group">
+          <legend>Theme</legend>
+          <div class="theme-options" role="radiogroup" aria-label="Theme">
+            <label><input type="radio" name="theme" value="light" checked /><span>Light</span></label>
+            <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+          </div>
+        </fieldset>
+      </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
     <section class="map-panel" aria-label="Map and route preview">
@@ -98,6 +115,17 @@ let locationRequestId = 0;
 let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
+
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
+  try { localStorage.setItem('mommy-maps-theme', theme); } catch { /* Theme still applies for this visit. */ }
+}
+
+try {
+  const savedTheme = localStorage.getItem('mommy-maps-theme');
+  if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
+} catch { /* Storage may be unavailable in privacy-focused browsers. */ }
 
 async function loadRuntime() {
   try {
@@ -411,7 +439,8 @@ $('#route-form').addEventListener('submit', async (event) => {
     map?.setPoint('start', start);
     map?.setPoint('end', end);
     status('Putting the turns together…');
-    const result = await getRoute(start, end, { signal: AbortSignal.any([current.signal, AbortSignal.timeout(20000)]) });
+    const avoid = [...document.querySelectorAll('[data-avoid]:checked')].map((input) => input.dataset.avoid);
+    const result = await getRoute(start, end, { signal: AbortSignal.any([current.signal, AbortSignal.timeout(20000)]), avoid });
     if (request !== current) return;
     if (!result.steps.length) throw new Error('No directions returned. Try different points.');
     route = result;
@@ -477,6 +506,12 @@ for (const id of ['volume', 'library-volume']) $('#'+id).addEventListener('input
 });
 $('#library-stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
 $('#retry-voices').addEventListener('click', loadVoices);
+document.querySelectorAll('[data-avoid]').forEach((input) => input.addEventListener('change', () => {
+  if (route) status('Navigation preferences changed. Find a new route to apply them.');
+}));
+document.querySelectorAll('input[name="theme"]').forEach((input) => input.addEventListener('change', () => {
+  if (input.checked) setTheme(input.value);
+}));
 
 async function loadVoices() {
   $('#retry-voices').disabled = true;
