@@ -665,4 +665,37 @@ details li { margin-bottom: 7px; }
   #journey-panel.compact-journey .journey .current-step { margin: 8px 0; }
   #journey-panel.compact-journey .journey .small-pill { display: none; }
   #journey-panel.compact-journey .journey details ol { max-height: 64px; }
+
+  /* Opening every direction should not grow below the bottom sheet. Keep the
+     sheet compact and place a scrollable list in the open map space above it. */
+  #journey-panel.compact-journey .journey { overflow: visible; }
+  #journey-panel.compact-journey .journey details[open] {
+    position: absolute;
+    z-index: 7;
+    right: 14px;
+    bottom: calc(100% + 10px);
+    left: 14px;
+    max-height: min(360px, calc(100dvh - 350px));
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    background: var(--surface);
+    box-shadow: 0 10px 28px #52396d33;
+  }
+  #journey-panel.compact-journey .journey details[open] summary {
+    position: sticky;
+    top: -12px;
+    z-index: 1;
+    margin: -12px -14px 8px;
+    padding: 12px 14px 8px;
+    background: var(--surface);
+  }
+  #journey-panel.compact-journey .journey details[open] ol {
+    max-height: none;
+    margin-bottom: 0;
+    overflow: visible;
+  }
 }
