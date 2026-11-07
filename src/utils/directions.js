@@ -25,4 +25,11 @@ export function instructionFor(step) {
 }
 
 export const formatDistance = (meters) => meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
-export const formatDuration = (seconds) => `${Math.max(1, Math.round(seconds / 60))} min`;
+export const formatDuration = (seconds) => {
+  const totalMinutes = Math.max(1, Math.round(seconds / 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (!hours) return `${totalMinutes} min`;
+  if (!minutes) return `${hours} hr`;
+  return `${hours} hr ${minutes} min`;
+};
