@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCoordinates, instructionFor } from '../src/utils/directions.js';
+import { combineNearbySteps, parseCoordinates, instructionFor } from '../src/utils/directions.js';
 import { getRoute } from '../src/services/routing.js';
 
 test('coordinates reject missing, nonnumeric and out-of-range points', () => {
@@ -14,6 +14,17 @@ test('directions preserve U-turns, numbered exits and arrival', () => {
   assert.equal(instructionFor({ name: 'Main St', maneuver: { type: 'turn', modifier: 'uturn' } }), 'Make a U-turn onto Main St.');
   assert.equal(instructionFor({ name: '', maneuver: { type: 'roundabout', exit: 3 } }), 'At the roundabout, take exit 3.');
   assert.equal(instructionFor({ maneuver: { type: 'arrive' } }), 'You have arrived at your destination.');
+});
+
+test('nearby turns are spoken as one direction', () => {
+  const steps = combineNearbySteps([
+    { distance: 180, duration: 20, instruction: 'Turn left onto Oak Street.', maneuver: { type: 'turn' } },
+    { distance: 850, duration: 90, instruction: 'Turn right onto Pine Avenue.', maneuver: { type: 'turn' } },
+    { distance: 100, duration: 10, instruction: 'You have arrived at your destination.', maneuver: { type: 'arrive' } },
+  ]);
+  assert.equal(steps.length, 2);
+  assert.equal(steps[0].instruction, 'Turn left onto Oak Street, then turn right onto Pine Avenue.');
+  assert.equal(steps[0].distance, 1030);
 });
 
 test('OSRM requests use longitude first and flatten route legs', async () => {

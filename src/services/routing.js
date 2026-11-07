@@ -1,4 +1,4 @@
-import { instructionFor } from '../utils/directions.js';
+import { combineNearbySteps, instructionFor } from '../utils/directions.js';
 
 export async function getRoute(start, end, { signal, baseUrl = 'https://router.project-osrm.org', fetcher = fetch, avoid = [] } = {}) {
   const coordinates = `${start.lng},${start.lat};${end.lng},${end.lat}`;
@@ -13,6 +13,6 @@ export async function getRoute(start, end, { signal, baseUrl = 'https://router.p
   const route = data.routes[0];
   return {
     distance: route.distance, duration: route.duration, geometry: route.geometry,
-    steps: route.legs.flatMap((leg) => leg.steps).map((step) => ({ ...step, instruction: instructionFor(step) })),
+    steps: combineNearbySteps(route.legs.flatMap((leg) => leg.steps).map((step) => ({ ...step, instruction: instructionFor(step) }))),
   };
 }
