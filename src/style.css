@@ -211,7 +211,7 @@ details li { margin-bottom: 7px; }
 :root[data-theme='verity'] .library-card { border-color: #4c492d; background: #1d1c15; }
 :root[data-theme='verity'] .library-card.selected { border-color: #f4cc28; box-shadow: 0 0 0 2px #f4cc2824, 0 10px 30px #00000035; }
 :root[data-theme='verity'] .voice-card-heading h2, :root[data-theme='verity'] .library-player-copy strong { color: #fff8d5; }
-:root[data-theme='verity'] .voice-mood, :root[data-theme='verity'] .voice-quote, :root[data-theme='verity'] #library-voice-status { color: #d4cc9f; }
+:root[data-theme='verity'] .voice-mood, :root[data-theme='verity'] .voice-description, :root[data-theme='verity'] .voice-quote, :root[data-theme='verity'] #library-voice-status { color: #d4cc9f; }
 :root[data-theme='verity'] button:focus-visible, :root[data-theme='verity'] input:focus-visible, :root[data-theme='verity'] select:focus-visible, :root[data-theme='verity'] textarea:focus-visible, :root[data-theme='verity'] summary:focus-visible, :root[data-theme='verity'] a:focus-visible { outline-color: #ffe15b; }
 :root[data-theme='verity'] .eyebrow, :root[data-theme='verity'] .tiny, :root[data-theme='verity'] .route-form label, :root[data-theme='verity'] .voice-select-label, :root[data-theme='verity'] .volume-label, :root[data-theme='verity'] .settings legend, :root[data-theme='verity'] .switch-row, :root[data-theme='verity'] .simulation-controls label, :root[data-theme='verity'] .map-label div > span { color: #c6bd91; }
 :root[data-theme='verity'] .route-form label span, :root[data-theme='verity'] .text-button, :root[data-theme='verity'] .voice-select-wrap::after, :root[data-theme='verity'] .voice-summary, :root[data-theme='verity'] .sidebar-footer, :root[data-theme='verity'] .library-footer, :root[data-theme='verity'] .library-footer span { color: #ffe15b; }
@@ -250,6 +250,7 @@ details li { margin-bottom: 7px; }
 .voice-availability { border-radius: 20px; background: #f9edf3; color: #97647f; font-size: 9px; padding: 5px 8px; white-space: nowrap; }
 .voice-availability.ready { background: #eee4f7; color: #7e5e97; }
 .voice-mood { font-size: 11px; letter-spacing: .2px; color: #9577a4; margin: 6px 0 0; }
+.voice-description { font-size: 11px; line-height: 1.65; color: #705e7c; margin: 14px 0 0; }
 .voice-quote { font-size: 12px; line-height: 1.8; color: #84728e; margin: 18px 0; min-height: 66px; }
 .library-card-actions { display: grid; gap: 10px; }
 .preview-voice, .choose-voice { width: 100%; border-radius: 10px; padding: 12px 8px; font-size: 11px; font-weight: 500; }

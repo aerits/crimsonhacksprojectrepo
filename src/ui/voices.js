@@ -63,7 +63,12 @@ export function createVoicePicker({ select, summary, gallery, selection, onSelec
       const title = element('h2', '', voice.name);
       title.id = titleId;
       top.append(title, element('span', 'voice-availability' + (voice.configured ? ' ready' : ''), voice.configured ? 'Ready to play' : 'Setup needed'));
-      body.append(top, element('p', 'voice-mood', voice.mood), element('blockquote', 'voice-quote', '“' + voice.sample + '”'));
+      body.append(
+        top,
+        element('p', 'voice-mood', voice.mood),
+        element('p', 'voice-description', voice.description),
+        element('blockquote', 'voice-quote', '“' + voice.sample + '”'),
+      );
       const actions = element('div', 'library-card-actions');
       const preview = element('button', 'preview-voice', '▷ Preview voice');
       preview.type = 'button';
