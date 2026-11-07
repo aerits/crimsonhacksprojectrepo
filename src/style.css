@@ -733,3 +733,36 @@ details li { margin-bottom: 7px; }
   #app .topbar .brand { font-size: 18px; letter-spacing: -.8px; }
   #app .topbar .brand-mark { width: 28px; height: 28px; margin-right: 6px; }
 }
+
+/* A short, medium-width window has room for the map but not for the full
+   tab strip plus the parks control. Treat it like the compact map header so
+   controls remain reachable instead of overflowing off the right edge. */
+@media (min-width: 761px) and (max-width: 900px) {
+  .topbar.map-mode {
+    min-height: 64px;
+    height: 64px;
+    padding: 0 14px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .topbar.map-mode .view-tabs { display: none; }
+  .topbar.map-mode .map-actions { display: flex; margin-left: auto; }
+  .topbar.map-mode .header-parks { height: 34px; padding: 0 10px; font-size: 10px; }
+  .topbar.map-mode + #journey-panel.compact-journey {
+    height: calc(100dvh - 64px);
+    min-height: calc(100dvh - 64px);
+  }
+
+  /* Library and settings keep their navigation, but wrap it onto a dedicated
+     row rather than letting either control disappear past the viewport. */
+  .topbar:not(.map-mode) {
+    height: auto;
+    min-height: 112px;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topbar:not(.map-mode) .header-parks { margin-left: auto; }
+  .topbar:not(.map-mode) .view-tabs { order: 4; width: 100%; margin: 0; }
+  .topbar:not(.map-mode) .view-tabs button { flex: 1; }
+}
