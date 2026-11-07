@@ -2,6 +2,7 @@ import { createMap } from './services/map.js';
 import { getRoute } from './services/routing.js';
 import { createSpeechService } from './services/speech.js';
 import { createAmbientTrivia } from './services/trivia.js';
+import { utahStateParks, utahTrails } from './data/utah-outdoors.js';
 import { parseCoordinates, formatDistance, formatDuration } from './utils/directions.js';
 
 document.querySelector('#app').innerHTML = `
@@ -55,6 +56,7 @@ document.querySelector('#app').innerHTML = `
           <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
+        <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">All Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><label for="utah-trails" class="hint">Trail ideas</label><select id="utah-trails"><option value="">Choose a trail idea</option></select><p id="outdoor-note" class="hint">Choose an outdoor spot, then use its official page to plan before setting route coordinates.</p></fieldset>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -94,6 +96,12 @@ let triviaMuted = false;
 let locationWatcher;
 let lastPosition;
 const ambientTrivia = createAmbientTrivia();
+
+function populateOutdoorLists() {
+  const fill = (selector, items) => $(selector).append(...items.map((name) => { const option = document.createElement('option'); option.value = name; option.textContent = name; return option; }));
+  fill('#utah-parks', utahStateParks); fill('#utah-trails', utahTrails);
+  for (const selector of ['#utah-parks', '#utah-trails']) $(selector).addEventListener('change', (event) => { if (!event.target.value) return; const link = document.createElement('a'); link.href = 'https://stateparks.utah.gov/'; link.target = '_blank'; link.rel = 'noreferrer'; link.textContent = 'Open official Utah State Parks site'; $('#outdoor-note').replaceChildren(`Selected: ${event.target.value}. `, link); });
+}
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -352,4 +360,5 @@ async function loadVoices() {
   } catch (error) { voiceStatus(error.message); }
 }
 loadVoices();
+populateOutdoorLists();
 window.addEventListener('pagehide', () => { speech.stop(); request?.abort(); stopAmbientGuidance(); });
