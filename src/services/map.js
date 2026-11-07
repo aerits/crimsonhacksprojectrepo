@@ -10,6 +10,7 @@ export function createMap(element) {
   let routeLayer;
   let simulationMarker;
   return {
+    resize() { map.invalidateSize({ pan: false }); },
     setPoint(kind, point) {
       markers[kind]?.remove();
       markers[kind] = L.marker(point, { icon: L.divIcon({
@@ -19,14 +20,14 @@ export function createMap(element) {
     clearRoute() { routeLayer?.remove(); routeLayer = null; },
     setSimulationPoint(point) {
       if (!simulationMarker) {
-        simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#e15e7a', fillOpacity: 1 })
+        simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#ce82a7', fillOpacity: 1 })
           .addTo(map).bindTooltip('Simulated location', { direction: 'top' });
       } else simulationMarker.setLatLng(point);
     },
     clearSimulationPoint() { simulationMarker?.remove(); simulationMarker = null; },
     drawRoute(geometry) {
       routeLayer?.remove();
-      routeLayer = L.geoJSON(geometry, { style: { color: '#75608e', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
+      routeLayer = L.geoJSON(geometry, { style: { color: '#9471b8', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
       map.fitBounds(routeLayer.getBounds(), { padding: [45, 45] });
     },
     focus(point) { map.flyTo(point, 15); },

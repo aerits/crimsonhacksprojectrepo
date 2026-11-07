@@ -16,11 +16,13 @@ Open http://127.0.0.1:3000. The app requests your browser location for the start
 
 Use **Simulate route** in the route preview to automatically advance through each turn, focus the map on the current maneuver, and play the selected voice’s route guidance. A pink marker shows the simulated location. Choose a relaxed, normal, or quick pace. Each simulated direction sends a Fish Audio TTS request and may consume provider credit.
 
-The map and routing work without Fish credentials. Voice cards show `SETUP` until configured. `npm start` runs without file watching. `npm test` runs the Node test suite.
+Choose your navigation voice from the dropdown on **Your journey**. Open **Voice library** to compare each voice’s mood and sample phrase, preview configured voices, or select a voice for the route. Selection and listening volume stay in sync across both tabs. Switching to the library pauses an active simulation; returning keeps your addresses and route. Tabs support the arrow, Home, and End keys.
+
+The map and routing work without Fish credentials. Voices show **Setup needed** until configured. `npm start` runs without file watching. `npm test` runs the Node test suite.
 
 ## Developer TTS testing
 
-Open **Developer: test TTS** below the voice controls, enter up to 600 characters, choose a configured voice, and select **Generate with selected voice**. It uses the production `/api/tts` endpoint, so each test is a Fish Audio request and may consume provider credit.
+Open **Developer: test TTS** at the bottom of **Voice library**, enter up to 600 characters, choose a configured voice, and select **Generate with selected voice**. It uses the production `/api/tts` endpoint, so each test is a Fish Audio request and may consume provider credit.
 
 ## Voices and server-side TTS
 
@@ -52,7 +54,9 @@ server/
   voices.js                Voice registry and delivery settings
 src/
   main.js                  Route planner, voice picker and preview controls
-  style.css                Responsive app layout
+  style.css                Responsive lavender-and-pink app layout
+  ui/tabs.js               Keyboard-accessible journey / library tabs
+  ui/voices.js             Synchronized voice dropdown and voice library
   services/map.js          Leaflet map, points and route rendering
   services/routing.js      OSRM driving route adapter
   services/speech.js       Fetch generated audio, cancel and play
