@@ -46,8 +46,9 @@ export function createVoicePicker({ select, summary, gallery, selection, onSelec
       card.setAttribute('aria-labelledby', titleId);
       const art = element('div', 'voice-art voice-art-' + index % 3);
       const portrait = document.createElement('img');
-      portrait.className = 'voice-portrait';
-      portrait.src = [
+      const isVerity = voice.id === 'verity';
+      portrait.className = 'voice-portrait' + (isVerity ? ' voice-portrait-verity' : '');
+      portrait.src = isVerity ? '/images/verity-smiley.svg' : [
         '/images/guide-luna.png',
         '/images/guide-rose.png',
         '/images/guide-iris.png',
@@ -55,7 +56,7 @@ export function createVoicePicker({ select, summary, gallery, selection, onSelec
         '/images/guide-amber.png',
         '/images/guide-ember.png',
       ][index % 6];
-      portrait.alt = `Illustrated anime portrait of ${voice.name}`;
+      portrait.alt = isVerity ? 'Yellow smiley face for Verity' : `Illustrated anime portrait of ${voice.name}`;
       portrait.loading = 'lazy';
       const badge = element('span', 'selected-badge', '✓ Your voice');
       art.append(portrait, badge);

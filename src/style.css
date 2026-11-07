@@ -244,6 +244,7 @@ details li { margin-bottom: 7px; }
 .library-card.selected { border-color: #b193c8; box-shadow: 0 0 0 2px #b193c824, 0 10px 30px #77568c0b; }
 .voice-art { height: 175px; position: relative; overflow: hidden; background: #eadff3; }
 .voice-portrait { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transition: transform .35s ease; }
+.voice-portrait-verity { object-fit: contain; object-position: center; padding: 18px; background: #17160f; }
 .library-card:hover .voice-portrait { transform: scale(1.035); }
 .voice-art::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #4f365300 48%, #55365b2c 100%); }
 .selected-badge { position: absolute; z-index: 1; top: 13px; left: 13px; font-size: 9px; font-weight: 500; color: #7b5a91; background: #fffafde8; padding: 6px 10px; border-radius: 20px; }
