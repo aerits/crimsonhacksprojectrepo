@@ -1,0 +1,13 @@
+{
+  "host": "127.0.0.1",
+  "port": 3000,
+  "fish": {
+    "apiKey": "",
+    "model": "s2.1-pro",
+    "voices": {
+      "velvet": "33bed5b5a88b47cd80f0a6ed85bc0bca",
+      "honey": "60bd8f0f5bbc462a8fa1686dd81af336",
+      "luna": "f7fe817b4b634c2cb763d240d95b1c2c"
+    }
+  }
+}

@@ -22,10 +22,10 @@ async function withServer(t, options = {}) {
   return { get: (path) => request(path), post: (body) => request('/api/tts', 'POST', body) };
 }
 
-const env = { FISH_API_KEY: 'secret-test-key', FISH_VOICE_VELVET: 'fish-voice-a', FISH_VOICE_HONEY: 'fish-voice-b' };
+const config = { fish: { apiKey: 'secret-test-key', voices: { velvet: 'fish-voice-a', honey: 'fish-voice-b' } } };
 
 test('voice list exposes setup status without keys or provider IDs', async (t) => {
-  const api = await withServer(t, { env });
+  const api = await withServer(t, { config });
   const response = await api.get('/api/voices');
   const text = await response.text();
   assert.ok(!text.includes('secret-test-key'));
@@ -39,7 +39,7 @@ test('voice list exposes setup status without keys or provider IDs', async (t) =
 test('server sends selected Fish voice and returns binary MP3', async (t) => {
   let calls = 0;
   const bytes = Uint8Array.of(73, 68, 51, 0, 1, 2);
-  const api = await withServer(t, { env, fetcher: async (url, options) => {
+  const api = await withServer(t, { config, fetcher: async (url, options) => {
     calls += 1;
     assert.equal(url, 'https://api.fish.audio/v1/tts');
     assert.equal(options.headers.Authorization, 'Bearer secret-test-key');
@@ -58,7 +58,7 @@ test('server sends selected Fish voice and returns binary MP3', async (t) => {
 });
 
 test('invalid input and missing voice configuration never call Fish', async (t) => {
-  const api = await withServer(t, { env: {}, fetcher: () => { throw new Error('Must not call Fish'); } });
+  const api = await withServer(t, { config: {}, fetcher: () => { throw new Error('Must not call Fish'); } });
   for (const body of [null, {}, { text: '  ' }, { text: 42 }, { text: 'x'.repeat(601) }, { text: 'Hi', voiceId: 'unknown' }]) {
     assert.equal((await api.post(body)).status, 400);
   }
@@ -67,22 +67,22 @@ test('invalid input and missing voice configuration never call Fish', async (t) 
 });
 
 test('Fish errors are safe and actionable', async (t) => {
-  const api = await withServer(t, { env, fetcher: async () => new Response('secret upstream details', { status: 402 }) });
+  const api = await withServer(t, { config, fetcher: async () => new Response('secret upstream details', { status: 402 }) });
   const response = await api.post({ text: 'Hi', voiceId: 'velvet' });
   assert.equal(response.status, 502);
   assert.match((await response.json()).error, /credit/);
 });
 
 test('empty audio is rejected rather than played', async (t) => {
-  const api = await withServer(t, { env, fetcher: async () => new Response('') });
+  const api = await withServer(t, { config, fetcher: async () => new Response('') });
   assert.equal((await api.post({ text: 'Hi', voiceId: 'velvet' })).status, 502);
 });
 
 test('static server serves app source and blocks private files', async (t) => {
-  const api = await withServer(t, { env });
+  const api = await withServer(t, { config });
   assert.equal((await api.get('/')).status, 200);
   assert.match((await api.get('/src/main.js')).headers.get('content-type'), /javascript/);
-  for (const path of ['/.env', '/server/app.js', '/package.json', '/.git/config', '/src/%2e%2e%2fserver/app.js']) {
+  for (const path of ['/config.json', '/config.local.json', '/server/app.js', '/package.json', '/.git/config', '/src/%2e%2e%2fserver/app.js']) {
     assert.equal((await api.get(path)).status, 404);
   }
 });

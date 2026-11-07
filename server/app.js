@@ -25,14 +25,15 @@ async function bodyOf(req) {
   catch { throw Object.assign(new Error('Expected a JSON request.'), { status: 400 }); }
 }
 
-export function createApp({ env = process.env, fetcher = fetch } = {}) {
-  const voices = getVoices(env);
+export function createApp({ config = {}, fetcher = fetch } = {}) {
+  const voices = getVoices(config);
+  const fish = config.fish || {};
   let active = 0;
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
       if (req.method === 'GET' && url.pathname === '/api/voices') {
-        return json(res, 200, publicVoices(voices, env.FISH_API_KEY));
+        return json(res, 200, publicVoices(voices, fish.apiKey));
       }
       if (req.method === 'POST' && url.pathname === '/api/tts') {
         if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Use application/json.' });
@@ -42,8 +43,8 @@ export function createApp({ env = process.env, fetcher = fetch } = {}) {
         }
         const voice = voices.find((item) => item.id === body.voiceId);
         if (!voice) return json(res, 400, { error: 'Choose a valid voice.' });
-        if (!env.FISH_API_KEY || !voice.referenceId) {
-          return json(res, 503, { error: 'This voice needs a Fish Audio API key and voice ID configured in the server .env file.' });
+        if (!fish.apiKey || !voice.referenceId) {
+          return json(res, 503, { error: 'This voice needs a Fish Audio API key and voice ID configured in the server config files.' });
         }
         if (active >= 2) return json(res, 429, { error: 'The voice server is busy. Try again shortly.' });
         active += 1;
@@ -53,7 +54,7 @@ export function createApp({ env = process.env, fetcher = fetch } = {}) {
         try {
           const upstream = await fetcher('https://api.fish.audio/v1/tts', {
             method: 'POST',
-            headers: { Authorization: `Bearer ${env.FISH_API_KEY}`, 'Content-Type': 'application/json', model: env.FISH_MODEL || 's2.1-pro' },
+            headers: { Authorization: `Bearer ${fish.apiKey}`, 'Content-Type': 'application/json', model: fish.model || 's2.1-pro' },
             body: JSON.stringify({ text: `${voice.cue} ${body.text.trim()}`, reference_id: voice.referenceId,
               format: 'mp3', prosody: { speed: voice.speed }, normalize: true }),
             signal: AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]),
@@ -86,7 +87,7 @@ export function createApp({ env = process.env, fetcher = fetch } = {}) {
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Method not allowed.' });
       const pathname = decodeURIComponent(url.pathname);
       const file = pathname === '/' ? resolve(ROOT, 'index.html') : resolve(ROOT, `.${pathname}`);
-      // Serve only the app entry and browser source, never .env or server files.
+      // Serve only the app entry and browser source, never configuration or server files.
       if (file !== resolve(ROOT, 'index.html') && !file.startsWith(resolve(ROOT, 'src') + sep)) {
         return json(res, 404, { error: 'Not found.' });
       }

@@ -7,8 +7,8 @@ A JavaScript maps app with comforting mommy ASMR navigation voices. This first s
 Requires Node.js 22.9 or newer. There are no npm dependencies to install.
 
 ```sh
-cp .env.example .env
-# Add your Fish Audio API key and at least one Fish voice ID to .env.
+cp config.local.example.json config.local.json
+# Add your Fish Audio API key to config.local.json.
 npm run dev
 ```
 
@@ -24,11 +24,11 @@ Node server → Fish Audio /v1/tts with server-only API key + reference_id
 Fish Audio → MP3 bytes → Node server → browser audio element
 ```
 
-In `.env`, set `FISH_API_KEY` and copy Fish Audio voice model IDs into `FISH_VOICE_VELVET`, `FISH_VOICE_HONEY`, and `FISH_VOICE_LUNA`. Each slot can use a different voice. These names are app personas; no specific Fish voice is bundled or selected on your behalf. The earlier voice-models.com RVC archive is not used by this Fish Audio integration.
+`config.json` is the committed default configuration: host, port, Fish model, and the three public voice IDs. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
 
-The default synthesis model is `s2.1-pro`; override `FISH_MODEL` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
+The default synthesis model is `s2.1-pro`; change `fish.model` in `config.json` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
 
-Add further voices in `server/voices.js`, referencing a new server environment variable for each Fish voice ID. The client discovers them from `GET /api/voices`. API keys and provider IDs stay on the server. The app makes a paid provider request only when you press a speech button; audio can be replayed locally through the controls. Text is sent to Fish Audio for synthesis.
+Add further voices in `server/voices.js`, referencing a new entry under `fish.voices` in the configuration. The client discovers them from `GET /api/voices`. API keys and provider IDs stay on the server. The app makes a paid provider request only when you press a speech button; audio can be replayed locally through the controls. Text is sent to Fish Audio for synthesis.
 
 Requests are limited to 600 text characters, two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
 

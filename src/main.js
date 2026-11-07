@@ -213,14 +213,14 @@ async function loadVoices() {
         selectedVoice = voice.id;
         speech.stop();
         $('#sample').disabled = !voice.configured;
-        voiceStatus(voice.configured ? `${voice.name} is here for you.` : 'Add this voice’s Fish Audio ID and the API key in .env, then restart the server.');
+        voiceStatus(voice.configured ? `${voice.name} is here for you.` : 'Add this voice’s Fish Audio ID and API key in config.local.json, then restart the server.');
         if (route) showStep();
       });
       return label;
     }));
     const configured = voices.some((voice) => voice.configured);
     $('#sample').disabled = !configured;
-    if (!configured) voiceStatus('Voice setup needed: add your Fish Audio API key and voice IDs to .env, then restart.');
+    if (!configured) voiceStatus('Voice setup needed: add your Fish Audio API key and voice IDs to config.local.json, then restart.');
   } catch (error) { voiceStatus(error.message); }
 }
 loadVoices();
