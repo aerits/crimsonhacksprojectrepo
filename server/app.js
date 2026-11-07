@@ -6,7 +6,9 @@ import { getVoices, publicVoices } from './voices.js';
 import voicePhrases from '../voice-phrases.json' with { type: 'json' };
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
+const SOURCE = resolve(ROOT, 'src');
+const PUBLIC = resolve(ROOT, 'public');
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
 const json = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(body));
@@ -126,9 +128,11 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
       if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'API endpoint not found.' });
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Method not allowed.' });
       const pathname = decodeURIComponent(url.pathname);
-      const file = pathname === '/' ? resolve(ROOT, 'index.html') : resolve(ROOT, `.${pathname}`);
-      // Serve only the app entry and browser source, never configuration or server files.
-      if (file !== resolve(ROOT, 'index.html') && !file.startsWith(resolve(ROOT, 'src') + sep)) {
+      const file = pathname === '/' ? resolve(ROOT, 'index.html')
+        : pathname.startsWith('/images/') ? resolve(PUBLIC, `.${pathname}`)
+          : resolve(ROOT, `.${pathname}`);
+      // Serve only browser assets, never configuration or server files.
+      if (file !== resolve(ROOT, 'index.html') && !file.startsWith(SOURCE + sep) && !file.startsWith(PUBLIC + sep)) {
         return json(res, 404, { error: 'Not found.' });
       }
       if (!MIME[extname(file)]) return json(res, 404, { error: 'Not found.' });

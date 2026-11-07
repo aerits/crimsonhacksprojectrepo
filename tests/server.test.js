@@ -126,10 +126,11 @@ test('empty audio is rejected rather than played', async (t) => {
   assert.equal((await api.post({ text: 'Hi', voiceId: 'velvet' })).status, 502);
 });
 
-test('static server serves app source and blocks private files', async (t) => {
+test('static server serves browser assets and blocks private files', async (t) => {
   const api = await withServer(t, { config });
   assert.equal((await api.get('/')).status, 200);
   assert.match((await api.get('/src/main.js')).headers.get('content-type'), /javascript/);
+  assert.match((await api.get('/images/guide-luna.png')).headers.get('content-type'), /image\/png/);
   for (const path of ['/config.json', '/config.local.json', '/server/app.js', '/package.json', '/.git/config', '/src/%2e%2e%2fserver/app.js']) {
     assert.equal((await api.get(path)).status, 404);
   }

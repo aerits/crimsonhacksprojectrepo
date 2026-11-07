@@ -21,7 +21,7 @@ document.querySelector('#app').innerHTML = `
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
         <label for="start">Starting address <span>A</span></label>
-        <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="start">Search</button></div>
+        <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="street-address" required /><button id="locate" type="button" class="location-search" aria-label="Use my GPS location" title="Use my GPS location">⌖</button><button type="button" class="address-search" data-search="start">Search</button></div>
         <div id="start-results" class="address-results" aria-live="polite"></div>
         <label for="end">Your destination <span>B</span></label>
         <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="street-address" required /><button type="button" class="address-search" data-search="end">Search</button></div>
@@ -92,6 +92,7 @@ let request;
 let map;
 let simulationTimer;
 let simulationRunning = false;
+let locationRequestId = 0;
 let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
@@ -210,26 +211,50 @@ try {
   map = createMap($('#map'));
 } catch (error) { status(error.message); }
 
-function useCurrentLocation() {
-  const startAtRequest = $('#start').value;
-  if (!navigator.geolocation) {
-    $('#start').value = '';
-    return status('Current location is unavailable. Search for a starting address.');
-  }
-  navigator.geolocation.getCurrentPosition(({ coords }) => {
-    if ($('#start').value !== startAtRequest) return;
-    const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your current location' };
-    selectedPlaces.start = place;
-    $('#start').value = place.label;
-    map?.setPoint('start', place);
-    map?.focus(place);
-    status('Starting from your current location. Search for a destination to begin.');
-  }, () => {
-    if ($('#start').value !== startAtRequest) return;
-    $('#start').value = '';
-    status('Location permission was not granted. Search for a starting address.');
-  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+function locationErrorMessage(error) {
+  if (error?.code === 1) return 'GPS permission is off. Allow location access in your browser, then use the location button to try again.';
+  if (error?.code === 2) return 'GPS could not find a position right now. Check your connection and try the location button again.';
+  if (error?.code === 3) return 'GPS took too long to respond. Try the location button again or enter a starting address.';
+  return 'Your location is unavailable. Enter a starting address or try the location button again.';
 }
+
+function useCurrentLocation({ userInitiated = false } = {}) {
+  const input = $('#start');
+  const locate = $('#locate');
+  const requestId = ++locationRequestId;
+  if (!navigator.geolocation) {
+    if (input.value.startsWith('Finding your')) input.value = '';
+    return status('GPS is not available in this browser. Enter a starting address instead.');
+  }
+  if (window.isSecureContext === false) {
+    if (input.value.startsWith('Finding your')) input.value = '';
+    return status('GPS requires HTTPS (or localhost). Open this app securely, then try again.');
+  }
+  input.value = 'Finding your GPS location…';
+  locate.disabled = true;
+  status(userInitiated ? 'Checking your GPS location…' : 'Finding your GPS location…');
+  navigator.geolocation.getCurrentPosition(({ coords }) => {
+    if (requestId !== locationRequestId) return;
+    locate.disabled = false;
+    if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) {
+      input.value = '';
+      return status('GPS returned an invalid position. Try again or enter a starting address.');
+    }
+    const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your GPS location' };
+    selectedPlaces.start = place;
+    input.value = place.label;
+    map?.setPoint('start', place);
+    map?.setLiveLocation(place);
+    map?.focus(place);
+    status('Starting from your GPS location. Search for a destination to begin.');
+  }, (error) => {
+    if (requestId !== locationRequestId) return;
+    locate.disabled = false;
+    input.value = '';
+    status(locationErrorMessage(error));
+  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
+}
+$('#locate').addEventListener('click', () => useCurrentLocation({ userInitiated: true }));
 useCurrentLocation();
 
 function clearResults(kind) { $(`#${kind}-results`).replaceChildren(); }
@@ -290,6 +315,10 @@ function scheduleSuggestions(kind) {
 }
 
 for (const kind of ['start', 'end']) $(`#${kind}`).addEventListener('input', () => {
+  if (kind === 'start') {
+    locationRequestId += 1;
+    $('#locate').disabled = false;
+  }
   invalidateRoute();
   selectedPlaces[kind] = null;
   clearResults(kind);

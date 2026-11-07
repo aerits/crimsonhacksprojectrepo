@@ -45,17 +45,13 @@ export function createVoicePicker({ select, summary, gallery, selection, onSelec
       const titleId = 'voice-title-' + index;
       card.setAttribute('aria-labelledby', titleId);
       const art = element('div', 'voice-art voice-art-' + index % 3);
-      art.setAttribute('aria-hidden', 'true');
-      art.append(element('span', 'voice-orbit orbit-one'), element('span', 'voice-orbit orbit-two'));
+      const portrait = document.createElement('img');
+      portrait.className = 'voice-portrait';
+      portrait.src = ['/images/guide-luna.png', '/images/guide-rose.png', '/images/guide-iris.png'][index % 3];
+      portrait.alt = `Illustrated anime portrait of ${voice.name}`;
+      portrait.loading = 'lazy';
       const badge = element('span', 'selected-badge', '✓ Your voice');
-      const monogram = element('span', 'voice-monogram', voice.initial);
-      const waveform = element('span', 'voice-waveform');
-      for (let i = 0; i < 15; i++) {
-        const bar = element('i');
-        bar.style.height = (8 + (i * 13 + index * 7) % 28) + 'px';
-        waveform.append(bar);
-      }
-      art.append(badge, monogram, waveform);
+      art.append(portrait, badge);
       const body = element('div', 'library-card-body');
       const top = element('div', 'voice-card-heading');
       const title = element('h2', '', voice.name);
