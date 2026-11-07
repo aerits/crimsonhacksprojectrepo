@@ -12,7 +12,7 @@ import { sunGlare } from './utils/sun.js';
 import { loadSavedPlaces, removePlace, saveSavedPlaces, upsertPlace } from './utils/saved-places.js';
 import { createReminder } from './utils/reminders.js';
 import { nationalParkPromptFor } from './data/national-park-prompts.js';
-import { utahStateParks, utahTrails } from './data/utah-outdoors.js';
+import { stateParkPageUrl, utahStateParks } from './data/utah-outdoors.js';
 import { mapCategories } from './data/map-categories.js';
 
 document.querySelector('#app').innerHTML = `
@@ -113,7 +113,7 @@ document.querySelector('#app').innerHTML = `
           <label class="switch-row trivia-toggle" for="mute-trivia"><span>Mute trivia</span><input id="mute-trivia" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
-        <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><label for="utah-trails" class="hint">Trail ideas</label><select id="utah-trails"><option value="">Choose a trail idea</option></select><p id="outdoor-note" class="hint">Choose an outdoor spot, then use its official page to plan before setting a route.</p></fieldset>
+        <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><p id="outdoor-note" class="hint">Choose a park, then use its official page to plan before setting a route.</p></fieldset>
         <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
       </section>
       <section id="saved-places-settings" class="settings card" aria-labelledby="saved-places-heading">
@@ -217,21 +217,23 @@ let savedPlaces = loadSavedPlaces();
 const wellnessReminder = createReminder();
 
 function populateOutdoorLists() {
-  const fill = (selector, items) => $(selector).append(...items.map((name) => {
+  const fill = (selector, items, urlForItem) => $(selector).append(...items.map((name) => {
     const option = document.createElement('option');
     option.value = name;
+    if (urlForItem) option.dataset.url = urlForItem(name);
     option.textContent = name;
     return option;
   }));
-  fill('#utah-parks', utahStateParks);
-  fill('#utah-trails', utahTrails);
-  for (const selector of ['#utah-parks', '#utah-trails']) $(selector).addEventListener('change', (event) => {
+  fill('#utah-parks', utahStateParks, stateParkPageUrl);
+  $('#utah-parks').addEventListener('change', (event) => {
     if (!event.target.value) return;
+    const selected = event.target.selectedOptions[0];
+    const officialUrl = selected?.dataset.url;
     const link = document.createElement('a');
-    link.href = 'https://stateparks.utah.gov/';
+    link.href = officialUrl;
     link.target = '_blank';
     link.rel = 'noreferrer';
-    link.textContent = 'Open official Utah State Parks site';
+    link.textContent = 'Open official park page';
     $('#outdoor-note').replaceChildren(`Selected: ${event.target.value}. `, link);
   });
 }
