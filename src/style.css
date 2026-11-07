@@ -39,7 +39,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 1.7px; color: #94749c; margin: 0 0 12px; }
 h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; line-height: 1.14; font-weight: 400; margin: 0; letter-spacing: -.7px; }
 h1 em { color: #9673ac; font-weight: 400; }
-.intro > p:last-child { color: var(--muted); font-size: 12px; line-height: 1.7; max-width: 275px; margin: 12px 0 0; }
+.intro-guide { color: var(--muted); font-size: 15px; line-height: 1.5; margin: 12px 0 0; overflow-wrap: anywhere; }
+.intro-guide span { color: var(--purple-dark); font-weight: 600; }
 .card { padding: 19px; background: #fffafd; border: 1px solid var(--line); border-radius: 17px; box-shadow: 0 6px 22px #87689a05; }
 .section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 17px; }
 h2 { font-size: 14px; font-weight: 600; margin: 0; }
@@ -196,9 +197,8 @@ details li { margin-bottom: 7px; }
   .workspace { min-height: calc(100dvh - 66px); }
   .sidebar { max-height: calc(100dvh - 66px); padding: 14px 20px; overflow-y: auto; }
   .intro { padding-bottom: 11px; }
-  .intro .eyebrow { margin-bottom: 6px; }
   h1 { font-size: 29px; }
-  .intro > p:last-child { display: none; }
+  .intro-guide { font-size: 13px; margin-top: 6px; }
   .card { padding: 13px; border-radius: 13px; }
   .section-title { margin-bottom: 10px; }
   .route-form label { margin: 8px 0 4px; font-size: 10px; }
