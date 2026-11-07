@@ -15,6 +15,7 @@ import { createReminder } from './utils/reminders.js';
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
     <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span>mommy maps<span class="brand-dot">.</span></a>
+    <div class="map-actions" aria-label="Map options"><button id="open-voices" type="button" class="map-action" aria-label="Open voice library">♫</button><button id="open-settings" type="button" class="map-action" aria-label="Open settings">⚙</button></div>
     <nav class="view-tabs" role="tablist" aria-label="App views">
       <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
       <button id="voices-tab" type="button" role="tab" aria-selected="false" aria-controls="voices-panel" data-tab="voices" tabindex="-1">Voice library</button>
@@ -37,7 +38,8 @@ document.querySelector('#app').innerHTML = `
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
-      <section class="voice-section" aria-labelledby="voice-heading">
+      <button id="edit-route" type="button" class="edit-route" hidden>⌕ Edit route</button>
+      <section id="voice-section" class="voice-section" aria-labelledby="voice-heading">
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
         <label class="voice-select-label" for="voice-select">Your navigation voice</label>
         <div class="voice-select-wrap"><select id="voice-select" aria-describedby="voice-summary" disabled><option>Loading your guides…</option></select></div>
@@ -169,7 +171,7 @@ const arrivalPhraseSettings = createPhraseSettings({
   submit: '#save-arrival-phrase', cancel: '#cancel-arrival-phrase', status: '#arrival-phrase-status',
   storageKey: 'mommy-maps-arrival-phrases',
 });
-$('#settings-content').append($('#settings'));
+$('#settings-content').append($('#voice-section'), $('#settings'));
 const affirmationStyles = new Set(['neutral', 'girl', 'boy', 'enby']);
 let voices = [];
 let selectedVoice;
@@ -220,10 +222,14 @@ async function loadRuntime() {
 loadRuntime();
 
 const activateTab = setupTabs((name) => {
+  $('.topbar').classList.toggle('map-mode', name === 'journey');
+  $('#journey-panel').classList.toggle('compact-journey', name === 'journey');
   if (name === 'voices' && simulationRunning) stopSimulation('Simulation paused while you browse voices.');
   if (name === 'journey') requestAnimationFrame(() => map?.resize());
 });
 $('#browse-voices').addEventListener('click', () => activateTab('voices', { focus: true }));
+$('#open-voices').addEventListener('click', () => activateTab('voices', { focus: true }));
+$('#open-settings').addEventListener('click', () => activateTab('settings', { focus: true }));
 $('#back-to-route').addEventListener('click', () => activateTab('journey', { focus: true }));
 $('#settings-back-to-route').addEventListener('click', () => activateTab('journey', { focus: true }));
 const voicePicker = createVoicePicker({
@@ -362,7 +368,7 @@ async function loadConditions(start, end, plannedRoute) {
 
 function showStep({ focus = true } = {}) {
   const step = route.steps[stepIndex];
-  $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} Â· ${formatDistance(step.distance)}`;
+  $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} · ${formatDistance(step.distance)}`;
   $('#instruction').textContent = step.instruction;
   $('#previous').disabled = stepIndex === 0;
   $('#next').disabled = stepIndex === route.steps.length - 1;
@@ -459,7 +465,7 @@ function renderAddressResults(kind, results, origin, message) {
   note.className = 'address-results-note';
   note.id = kind + '-results-note';
   note.textContent = origin
-    ? 'Nearest matches Â· Straight-line distance from ' + origin.label + '.'
+    ? 'Nearest matches · Straight-line distance from ' + origin.label + '.'
     : kind === 'end' ? 'Choose a starting address to see nearby matches and distances.'
       : 'Allow location access to see nearby starting addresses and distances.';
   const list = document.createElement('ul');
@@ -576,6 +582,12 @@ $('#swap').addEventListener('click', () => {
   status('Swapped. Let’s find the way back.');
 });
 
+$('#edit-route').addEventListener('click', () => {
+  $('#route-form').classList.remove('collapsed');
+  $('#edit-route').hidden = true;
+  $('#end').focus();
+});
+
 $('#route-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   invalidateRoute();
@@ -610,7 +622,7 @@ $('#route-form').addEventListener('submit', async (event) => {
     stepIndex = 0;
     const estimatedDuration = formatDuration(route.duration);
     const arrivalTime = formatArrivalTime(route.duration);
-    $('#journey-heading').textContent = `${estimatedDuration} Â· ${formatDistance(route.distance)}`;
+    $('#journey-heading').textContent = `${estimatedDuration} · ${formatDistance(route.distance)}`;
     $('#journey-eta').textContent = `Estimated arrival: ${arrivalTime}`;
     $('#steps').replaceChildren(...route.steps.map((step) => {
       const item = document.createElement('li');
@@ -618,6 +630,8 @@ $('#route-form').addEventListener('submit', async (event) => {
       return item;
     }));
     $('#journey').hidden = false;
+    $('#route-form').classList.add('collapsed');
+    $('#edit-route').hidden = false;
     $('#start-guidance').disabled = false;
     showStep();
     map?.drawRoute(route.geometry);

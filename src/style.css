@@ -32,10 +32,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .view-tabs { display: flex; gap: 4px; padding: 5px; border: 1px solid #eee3f2; border-radius: 14px; background: #f8f3fb; margin-left: auto; }
 .view-tabs button { border: 0; background: transparent; border-radius: 10px; color: #7b6d87; padding: 11px 18px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .view-tabs button[aria-selected=true] { background: #e9ddf2; color: #65467f; box-shadow: 0 2px 5px #87619c0b; }
+.map-actions { display: none; margin-left: auto; gap: 8px; }
+.map-action { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--purple-dark); font-size: 17px; line-height: 1; }
+.topbar.map-mode .view-tabs, .topbar.map-mode .prototype { display: none; }
+.topbar.map-mode .map-actions { display: flex; }
 .prototype { margin-left: auto; font-size: 9px; letter-spacing: 1.3px; color: #936a86; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .prototype span, .location-dot { display: inline-block; width: 7px; height: 7px; background: #c991ae; border-radius: 50%; box-shadow: 0 0 0 4px #f7e9f0; }
 .workspace { display: grid; grid-template-columns: 380px minmax(0, 1fr); min-height: calc(100dvh - 88px); }
 .sidebar { padding: 28px 25px 18px; border-right: 1px solid var(--line); background: linear-gradient(155deg, #f4eefb, #fdf0f5); max-height: calc(100dvh - 88px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #d8c7e3 transparent; }
+.compact-journey { grid-template-columns: minmax(288px, 340px) minmax(0, 1fr); }
+.compact-journey .sidebar { padding: 16px; }
+.compact-journey .intro, .compact-journey .sidebar-footer { display: none; }
+.compact-journey .route-form { padding: 13px; border-radius: 14px; box-shadow: 0 8px 24px #503d5b14; }
+.compact-journey .route-form .section-title { margin-bottom: 9px; }
+.compact-journey .route-form label { margin: 9px 0 5px; }
+.compact-journey .route-options { margin: 5px 0 8px; }
+.compact-journey .route-form > .hint { display: none; }
 .intro { padding: 0 3px 23px; }
 .eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 1.7px; color: #94749c; margin: 0 0 12px; }
 h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 36px; line-height: 1.14; font-weight: 400; margin: 0; letter-spacing: -.7px; }
@@ -72,6 +84,7 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .hint { font-size: 11px; line-height: 1.6; color: #82728f; margin: 10px 0 0; }
 .voice-section { padding: 25px 2px 0; }
 .voice-section .section-title { margin-bottom: 14px; }
+.settings-page #voice-section { margin: 0 0 18px; padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
 .settings { margin-top: 18px; padding: 16px 18px; }
 .settings .section-title { margin-bottom: 11px; }
 .settings fieldset { padding: 0; margin: 0; border: 0; }
@@ -159,6 +172,7 @@ details li { margin-bottom: 7px; }
 :root[data-theme='dark'] .settings-page { background: radial-gradient(ellipse at 92% 0%, #3a2c45 0, transparent 46%), linear-gradient(145deg, #211a29, #2b202e); }
 :root[data-theme='dark'] .settings-page-heading > div { background: #30263ae8; border-color: var(--line); }
 :root[data-theme='dark'] .settings-page .settings { background: #382d43; border-color: #756080; box-shadow: 0 12px 32px #100b162e; }
+:root[data-theme='dark'] .settings-page #voice-section { background: #382d43; border-color: #756080; }
 :root[data-theme='dark'] .settings-page .settings :is(legend, .affirmation-label, .switch-row, .phrase-settings summary, .hint, .tiny) { color: #e5d7eb; }
 :root[data-theme='dark'] .settings-page .settings :is(select, textarea) { background: #211a29; border-color: #756080; color: #f6eff8; }
 :root[data-theme='dark'] .settings-page .settings :is(select, textarea)::placeholder { color: #cdbdd4; }
@@ -461,6 +475,8 @@ details li { margin-bottom: 7px; }
   .workspace { height: calc(100dvh - 88px); min-height: 0; overflow: hidden; }
   .sidebar { height: 100%; max-height: none; overscroll-behavior: contain; }
   .map-panel { min-height: 0; height: 100%; }
+  .topbar.map-mode { height: 64px; padding: 0 20px; }
+  .topbar.map-mode + .workspace { height: calc(100dvh - 64px); min-height: calc(100dvh - 64px); }
 }
 
 /* The compact desktop header is 66px high. Keep both panes aligned to it
@@ -500,6 +516,10 @@ details li { margin-bottom: 7px; }
 }
 
 @media (max-width: 760px) {
+  .topbar.map-mode { min-height: 64px; height: 64px; padding: 0 16px; flex-wrap: nowrap; }
+  .topbar.map-mode + .workspace { height: calc(100dvh - 64px); }
+  .topbar.map-mode .brand { font-size: 23px; }
+  .topbar.map-mode .brand-mark { width: 32px; height: 32px; margin-right: 8px; }
   .workspace {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -523,4 +543,101 @@ details li { margin-bottom: 7px; }
   .sidebar { padding-bottom: 16px; }
   /* Avoid a second scrollbar inside the compact route sheet. */
   .journey { overflow-y: hidden; }
+}
+
+/* Map-first journey view: keep directions available without turning the map
+   into a secondary panel. This is intentionally more like a maps search bar
+   than a conventional application sidebar. */
+.topbar.map-mode + #journey-panel.compact-journey {
+  position: relative;
+  display: block;
+  height: calc(100dvh - 64px);
+  min-height: calc(100dvh - 64px);
+  overflow: hidden;
+}
+.compact-journey .map-panel { position: absolute; inset: 0; height: 100% !important; min-height: 0; }
+.compact-journey .sidebar {
+  position: absolute;
+  z-index: 6;
+  top: 14px;
+  left: 14px;
+  width: min(390px, calc(100% - 28px));
+  height: auto;
+  max-height: calc(100% - 28px);
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+}
+.compact-journey .route-form {
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px #30203f2b;
+  backdrop-filter: blur(12px);
+}
+.compact-journey .route-form .section-title { margin-bottom: 6px; }
+.compact-journey .route-form .section-title h2 { font-size: 12px; }
+.compact-journey .route-form label { margin: 7px 0 4px; font-size: 10px; }
+.compact-journey .route-form .input-row { min-height: 40px; }
+.compact-journey .route-form .input-row input { padding: 8px 9px; font-size: 12px; }
+.compact-journey .route-form .address-search { min-width: 56px; padding: 0 8px; }
+.compact-journey .route-form .location-search { width: 34px; }
+.compact-journey .route-options { margin: 3px 0 6px; }
+.compact-journey .route-form > .primary { padding: 10px 12px; }
+.compact-journey .route-form.collapsed { display: none; }
+.edit-route { border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px; background: var(--surface); color: var(--purple-dark); font-size: 12px; font-weight: 600; box-shadow: 0 5px 18px #30203f22; }
+.compact-journey .map-label { display: none; }
+.compact-journey .map-status { top: auto; bottom: 20px; left: 14px; max-width: min(480px, calc(100% - 28px)); padding: 8px 11px; box-shadow: 0 3px 12px #30203f22; }
+.compact-journey .map-note { display: none; }
+
+@media (max-width: 760px) {
+  .topbar.map-mode + #journey-panel.compact-journey { height: calc(100dvh - 64px); min-height: calc(100dvh - 64px); }
+  .compact-journey .sidebar { top: 10px; left: 10px; width: calc(100% - 20px); }
+  .compact-journey .route-form { padding: 10px; }
+  .compact-journey .route-form .input-row input { font-size: 14px; }
+  .compact-journey .route-form .address-search { min-height: 40px; }
+  .compact-journey .map-status { bottom: 12px; left: 10px; max-width: calc(100% - 20px); }
+}
+
+/* Keep every view anchored by the same concise header. The tab strip is only
+   exposed away from the map, where it acts as navigation rather than chrome. */
+.topbar:not(.map-mode) { height: 64px; padding: 0 20px; gap: 14px; }
+.topbar:not(.map-mode) .brand { font-size: 23px; }
+.topbar:not(.map-mode) .brand-mark { width: 32px; height: 32px; margin-right: 8px; border-radius: 10px; }
+.topbar:not(.map-mode) .view-tabs { margin-left: auto; padding: 3px; border-radius: 10px; }
+.topbar:not(.map-mode) .view-tabs button { padding: 8px 12px; font-size: 11px; }
+.topbar:not(.map-mode) .prototype { display: none; }
+.voice-library, .settings-page { min-height: calc(100dvh - 64px); }
+
+@media (max-width: 760px) {
+  .topbar:not(.map-mode) { min-height: 64px; height: 64px; padding: 0 10px; flex-wrap: nowrap; gap: 8px; }
+  .topbar:not(.map-mode) .brand { font-size: 18px; letter-spacing: -.8px; }
+  .topbar:not(.map-mode) .brand-mark { width: 28px; height: 28px; margin-right: 6px; }
+  .topbar:not(.map-mode) .view-tabs { width: auto; min-width: 0; margin: 0 0 0 auto; }
+  .topbar:not(.map-mode) .view-tabs button { padding: 8px 7px; font-size: 10px; }
+}
+
+/* During live guidance, preserve the map as the primary surface. The route
+   controls stay reachable in a compact, scrollable sheet instead of covering
+   most of the route. */
+#journey-panel.compact-journey .journey {
+  bottom: 16px;
+  left: 16px;
+  width: min(420px, calc(100% - 32px));
+  max-height: min(360px, calc(100% - 110px));
+  padding: 16px;
+  border-radius: 16px;
+}
+#journey-panel.compact-journey .journey .current-step { margin: 12px 0; }
+#journey-panel.compact-journey .journey > .hint { display: none; }
+#journey-panel.compact-journey .journey details { margin-top: 9px; }
+#journey-panel.compact-journey .journey details ol { max-height: 94px; }
+
+@media (max-width: 760px) {
+  #journey-panel.compact-journey .journey { bottom: 0; left: 0; width: 100%; max-height: min(270px, calc(100% - 100px)); padding: 16px 14px 10px; border-radius: 18px 18px 0 0; border-bottom: 0; }
+  #journey-panel.compact-journey .journey .section-title { align-items: flex-start; }
+  #journey-panel.compact-journey .journey h2 { font-size: 19px; }
+  #journey-panel.compact-journey .journey .current-step { margin: 8px 0; }
+  #journey-panel.compact-journey .journey .small-pill { display: none; }
+  #journey-panel.compact-journey .journey details ol { max-height: 64px; }
 }
