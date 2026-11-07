@@ -16,7 +16,14 @@ export function createMap(element) {
     lat: from.lat + (to.lat - from.lat) * amount,
     lng: from.lng + (to.lng - from.lng) * amount,
   });
-  const segmentLength = (from, to) => Math.hypot(to.lat - from.lat, (to.lng - from.lng) * Math.cos((from.lat + to.lat) * Math.PI / 360));
+  const segmentLength = (from, to) => {
+    const radians = Math.PI / 180;
+    const deltaLat = (to.lat - from.lat) * radians;
+    const deltaLng = (to.lng - from.lng) * radians;
+    const value = Math.sin(deltaLat / 2) ** 2
+      + Math.cos(from.lat * radians) * Math.cos(to.lat * radians) * Math.sin(deltaLng / 2) ** 2;
+    return 2 * 6371008.8 * Math.asin(Math.sqrt(Math.min(1, value)));
+  };
   const setSimulationPoint = (point) => {
     if (!simulationMarker) {
       simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#ce82a7', fillOpacity: 1 })
@@ -57,15 +64,16 @@ export function createMap(element) {
     },
     clearRoute() { routeLayer?.remove(); routeLayer = null; },
     setSimulationPoint,
-    animateSimulationPath(coordinates, duration) {
+    animateSimulationPath(coordinates, mph) {
       cancelAnimationFrame(simulationAnimation);
       const points = coordinates.map(([lng, lat]) => ({ lat, lng }));
-      if (points.length < 2) return setSimulationPoint(points[0]);
+      if (points.length < 2) { setSimulationPoint(points[0]); return 600; }
       const lengths = points.slice(1).map((point, index) => segmentLength(points[index], point));
       const distances = [0];
       for (const length of lengths) distances.push(distances.at(-1) + length);
       const total = distances.at(-1);
-      if (!total) return setSimulationPoint(points.at(-1));
+      if (!total) { setSimulationPoint(points.at(-1)); return 600; }
+      const duration = Math.max(600, total / (mph * 1609.344 / 3_600_000));
       const startedAt = performance.now();
       let segment = 0;
       follow(points[0], Math.max(map.getZoom(), 17));
@@ -81,6 +89,7 @@ export function createMap(element) {
       };
       setSimulationPoint(points[0]);
       simulationAnimation = requestAnimationFrame(frame);
+      return duration;
     },
     clearSimulationPoint() { cancelAnimationFrame(simulationAnimation); simulationMarker?.remove(); simulationMarker = null; },
     setLiveLocation,

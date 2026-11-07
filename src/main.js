@@ -121,7 +121,7 @@ document.querySelector('#app').innerHTML = `
         <p id="glare-note" class="hint" role="status" hidden>☀ Sun glare may be likely for this turn — sunglasses on.</p><p id="conditions-note" class="hint" role="status" hidden></p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
-        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
+        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Simulation speed <select id="simulation-speed"><option value="120">120 mph</option><option value="300" selected>300 mph</option><option value="600">600 mph</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
         <button type="button" id="start-guidance" class="ambient-guidance" disabled>Start ambient guidance</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
@@ -281,30 +281,38 @@ function startDrivingFollow() {
   }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
 }
 
-function scheduleSimulationStep() {
-  const delay = Number($('#simulation-speed').value);
-  simulationTimer = setTimeout(() => {
-    if (!simulationRunning || !route) return;
-    if (stepIndex >= route.steps.length - 1) return stopSimulation('Simulation complete. You’ve arrived.');
-    stepIndex += 1;
-    playSimulationStep();
-    scheduleSimulationStep();
-  }, delay);
+function simulationDuration(step) {
+  const mph = Number($('#simulation-speed').value);
+  const metersPerMillisecond = mph * 1609.344 / 3_600_000;
+  return Math.max(600, (step.distance || 0) / metersPerMillisecond);
 }
 
 function playSimulationStep() {
   const step = route.steps[stepIndex];
   showStep({ focus: false });
-  const duration = Number($('#simulation-speed').value);
+  let duration = simulationDuration(step);
   if (step.geometry?.coordinates?.length > 1) {
-    map?.animateSimulationPath(step.geometry.coordinates, duration);
+    duration = map?.animateSimulationPath(step.geometry.coordinates, Number($('#simulation-speed').value)) ?? duration;
   } else if (step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
     map?.setSimulationPoint({ lat, lng });
   }
   const voice = voices.find((item) => item.id === selectedVoice);
-  if (voice?.configured) speech.speak(step.instruction, selectedVoice, speechOptionsForStep(step));
-  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
+  const speechDone = voice?.configured
+    ? speech.speak(step.instruction, selectedVoice, { ...speechOptionsForStep(step), waitForPlayback: true })
+    : Promise.resolve();
+  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length} at ${$('#simulation-speed').value} mph.`;
+  return { duration, speechDone };
+}
+
+async function runSimulationStep() {
+  if (!simulationRunning || !route) return;
+  const { duration, speechDone } = playSimulationStep();
+  await Promise.all([speechDone, new Promise((resolve) => { simulationTimer = setTimeout(resolve, duration); })]);
+  if (!simulationRunning || !route) return;
+  if (stepIndex >= route.steps.length - 1) return stopSimulation('Simulation complete. You’ve arrived.');
+  stepIndex += 1;
+  runSimulationStep();
 }
 
 function speechOptionsForStep(step) {
@@ -683,8 +691,7 @@ $('#simulate').addEventListener('click', () => {
   }
   simulationRunning = true;
   $('#simulate').textContent = 'Ⅱ Pause simulation';
-  playSimulationStep();
-  scheduleSimulationStep();
+  runSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
   if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, speechOptionsForStep(route.steps[stepIndex]));

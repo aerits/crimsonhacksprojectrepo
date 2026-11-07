@@ -3,16 +3,23 @@ export function createSpeechService(audio, onStatus = () => {}) {
   let controller;
   let objectUrl;
   let generation = 0;
+  let finishPlayback;
+  const completePlayback = () => {
+    finishPlayback?.();
+    finishPlayback = undefined;
+  };
   function stop() {
     generation += 1;
     controller?.abort();
+    completePlayback();
     audio.pause();
     audio.removeAttribute('src');
     audio.load();
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = undefined;
   }
-  audio.addEventListener('ended', () => onStatus('Ready for the next turn.'));
+  audio.addEventListener('ended', () => { onStatus('Ready for the next turn.'); completePlayback(); });
+  audio.addEventListener('error', completePlayback);
   return {
     stop,
     async voices() {
@@ -20,7 +27,7 @@ export function createSpeechService(audio, onStatus = () => {}) {
       if (!response.ok) throw new Error('Could not load voices. Please reload.');
       return response.json();
     },
-    async speak(text, voiceId, { afterTurnPhrase = false, customAfterTurnPhrases = [], arrivalPhrase = false, customArrivalPhrases = [], affirmation } = {}) {
+    async speak(text, voiceId, { afterTurnPhrase = false, customAfterTurnPhrases = [], arrivalPhrase = false, customArrivalPhrases = [], affirmation, waitForPlayback = false } = {}) {
       stop();
       const current = generation;
       controller = new AbortController();
@@ -38,10 +45,13 @@ export function createSpeechService(audio, onStatus = () => {}) {
         if (generation !== current) return;
         objectUrl = URL.createObjectURL(blob);
         audio.src = objectUrl;
+        const playback = waitForPlayback ? new Promise((resolve) => { finishPlayback = resolve; }) : null;
         try {
           await audio.play();
           if (generation === current) onStatus('Your guide is speaking.');
+          if (playback) await playback;
         } catch {
+          completePlayback();
           if (generation === current) onStatus('Audio playback was blocked. Try again from a voice button.');
         }
       } catch (error) {
