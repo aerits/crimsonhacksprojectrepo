@@ -14,7 +14,7 @@ import { createReminder } from './utils/reminders.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span>mommy maps<span class="brand-dot">.</span></a>
+    <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span><span id="brand-title">mommy maps</span><span class="brand-dot">.</span></a>
     <div class="map-actions" aria-label="Map options"><button id="open-voices" type="button" class="map-action voice-map-action" aria-label="Open voice library"><img src="/images/voice-guide.svg" alt="" aria-hidden="true" /></button><button id="open-settings" type="button" class="map-action" aria-label="Open settings">⚙</button></div>
     <nav class="view-tabs" role="tablist" aria-label="App views">
       <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
@@ -262,6 +262,9 @@ function selectVoice(id) {
   const portrait = voicePortrait(voice, voices.indexOf(voice));
   $('#header-voice-portrait').src = portrait.src;
   $('#header-voice-portrait').alt = portrait.alt;
+  const isVerity = voice.id === 'verity';
+  $('#brand-title').textContent = isVerity ? 'verity maps' : 'mommy maps';
+  document.title = isVerity ? 'Verity Maps' : 'Mommy Maps';
   $('#selected-voice-name').textContent = voice.name?.trim() || 'Your selected guide';
   speech.stop();
   voicePicker.setSelected(id);
