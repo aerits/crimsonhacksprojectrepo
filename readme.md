@@ -1,4 +1,4 @@
-# Softly
+# MommyMaps
 
 A JavaScript maps app with comforting mommy ASMR navigation voices. This first scaffold plans driving routes and lets you preview each direction with server-generated Fish Audio speech.
 
