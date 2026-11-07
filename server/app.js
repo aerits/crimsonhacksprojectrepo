@@ -5,6 +5,7 @@ import { resolve, extname, sep } from 'node:path';
 import { getVoices, publicVoices } from './voices.js';
 import { distanceBetween, isValidPoint } from '../src/utils/location.js';
 import voicePhrases from '../voice-phrases.json' with { type: 'json' };
+import { normalizeCustomPhrases } from '../src/utils/phrases.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SOURCE = resolve(ROOT, 'src');
@@ -20,7 +21,7 @@ async function bodyOf(req) {
   req.setEncoding('utf8');
   for await (const chunk of req.iterator({ destroyOnReturn: false })) {
     body += chunk;
-    if (Buffer.byteLength(body) > 4096) {
+    if (Buffer.byteLength(body) > 32 * 1024) {
       req.resume();
       throw Object.assign(new Error('Request too large.'), { status: 413 });
     }
@@ -107,12 +108,21 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         if (!body || typeof body.text !== 'string' || !body.text.trim() || body.text.length > 600) {
           return json(res, 400, { error: 'Text must contain between 1 and 600 characters.' });
         }
+        let customPhrases;
+        try { customPhrases = normalizeCustomPhrases(body.customAfterTurnPhrases); }
+        catch (error) { return json(res, 400, { error: error.message }); }
         const voice = voices.find((item) => item.id === body.voiceId);
         if (!voice) return json(res, 400, { error: 'Choose a valid voice.' });
         if (!fish.apiKey || !voice.referenceId) {
           return json(res, 503, { error: 'This voice needs a Fish Audio API key and voice ID configured in the server config files.' });
         }
         if (active >= 2) return json(res, 429, { error: 'The voice server is busy. Try again shortly.' });
+        // Build a per-request pool so personal phrases never affect another user's turns.
+        const phrasePool = body.afterTurnPhrase === true
+          ? [...new Map([...(phrases.afterTurn || []), ...customPhrases].map((phrase) => [phrase.toLowerCase(), phrase])).values()]
+          : [];
+        const afterTurn = phrasePool.length ? phrasePool[Math.floor(random() * phrasePool.length)] : '';
+        const spokenText = voice.cue + ' ' + body.text.trim() + (afterTurn ? ' ' + afterTurn : '');
         active += 1;
         const controller = new AbortController();
         const abort = () => { if (!res.writableEnded) controller.abort(); };
@@ -121,7 +131,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           const upstream = await fetcher('https://api.fish.audio/v1/tts', {
             method: 'POST',
             headers: { Authorization: `Bearer ${fish.apiKey}`, 'Content-Type': 'application/json', model: fish.model || 's2.1-pro' },
-            body: JSON.stringify({ text: `${voice.cue} ${body.text.trim()}${body.afterTurnPhrase === true && phrases.afterTurn?.length ? ` ${phrases.afterTurn[Math.floor(random() * phrases.afterTurn.length)]}` : ''}`, reference_id: voice.referenceId,
+            body: JSON.stringify({ text: spokenText, reference_id: voice.referenceId,
               format: 'mp3', prosody: { speed: voice.speed }, normalize: true }),
             signal: AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]),
           });

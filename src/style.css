@@ -90,6 +90,22 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .theme-options input { position: absolute; opacity: 0; }
 .theme-options span { display: block; padding: 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 11px; text-align: center; }
 .theme-options input:checked + span { border-color: #b999ca; background: var(--lavender); color: var(--purple-dark); font-weight: 600; }
+.phrase-settings { color: inherit; border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
+.phrase-settings summary { color: var(--purple-dark); font-size: 12px; font-weight: 600; line-height: 1.6; }
+.phrase-settings summary .tiny { display: inline-block; margin-left: 6px; color: var(--muted); font-weight: 400; }
+.phrase-settings .hint, .phrase-settings .tiny { color: var(--muted); }
+#phrase-form { margin-top: 12px; }
+#phrase-form label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+#custom-phrase { display: block; width: 100%; min-height: 76px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: inherit; padding: 10px; font-size: 12px; line-height: 1.5; }
+#custom-phrase::placeholder { color: var(--muted); opacity: .8; }
+#custom-phrase[aria-invalid='true'] { border-color: #b64a6d; }
+.phrase-editor-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.phrase-editor-footer > div, .phrase-item-actions { display: flex; align-items: center; gap: 14px; }
+.phrase-settings .text-button { color: var(--purple-dark); }
+.custom-phrases { list-style: none; padding: 0; margin: 12px 0 0; }
+.custom-phrases li { padding: 10px 0; border-top: 1px solid var(--line); }
+.custom-phrases li p { margin: 0; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.phrase-item-actions { justify-content: flex-end; margin-top: 3px; }
 .voice-select-label { display: block; color: #7a6889; font-size: 11px; margin-bottom: 7px; }
 .voice-select-wrap { position: relative; }
 .voice-select-wrap::after { content: '⌄'; position: absolute; right: 14px; top: 10px; color: #8e6ba7; font-size: 20px; pointer-events: none; }

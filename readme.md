@@ -34,7 +34,9 @@ Fish Audio → MP3 bytes → Node server → browser playback
 
 `config.json` is the committed default configuration: host, port, Fish model, and six public voice IDs. The first Mommy voice is the highest-use nurturing/ASMR result in the public Fish Audio catalog at the time of configuration. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
 
-`voice-phrases.json` contains the committed after-turn phrase presets. Whenever navigation or the simulator speaks a direction, the server randomly selects one phrase and appends it after the instruction. Voice previews and developer TTS tests use only the entered text.
+`voice-phrases.json` contains 24 built-in after-turn phrases. Open **User settings → After-turn phrases** to add, edit, or remove up to 20 personal phrases, each up to 160 characters. Changes save automatically in this browser; if storage is unavailable, they remain usable for the current visit. Blank phrases and duplicates are rejected.
+
+Whenever navigation or the simulator speaks a direction, the server randomly selects one phrase from the built-in and personal collections and appends it after the instruction. Changes apply to the next spoken direction. Custom phrases are sent with that request, validated on the server, and never added to the shared preset list. Only the selected phrase is sent to Fish Audio with the direction. Voice previews and developer TTS tests use only their entered text.
 
 The default synthesis model is `s2.1-pro`; change `fish.model` in `config.json` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
 
@@ -48,7 +50,7 @@ When a location is known, the app asks Photon for nearby matches, sorts them by 
 
 If location access is unavailable, address search still works without distance badges. Select a starting address to enable nearby destination results. Address text and the reference coordinates (when available) are sent to Photon. The server caches results separately for each query and reference point, retaining up to 200 searches. Use a production geocoding provider before deploying at scale.
 
-Requests are limited to 600 text characters, two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
+Speech requests accept up to 600 instruction characters plus 20 custom phrases of up to 160 characters each, with a 32 KB request body limit. Synthesis is limited to two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
 
 ## Structure
 
@@ -63,6 +65,9 @@ src/
   style.css                Responsive lavender-and-pink app layout
   ui/tabs.js               Keyboard-accessible journey / library tabs
   ui/voices.js             Synchronized voice dropdown and voice library
+  ui/phrases.js            Custom after-turn phrase editor
+  services/phrase-preferences.js  Browser-local phrase storage
+  utils/phrases.js          Shared custom phrase limits and validation
   services/map.js          Leaflet map, points and route rendering
   services/routing.js      OSRM driving route adapter
   services/speech.js       Fetch generated audio, cancel and play
