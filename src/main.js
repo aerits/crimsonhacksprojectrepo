@@ -62,14 +62,6 @@ document.querySelector('#app').innerHTML = `
           <label class="switch-row" for="avoid-tolls"><span>Avoid Tolls</span><input id="avoid-tolls" type="checkbox" role="switch" data-avoid="toll" /><span class="switch-control" aria-hidden="true"></span></label>
           <label class="switch-row" for="avoid-highways"><span>Avoid Highways/Freeways</span><input id="avoid-highways" type="checkbox" role="switch" data-avoid="motorway" /><span class="switch-control" aria-hidden="true"></span></label>
           <label class="switch-row" for="avoid-ferries"><span>Avoid Ferries</span><input id="avoid-ferries" type="checkbox" role="switch" data-avoid="ferry" /><span class="switch-control" aria-hidden="true"></span></label>
-          <label class="affirmation-label" for="affirmation-style">After-turn encouragement
-            <select id="affirmation-style">
-              <option value="neutral">Neutral</option>
-              <option value="girl">Girl</option>
-              <option value="boy">Boy</option>
-              <option value="enby">Enby</option>
-            </select>
-          </label>
         </fieldset>
         <fieldset class="theme-group">
           <legend>Theme</legend>
@@ -80,6 +72,17 @@ document.querySelector('#app').innerHTML = `
             <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
           </div>
         </fieldset>
+      </section>
+      <section id="journey-settings" class="settings card" aria-labelledby="journey-settings-heading">
+        <div class="section-title"><h2 id="journey-settings-heading">Journey extras</h2><span class="tiny">YOUR RHYTHM</span></div>
+        <label class="affirmation-label" for="affirmation-style">After-turn encouragement
+          <select id="affirmation-style">
+            <option value="neutral">Neutral</option>
+            <option value="girl">Girl</option>
+            <option value="boy">Boy</option>
+            <option value="enby">Enby</option>
+          </select>
+        </label>
         <details class="phrase-settings">
           <summary>Journey encouragements <span id="phrase-count" class="tiny"></span></summary>
           <p id="phrase-help" class="hint">Your encouragements join the built-in collection after spoken directions. Save up to 20 phrases in this browser.</p>
@@ -111,15 +114,17 @@ document.querySelector('#app').innerHTML = `
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
         <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><label for="utah-trails" class="hint">Trail ideas</label><select id="utah-trails"><option value="">Choose a trail idea</option></select><p id="outdoor-note" class="hint">Choose an outdoor spot, then use its official page to plan before setting a route.</p></fieldset>
-        <fieldset class="trivia-group"><legend>Saved places</legend><p class="hint">Search for an address to save it for one-tap directions later.</p>
-          <div class="saved-place-editors">
+        <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
+      </section>
+      <section id="saved-places-settings" class="settings card" aria-labelledby="saved-places-heading">
+        <div class="section-title"><h2 id="saved-places-heading">Saved places</h2><span class="tiny">READY TO GO</span></div>
+        <p class="hint">Search for an address to save it for one-tap directions later.</p>
+        <div class="saved-place-editors">
             <form class="saved-place-editor" data-place-name="Home"><label for="home-place-search">Home address</label><div class="input-row"><input id="home-place-search" type="search" autocomplete="street-address" placeholder="Search for your home address" /><button type="submit" class="address-search">Search</button></div><div id="home-place-results" class="address-results" aria-live="polite"></div></form>
             <form class="saved-place-editor" data-place-name="Work"><label for="work-place-search">Work address</label><div class="input-row"><input id="work-place-search" type="search" autocomplete="street-address" placeholder="Search for your work address" /><button type="submit" class="address-search">Search</button></div><div id="work-place-results" class="address-results" aria-live="polite"></div></form>
             <form class="saved-place-editor" data-place-name="Favorite"><label for="favorite-place-search">Favorite address</label><div class="input-row"><input id="favorite-place-search" type="search" autocomplete="street-address" placeholder="Search for a favorite place" /><button type="submit" class="address-search">Search</button></div><div id="favorite-place-results" class="address-results" aria-live="polite"></div></form>
-          </div>
-          <ul id="saved-places" class="custom-phrases" aria-label="Saved places"></ul>
-        </fieldset>
-        <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
+        </div>
+        <ul id="saved-places" class="custom-phrases" aria-label="Saved places"></ul>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -184,7 +189,7 @@ const arrivalPhraseSettings = createPhraseSettings({
   submit: '#save-arrival-phrase', cancel: '#cancel-arrival-phrase', status: '#arrival-phrase-status',
   storageKey: 'mommy-maps-arrival-phrases',
 });
-$('#settings-content').append($('#voice-section'), $('#settings'));
+$('#settings-content').append($('#voice-section'), $('#settings'), $('#journey-settings'), $('#saved-places-settings'));
 const affirmationStyles = new Set(['neutral', 'girl', 'boy', 'enby']);
 let voices = [];
 let selectedVoice;
