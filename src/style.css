@@ -169,7 +169,9 @@ details li { margin-bottom: 7px; }
 :root[data-theme='dark'] .input-row input, :root[data-theme='dark'] .dev-tts textarea { color: #f0e8f3; }
 :root[data-theme='dark'] .address-search, :root[data-theme='dark'] .location-search { background: #473752; color: #e2c9ec; border-color: var(--line); }
 :root[data-theme='dark'] .journey, :root[data-theme='dark'] .map-label, :root[data-theme='dark'] .map-status, :root[data-theme='dark'] .map-note { background: #30263af2; border-color: var(--line); color: #eadfeb; }
-:root[data-theme='dark'] .leaflet-tile-pane { filter: saturate(.55) brightness(.68) contrast(1.1); }
+/* Keep geographic detail readable in dark mode; the map remains a familiar
+   daylight reference while its controls and route overlays match the theme. */
+:root[data-theme='dark'] .leaflet-tile-pane { filter: saturate(.65); }
 
 :root[data-theme='pink'] { color-scheme: light; color: #5b3043; background: #fff0f6; --purple: #c54b7e; --purple-dark: #a83465; --pink: #e36f9b; --muted: #8c6174; --line: #f0cad9; --surface: #fff9fc; --lavender: #fde1ec; --rose: #ffe3ee; }
 :root[data-theme='pink'] body { background: #fff0f6; }
