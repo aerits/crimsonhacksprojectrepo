@@ -867,13 +867,6 @@ $('#route-form').addEventListener('submit', async (event) => {
   }
 });
 
-for (const [id, delta] of [['previous', -1], ['next', 1]]) $(`#${id}`).addEventListener('click', () => {
-  if (!route) return;
-  stopSimulation();
-  speech.stop();
-  stepIndex = Math.max(0, Math.min(route.steps.length - 1, stepIndex + delta));
-  showStep();
-});
 $('#simulate').addEventListener('click', () => {
   if (!route) return;
   if (simulationRunning) return stopSimulation('Simulation paused.');
@@ -883,6 +876,13 @@ $('#simulate').addEventListener('click', () => {
   simulationRunning = true;
   $('#simulate').textContent = 'Ⅱ Pause simulation';
   runSimulationStep();
+});
+for (const [id, delta] of [['previous', -1], ['next', 1]]) $(`#${id}`).addEventListener('click', () => {
+  if (!route) return;
+  stopSimulation();
+  speech.stop();
+  stepIndex = Math.max(0, Math.min(route.steps.length - 1, stepIndex + delta));
+  showStep();
 });
 $('#speak').addEventListener('click', () => {
   if (route) {
