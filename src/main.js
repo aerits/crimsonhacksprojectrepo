@@ -51,7 +51,7 @@ document.querySelector('#app').innerHTML = `
         <p id="selected-voice-name" class="selected-voice-name" aria-live="polite" aria-atomic="true">Loading your guide…</p>
         <p id="voice-summary" class="voice-summary">A little company for the road.</p>
         <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>▷ Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
-        <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
+        <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="1" /></label>
         <p id="voice-status" class="hint" role="status">Choose the voice you’d like beside you.</p>
       </section>
       <section id="settings" class="settings card" aria-labelledby="settings-heading">
@@ -149,7 +149,7 @@ document.querySelector('#app').innerHTML = `
     <div class="library-heading"><div><p class="eyebrow">A LITTLE COMPANY FOR THE ROAD</p><h1>Find your kind <em>of calm.</em></h1><p>Meet your guides. A different voice, the same gentle way home.</p></div><button id="back-to-route" type="button" class="primary settings-return">← Back to my route</button></div>
     <div class="library-section-heading"><h2>Good company comes in a few voices.</h2><p id="library-selection">Choose a little company for the road.</p></div>
     <div id="voice-gallery" class="voice-gallery"><p class="library-empty">Getting your guides ready…</p></div>
-    <div class="library-player"><span class="player-symbol" aria-hidden="true">♫</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label><button id="library-preview" type="button" class="primary">▷ Preview selected voice</button><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
+    <div class="library-player"><span class="player-symbol" aria-hidden="true">♫</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="1" /></label><button id="library-preview" type="button" class="primary">▷ Preview selected voice</button><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
     <div class="library-note"><p>AI-generated voices, made for a softer journey. Voice previews need a configured Fish Audio connection.</p><button id="retry-voices" type="button" class="text-button" hidden>Retry loading voices ↻</button></div>
     <details class="dev-tts">
       <summary>Developer: test TTS</summary>
@@ -179,7 +179,7 @@ const voiceStatus = (message) => {
 };
 const audio = new Audio();
 audio.preload = 'none';
-audio.volume = 0.7;
+audio.volume = 1;
 const speech = createSpeechService(audio, voiceStatus);
 const phraseSettings = createPhraseSettings();
 const arrivalPhraseSettings = createPhraseSettings({
