@@ -46,7 +46,7 @@ test('stopped generation cannot play a late response', async (t) => {
   assert.equal(audio.src, '');
 });
 
-test('autoplay rejection leaves audio controls usable', async (t) => {
+test('autoplay rejection reports how to retry playback', async (t) => {
   const original = globalThis.fetch;
   t.after(() => { globalThis.fetch = original; });
   globalThis.fetch = async () => new Response('audio');
@@ -55,7 +55,7 @@ test('autoplay rejection leaves audio controls usable', async (t) => {
   const messages = [];
   const service = createSpeechService(audio, (message) => messages.push(message));
   await service.speak('Hello.', 'luna');
-  assert.match(messages.at(-1), /Press play/);
+  assert.match(messages.at(-1), /playback was blocked/);
   assert.match(audio.src, /^blob:/);
   service.stop();
 });

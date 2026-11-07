@@ -16,6 +16,10 @@ Open http://127.0.0.1:3000. Use the sample Tuscaloosa coordinates, enter `latitu
 
 The map and routing work without Fish credentials. Voice cards show `SETUP` until configured. `npm start` runs without file watching. `npm test` runs the Node test suite.
 
+## Developer TTS testing
+
+Open **Developer: test TTS** below the voice controls, enter up to 600 characters, choose a configured voice, and select **Generate with selected voice**. It uses the production `/api/tts` endpoint, so each test is a Fish Audio request and may consume provider credit.
+
 ## Voices and server-side TTS
 
 ```text
@@ -24,7 +28,7 @@ Node server → Fish Audio /v1/tts with server-only API key + reference_id
 Fish Audio → MP3 bytes → Node server → browser audio element
 ```
 
-`config.json` is the committed default configuration: host, port, Fish model, and the three public voice IDs. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
+`config.json` is the committed default configuration: host, port, Fish model, and six public voice IDs. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
 
 The default synthesis model is `s2.1-pro`; change `fish.model` in `config.json` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
 

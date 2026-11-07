@@ -42,7 +42,7 @@ export function createSpeechService(audio, onStatus = () => {}) {
           await audio.play();
           if (generation === current) onStatus('Your guide is speaking.');
         } catch {
-          if (generation === current) onStatus('Audio is ready. Press play in the audio controls.');
+          if (generation === current) onStatus('Audio playback was blocked. Try again from a voice button.');
         }
       } catch (error) {
         if (generation === current && error.name !== 'AbortError') onStatus(error.message);

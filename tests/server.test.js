@@ -31,7 +31,7 @@ test('voice list exposes setup status without keys or provider IDs', async (t) =
   assert.ok(!text.includes('secret-test-key'));
   assert.ok(!text.includes('fish-voice-a'));
   const voices = JSON.parse(text);
-  assert.equal(voices.length, 3);
+  assert.equal(voices.length, 6);
   assert.equal(voices[0].configured, true);
   assert.equal(voices[2].configured, false);
 });

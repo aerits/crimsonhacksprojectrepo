@@ -11,6 +11,15 @@ export function getVoices(config = {}) {
     { id: 'luna', name: 'Luna', initial: 'L', color: '#d5e4df', mood: 'Slow & soothing',
       referenceId: voiceIds.luna, speed: 0.8, cue: '[whispering][calm]',
       sample: 'Easy now, darling. There’s no rush. I’m right here to guide you.' },
+    { id: 'willow', name: 'Willow', initial: 'W', color: '#dce6cb', mood: 'Soft & comforting',
+      referenceId: voiceIds.willow, speed: 0.85, cue: '[soft tone][calm]',
+      sample: 'Settle in, sweetheart. We can take this nice and easy together.' },
+    { id: 'rose', name: 'Rose', initial: 'R', color: '#f0d9dc', mood: 'Gentle & supportive',
+      referenceId: voiceIds.rose, speed: 0.9, cue: '[warm][calm]',
+      sample: 'You’re doing beautifully. Just follow along, one little turn at a time.' },
+    { id: 'ember', name: 'Ember', initial: 'E', color: '#f0dfc7', mood: 'Warm & affectionate',
+      referenceId: voiceIds.ember, speed: 0.88, cue: '[soft tone][gentle]',
+      sample: 'Take your time, love. You’re safe, and you’re on your way.' },
   ];
 }
 

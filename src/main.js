@@ -19,7 +19,7 @@ document.querySelector('#app').innerHTML = `
         <label for="end">Your destination <span>B</span></label>
         <div class="input-row"><input id="end" name="end" value="33.1940, -87.5624" placeholder="Latitude, longitude" required /><button type="button" data-pick="end" class="pick" aria-label="Pick destination on map">⌖</button></div>
         <div class="route-options"><button type="button" id="locate" class="text-button">⌖ Use my location</button><button type="button" id="swap" class="text-button">⇅ Swap</button></div>
-        <button type="submit" class="primary" id="plan">Find my soft route <span>↗</span></button>
+        <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Enter coordinates or use ⌖ to pick on the map.</p>
       </form>
       <section class="voice-section" aria-labelledby="voice-heading">
@@ -27,8 +27,14 @@ document.querySelector('#app').innerHTML = `
         <div id="voices" class="voices"><p class="hint">Loading your guides…</p></div>
         <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>▷ Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
-        <audio id="audio" controls preload="none" aria-label="Generated navigation audio"></audio>
         <p id="voice-status" class="hint" role="status">Choose the voice you’d like beside you.</p>
+        <details class="dev-tts">
+          <summary>Developer: test TTS</summary>
+          <label for="tts-test-text">Test text</label>
+          <textarea id="tts-test-text" maxlength="600">Testing one, two, three. This is a calm navigation voice check.</textarea>
+          <button id="tts-test" type="button" class="secondary">Generate with selected voice</button>
+          <p class="hint">Uses the selected voice and the same server endpoint as route guidance.</p>
+        </details>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -50,7 +56,8 @@ document.querySelector('#app').innerHTML = `
 const $ = (selector) => document.querySelector(selector);
 const status = (message) => { $('#map-status').textContent = message; };
 const voiceStatus = (message) => { $('#voice-status').textContent = message; };
-const audio = $('#audio');
+const audio = new Audio();
+audio.preload = 'none';
 audio.volume = 0.7;
 const speech = createSpeechService(audio, voiceStatus);
 let voices = [];
@@ -69,7 +76,7 @@ function invalidateRoute() {
   map?.clearRoute();
   $('#journey').hidden = true;
   $('#plan').disabled = false;
-  $('#plan').innerHTML = 'Find my soft route <span>↗</span>';
+  $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
 }
 
 function updatePoint(kind, point) {
@@ -103,9 +110,10 @@ try {
 } catch (error) { status(error.message); }
 
 document.querySelectorAll('[data-pick]').forEach((button) => button.addEventListener('click', () => {
+  if (!map) return status('The map is unavailable. Check your internet connection and reload.');
   pickTarget = button.dataset.pick;
   document.querySelectorAll('[data-pick]').forEach((item) => item.classList.toggle('active', item === button));
-  status(`Tap the map to choose your ${pickTarget === 'start' ? 'starting point' : 'destination'}.`);
+  status(`Map picker is on: tap the map to choose your ${pickTarget === 'start' ? 'starting point' : 'destination'}.`);
 }));
 
 for (const kind of ['start', 'end']) $(`#${kind}`).addEventListener('input', () => {
@@ -171,7 +179,7 @@ $('#route-form').addEventListener('submit', async (event) => {
   } finally {
     if (request === current) {
       $('#plan').disabled = false;
-      $('#plan').innerHTML = 'Find my soft route <span>↗</span>';
+      $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
     }
   }
 });
@@ -188,6 +196,13 @@ $('#speak').addEventListener('click', () => {
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);
   if (voice?.configured) speech.speak(voice.sample, voice.id);
+});
+$('#tts-test').addEventListener('click', () => {
+  const text = $('#tts-test-text').value.trim();
+  const voice = voices.find((item) => item.id === selectedVoice);
+  if (!text) return voiceStatus('Enter some text to test.');
+  if (!voice?.configured) return voiceStatus('Choose a configured voice before testing.');
+  speech.speak(text, voice.id);
 });
 $('#stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
 $('#volume').addEventListener('input', (event) => { audio.volume = Number(event.target.value); });
