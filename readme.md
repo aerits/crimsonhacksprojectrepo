@@ -1,4 +1,4 @@
-# MommyMaps
+# Mommy Maps
 
 A JavaScript maps app with comforting mommy ASMR navigation voices. This first scaffold searches addresses, plans driving routes, and lets you preview each direction with server-generated Fish Audio speech.
 
