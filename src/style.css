@@ -34,8 +34,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .view-tabs button[aria-selected=true] { background: #e9ddf2; color: #65467f; box-shadow: 0 2px 5px #87619c0b; }
 .map-actions { display: none; margin-left: auto; gap: 8px; }
 .map-action { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--purple-dark); font-size: 17px; line-height: 1; }
-.topbar.map-mode .view-tabs, .topbar.map-mode .prototype { display: none; }
-.topbar.map-mode .map-actions { display: flex; }
+.topbar.map-mode .view-tabs { display: flex; margin-left: auto; }
+.topbar.map-mode .prototype, .topbar.map-mode .map-actions { display: none; }
 .prototype { margin-left: auto; font-size: 9px; letter-spacing: 1.3px; color: #936a86; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .prototype span, .location-dot { display: inline-block; width: 7px; height: 7px; background: #c991ae; border-radius: 50%; box-shadow: 0 0 0 4px #f7e9f0; }
 .workspace { display: grid; grid-template-columns: 380px minmax(0, 1fr); min-height: calc(100dvh - 88px); }
@@ -625,6 +625,10 @@ details li { margin-bottom: 7px; }
   .topbar:not(.map-mode) .brand-mark { width: 28px; height: 28px; margin-right: 6px; }
   .topbar:not(.map-mode) .view-tabs { width: auto; min-width: 0; margin: 0 0 0 auto; }
   .topbar:not(.map-mode) .view-tabs button { padding: 8px 7px; font-size: 10px; }
+
+  /* Mobile navigation stays as compact icon buttons in every view. */
+  .topbar .view-tabs, .topbar.map-mode .view-tabs { display: none; }
+  .topbar:not(.map-mode) .map-actions, .topbar.map-mode .map-actions { display: flex; }
 }
 
 /* During live guidance, preserve the map as the primary surface. The route
