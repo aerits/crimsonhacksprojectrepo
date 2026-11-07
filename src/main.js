@@ -24,8 +24,10 @@ document.querySelector('#app').innerHTML = `
       <button id="voices-tab" type="button" role="tab" aria-selected="false" aria-controls="voices-panel" data-tab="voices" tabindex="-1">Voice library</button>
       <button id="settings-tab" type="button" role="tab" aria-selected="false" aria-controls="settings-panel" data-tab="settings" tabindex="-1">Settings</button>
     </nav>
+    <button id="open-parks" type="button" class="header-parks" aria-expanded="false" aria-controls="parks-menu">Utah parks</button>
     <span class="prototype"><span></span> EARLY EXPLORER</span>
   </header>
+  <section id="parks-menu" class="parks-menu" aria-label="Utah State Parks" hidden><p>Open an official Utah State Park page</p><div id="parks-list" class="parks-list" role="menu"></div></section>
   <main id="journey-panel" class="workspace" role="tabpanel" aria-labelledby="journey-tab">
     <aside class="sidebar">
       <div class="intro"><h1>Where do you<br>want to go?</h1><p class="intro-guide" aria-live="polite" aria-atomic="true">Let <span id="intro-voice-name">your chosen voice</span> guide you.</p></div>
@@ -113,7 +115,6 @@ document.querySelector('#app').innerHTML = `
           <label class="switch-row trivia-toggle" for="mute-trivia"><span>Mute trivia</span><input id="mute-trivia" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
-        <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><p id="outdoor-note" class="hint">Choose a park, then use its official page to plan before setting a route.</p></fieldset>
         <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
       </section>
       <section id="saved-places-settings" class="settings card" aria-labelledby="saved-places-heading">
@@ -217,26 +218,28 @@ let savedPlaces = loadSavedPlaces();
 const wellnessReminder = createReminder();
 
 function populateOutdoorLists() {
-  const fill = (selector, items, urlForItem) => $(selector).append(...items.map((name) => {
-    const option = document.createElement('option');
-    option.value = name;
-    if (urlForItem) option.dataset.url = urlForItem(name);
-    option.textContent = name;
-    return option;
+  const list = $('#parks-list');
+  list.append(...utahStateParks.map((name) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.role = 'menuitem';
+    item.textContent = name;
+    item.addEventListener('click', () => {
+      window.open(stateParkPageUrl(name), '_blank', 'noopener,noreferrer');
+      status(`Opening the official ${name} page.`);
+      $('#parks-menu').hidden = true;
+      $('#open-parks').setAttribute('aria-expanded', 'false');
+    });
+    return item;
   }));
-  fill('#utah-parks', utahStateParks, stateParkPageUrl);
-  $('#utah-parks').addEventListener('change', (event) => {
-    if (!event.target.value) return;
-    const selected = event.target.selectedOptions[0];
-    const officialUrl = selected?.dataset.url;
-    const link = document.createElement('a');
-    link.href = officialUrl;
-    link.target = '_blank';
-    link.rel = 'noreferrer';
-    link.textContent = 'Open official park page';
-    $('#outdoor-note').replaceChildren(`Selected: ${event.target.value}. `, link);
-  });
 }
+
+$('#open-parks').addEventListener('click', () => {
+  const menu = $('#parks-menu');
+  menu.hidden = !menu.hidden;
+  $('#open-parks').setAttribute('aria-expanded', String(!menu.hidden));
+  if (!menu.hidden) $('#parks-list button').focus();
+});
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
