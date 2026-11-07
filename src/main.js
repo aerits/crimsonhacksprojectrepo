@@ -155,7 +155,7 @@ document.querySelector('#app').innerHTML = `
 
 document.querySelector('#app').insertAdjacentHTML('beforeend', `
   <section id="settings-panel" class="settings-page" role="tabpanel" aria-labelledby="settings-tab" hidden>
-    <div class="settings-page-heading"><div><p class="eyebrow">YOUR WAY</p><h1>Set up your <em>journey.</em></h1><p>Keep your route, voice, and comfort settings in one calm place.</p></div><button id="settings-back-to-route" type="button" class="secondary">Back to my route ↗</button></div>
+    <div class="settings-page-heading"><div><p class="eyebrow">YOUR WAY</p><h1>Set up your <em>journey.</em></h1><p>Keep your route, voice, and comfort settings in one calm place.</p></div><button id="settings-back-to-route" type="button" class="primary settings-return">← Back to my route</button></div>
     <div id="settings-content"></div>
   </section>`);
 
