@@ -1,3 +1,5 @@
+import { utahMapDestinations } from '../data/utah-landmarks.js';
+
 export function createMap(element) {
   const L = window.L;
   if (!L) throw new Error('The map library could not load. Check your internet connection and reload.');
@@ -12,6 +14,7 @@ export function createMap(element) {
   let liveMarker;
   let simulationAnimation;
   let liveAnimation;
+  let landmarkMarkers;
   const pointAt = (from, to, amount) => ({
     lat: from.lat + (to.lat - from.lat) * amount,
     lng: from.lng + (to.lng - from.lng) * amount,
@@ -63,6 +66,18 @@ export function createMap(element) {
       }) }).addTo(map).bindTooltip(kind === 'start' ? 'Starting point' : 'Destination');
     },
     clearRoute() { routeLayer?.remove(); routeLayer = null; },
+    addLandmarkMarkers(onSelect, categories = new Set(['parks', 'trails', 'landmarks'])) {
+      landmarkMarkers?.remove();
+      landmarkMarkers = L.layerGroup().addTo(map);
+      const colors = { parks: '#607d43', trails: '#317a8a', landmarks: '#9c6a9f' };
+      for (const place of utahMapDestinations) {
+        if (!categories.has(place.category)) continue;
+        L.circleMarker([place.lat, place.lng], { radius: 8, color: '#ffffff', weight: 2, fillColor: colors[place.category], fillOpacity: 1 })
+          .addTo(landmarkMarkers)
+          .bindTooltip(place.name, { direction: 'top', offset: [0, -7] })
+          .on('click', () => onSelect({ ...place, label: `${place.name}, Utah` }));
+      }
+    },
     setSimulationPoint,
     animateSimulationPath(coordinates, mph) {
       cancelAnimationFrame(simulationAnimation);

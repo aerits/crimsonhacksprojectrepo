@@ -145,6 +145,10 @@ input[type=range] { accent-color: #b18bc6; width: 124px; height: 20px; cursor: p
 .tiny { font-size: 9px; letter-spacing: 1px; color: #947e9e; }
 .map-panel { position: relative; min-height: 560px; height: calc(100dvh - 88px); background: #eee6f5; }
 #map { position: absolute; inset: 0; z-index: 0; }
+.map-category-filter { position: absolute; z-index: 3; top: 16px; right: 16px; display: flex; gap: 6px; align-items: center; margin: 0; padding: 7px; border: 1px solid var(--line); border-radius: 11px; background: #fffafdef; box-shadow: 0 4px 18px #503d5b18; }
+.map-category-filter legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.map-category-filter label { display: flex; align-items: center; gap: 4px; color: #725b80; font-size: 10px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.map-category-filter input { margin: 0; accent-color: var(--purple); }
 .leaflet-tile-pane { filter: saturate(.65); }
 .map-label { position: absolute; top: 24px; left: 24px; display: flex; gap: 12px; align-items: center; background: #fffafdf2; border: 1px solid #f2e6f6; border-radius: 13px; padding: 14px 17px; box-shadow: 0 4px 20px #7258860a; max-width: calc(100% - 48px); }
 .map-label strong { display: block; font-size: 12px; font-weight: 500; }
@@ -191,6 +195,8 @@ details li { margin-bottom: 7px; }
 :root[data-theme='dark'] .input-row input, :root[data-theme='dark'] .dev-tts textarea { color: #f0e8f3; }
 :root[data-theme='dark'] .address-search, :root[data-theme='dark'] .location-search { background: #473752; color: #e2c9ec; border-color: var(--line); }
 :root[data-theme='dark'] .journey, :root[data-theme='dark'] .map-label, :root[data-theme='dark'] .map-status, :root[data-theme='dark'] .map-note { background: #30263af2; border-color: var(--line); color: #eadfeb; }
+:root[data-theme='dark'] .map-category-filter { background: #30263af2; border-color: var(--line); }
+:root[data-theme='dark'] .map-category-filter label { color: #eadfeb; }
 /* Keep geographic detail readable in dark mode; the map remains a familiar
    daylight reference while its controls and route overlays match the theme. */
 :root[data-theme='dark'] .leaflet-tile-pane { filter: saturate(.65); }

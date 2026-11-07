@@ -8,6 +8,7 @@ const landmarks = [
   ['Natural History Museum of Utah', 40.7650, -111.8226, ['natural history museum', 'nhmu']],
   ['Red Butte Garden', 40.7668, -111.8255, ['red butte']],
   ['Hogle Zoo', 40.7505, -111.8162, ['zoo', 'hogle']],
+  ['Round1 Bowling & Arcade', 40.7430, -111.8998, ['round 1', 'round1', 'round 1 arcade']],
   ['This Is the Place Heritage Park', 40.7504, -111.8143, ['this is the place', 'heritage park']],
   ['Antelope Island State Park', 41.0548, -112.2272, ['antelope island']],
   ['Great Salt Lake State Park', 40.7379, -112.2115, ['great salt lake']],
@@ -22,6 +23,23 @@ const landmarks = [
   ['Bonneville Salt Flats', 40.7619, -113.8958, ['bonneville', 'salt flats']],
   ['Monument Valley', 37.0042, -110.1735, ['monument valley']],
 ].map(([name, lat, lng, aliases]) => ({ name, lat, lng, aliases }));
+
+export const utahNationalParks = landmarks.filter(({ name }) => name.endsWith('National Park'));
+
+const utahTrails = [
+  { name: 'Angels Landing Trailhead', lat: 37.2596, lng: -112.9510 },
+  { name: 'Delicate Arch Trailhead', lat: 38.7435, lng: -109.4997 },
+  { name: 'Navajo Loop Trailhead', lat: 37.6287, lng: -112.1673 },
+  { name: 'Timpanogos Trailhead', lat: 40.4270, lng: -111.6830 },
+  { name: 'Cecret Lake Trailhead', lat: 40.5739, lng: -111.6352 },
+];
+
+export const utahMapDestinations = [
+  ...utahNationalParks.map((place) => ({ ...place, category: 'parks' })),
+  ...utahTrails.map((place) => ({ ...place, category: 'trails' })),
+  ...landmarks.filter((place) => !place.name.endsWith('National Park'))
+    .map((place) => ({ ...place, category: 'landmarks' })),
+];
 
 const normalize = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 

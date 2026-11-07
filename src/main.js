@@ -120,6 +120,7 @@ document.querySelector('#app').innerHTML = `
     </aside>
     <section class="map-panel" aria-label="Map and route preview">
       <div id="map" aria-label="Interactive route map"></div>
+      <fieldset id="map-category-filter" class="map-category-filter"><legend>Map places</legend><label><input type="checkbox" value="parks" checked /> Parks</label><label><input type="checkbox" value="trails" checked /> Trails</label><label><input type="checkbox" value="landmarks" checked /> Landmarks</label></fieldset>
       <div class="map-label"><span class="location-dot"></span><div><strong>Start exploring the University of Utah</strong><span>Search two addresses to plan your route.</span></div></div>
       <div id="map-status" class="map-status" role="status">Your next little journey starts here.</div>
       <section id="journey" class="journey" hidden aria-labelledby="journey-heading">
@@ -498,6 +499,7 @@ renderSavedPlaces();
 
 try {
   map = createMap($('#map'));
+  map.addLandmarkMarkers(selectMapDestination);
 } catch (error) { status(error.message); }
 
 function locationErrorMessage(error) {
@@ -599,6 +601,22 @@ function selectPlace(kind, place) {
   if (kind === 'start') refreshSuggestions(['end']);
   status((kind === 'start' ? 'Starting address' : 'Destination') + ' selected. Search the other address or find your route.');
 }
+
+function selectMapDestination(place) {
+  selectPlace('end', place);
+  if (selectedPlaces.start) {
+    $('#route-form').requestSubmit();
+  } else {
+    $('#route-form').classList.remove('collapsed');
+    $('#edit-route').hidden = true;
+    status(`${place.name} is selected. Choose a starting address to plan your route.`);
+  }
+}
+
+$('#map-category-filter').addEventListener('change', () => {
+  const categories = new Set([...document.querySelectorAll('#map-category-filter input:checked')].map((input) => input.value));
+  map?.addLandmarkMarkers(selectMapDestination, categories);
+});
 
 async function searchAddress(kind, automatic = false) {
   const input = $('#' + kind);
