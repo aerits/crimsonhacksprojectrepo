@@ -2,6 +2,7 @@ import { createMap } from './services/map.js';
 import { getRoute } from './services/routing.js';
 import { searchAddresses } from './services/geocoding.js';
 import { createSpeechService } from './services/speech.js';
+import { createAmbientTrivia } from './services/trivia.js';
 import { formatDistance, formatDuration } from './utils/directions.js';
 import { addressSearchOrigin } from './utils/location.js';
 import { setupTabs } from './ui/tabs.js';
@@ -57,6 +58,12 @@ document.querySelector('#app').innerHTML = `
             <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
           </div>
         </fieldset>
+        <fieldset class="trivia-group">
+          <legend>Roadside trivia</legend>
+          <p class="hint">On a quiet, steady stretch, we’ll share a note about the place around you no more than once every 18 minutes.</p>
+          <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
+          <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
+        </fieldset>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -71,6 +78,7 @@ document.querySelector('#app').innerHTML = `
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
         <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
+        <button type="button" id="start-guidance" class="ambient-guidance" disabled>Start ambient guidance</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
@@ -116,6 +124,11 @@ let locationRequestId = 0;
 let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
+let navigationActive = false;
+let triviaMuted = false;
+let locationWatcher;
+let lastPosition;
+const ambientTrivia = createAmbientTrivia();
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -225,6 +238,26 @@ function invalidateRoute() {
   $('#journey').hidden = true;
   $('#plan').disabled = false;
   $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
+  stopAmbientGuidance();
+  $('#start-guidance').disabled = true;
+}
+
+function stopAmbientGuidance() {
+  navigationActive = false;
+  if (locationWatcher !== undefined) navigator.geolocation?.clearWatch(locationWatcher);
+  locationWatcher = undefined;
+  ambientTrivia.reset();
+  $('#start-guidance').textContent = 'Start ambient guidance';
+}
+
+function considerAmbientTrivia(position) {
+  if (!route || !navigationActive) return;
+  const point = { lat: position.coords.latitude, lng: position.coords.longitude };
+  const fact = ambientTrivia.consider({ point, speedMps: position.coords.speed, steps: route.steps, navigating: navigationActive, muted: triviaMuted });
+  if (!fact) return;
+  $('#ambient-note').textContent = `Roadside note: ${fact.text}`;
+  status(`A little note about ${fact.name} is ready.`);
+  if (voices.find((voice) => voice.id === selectedVoice)?.configured) speech.speak(fact.text, selectedVoice);
 }
 
 function showStep({ focus = true } = {}) {
@@ -454,6 +487,7 @@ $('#route-form').addEventListener('submit', async (event) => {
       return item;
     }));
     $('#journey').hidden = false;
+    $('#start-guidance').disabled = false;
     showStep();
     map?.drawRoute(route.geometry);
     startDrivingFollow();
@@ -508,6 +542,26 @@ for (const id of ['volume', 'library-volume']) $('#'+id).addEventListener('input
 });
 $('#library-stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
 $('#retry-voices').addEventListener('click', loadVoices);
+$('#start-guidance').addEventListener('click', () => {
+  if (navigationActive) { stopAmbientGuidance(); $('#ambient-note').textContent = 'Ambient guidance paused.'; return; }
+  if (!navigator.geolocation) return status('Live guidance needs location access in this browser.');
+  navigationActive = true;
+  $('#start-guidance').textContent = 'Pause ambient guidance';
+  $('#ambient-note').textContent = 'Watching for a calm stretch of road. Trivia begins after five minutes above 45 mph with no maneuver within five miles.';
+  locationWatcher = navigator.geolocation.watchPosition((position) => { lastPosition = position; considerAmbientTrivia(position); }, () => {
+    stopAmbientGuidance();
+    $('#ambient-note').textContent = 'We couldn’t read your live location, so ambient guidance is paused.';
+  }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
+});
+setInterval(() => { if (lastPosition) considerAmbientTrivia(lastPosition); }, 60_000);
+$('#skip-trivia').addEventListener('click', () => { speech.stop(); ambientTrivia.skip(); $('#ambient-note').textContent = 'Skipped. We’ll wait before sharing another note.'; });
+$('#mute-trivia').addEventListener('click', () => {
+  triviaMuted = !triviaMuted;
+  $('#mute-trivia').textContent = triviaMuted ? 'Unmute trivia' : 'Mute trivia';
+  $('#mute-trivia').setAttribute('aria-pressed', String(triviaMuted));
+  if (triviaMuted) speech.stop();
+  $('#ambient-note').textContent = triviaMuted ? 'Roadside trivia is muted.' : 'Roadside trivia is ready when you start ambient guidance.';
+});
 document.querySelectorAll('[data-avoid]').forEach((input) => input.addEventListener('change', () => {
   if (route) status('Navigation preferences changed. Find a new route to apply them.');
 }));
@@ -541,4 +595,5 @@ window.addEventListener('pagehide', () => {
   request?.abort();
   resetAddressSearch('start');
   resetAddressSearch('end');
+  stopAmbientGuidance();
 });
