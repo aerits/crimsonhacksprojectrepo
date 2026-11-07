@@ -104,13 +104,16 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .affirmation-label select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface); color: inherit; font-size: 11px; }
 .theme-group { border-top: 1px solid var(--line) !important; margin-top: 5px !important; padding-top: 12px !important; }
 .trivia-group { border-top: 1px solid var(--line) !important; margin-top: 15px !important; padding-top: 15px !important; }
-.trivia-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; }
+.trivia-toggle { margin-top: 9px; }
 .saved-place-editors { display: grid; gap: 13px; margin-top: 13px; }
 .saved-place-editor { margin: 0; }
 .saved-place-editor + .saved-place-editor { border-top: 1px solid var(--line); padding-top: 13px; }
 .saved-place-editor label { display: block; margin: 0 0 6px; color: #705e7c; font-size: 11px; }
 .saved-place-editor .input-row input { padding: 10px; }
 .saved-place-editor .address-result-list { max-height: 190px; overflow-y: auto; }
+.saved-place-item { display: flex; align-items: flex-start; gap: 10px; }
+.saved-place-use { flex: 1; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.saved-place-remove { flex: 0 0 auto; margin-left: auto; }
 .theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 8px; }
 .theme-options label { position: relative; cursor: pointer; }
 .theme-options input { position: absolute; opacity: 0; }
