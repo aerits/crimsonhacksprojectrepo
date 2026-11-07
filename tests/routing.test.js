@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { combineNearbySteps, parseCoordinates, instructionFor } from '../src/utils/directions.js';
+import { combineNearbySteps, formatDistance, parseCoordinates, instructionFor } from '../src/utils/directions.js';
 import { getRoute } from '../src/services/routing.js';
 
 test('coordinates reject missing, nonnumeric and out-of-range points', () => {
@@ -14,6 +14,12 @@ test('directions preserve U-turns, numbered exits and arrival', () => {
   assert.equal(instructionFor({ name: 'Main St', maneuver: { type: 'turn', modifier: 'uturn' } }), 'Make a U-turn onto Main St.');
   assert.equal(instructionFor({ name: '', maneuver: { type: 'roundabout', exit: 3 } }), 'At the roundabout, take exit 3.');
   assert.equal(instructionFor({ maneuver: { type: 'arrive' } }), 'You have arrived at your destination.');
+});
+
+test('distances use feet nearby and miles for longer routes', () => {
+  assert.equal(formatDistance(34), '112 ft');
+  assert.equal(formatDistance(160.9344), '0.1 mi');
+  assert.equal(formatDistance(1609.344), '1.0 mi');
 });
 
 test('nearby turns are spoken as one direction', () => {

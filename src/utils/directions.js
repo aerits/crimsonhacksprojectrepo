@@ -58,7 +58,9 @@ export function combineNearbySteps(steps, maximumDistance = 300) {
   return combined;
 }
 
-export const formatDistance = (meters) => meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
+export const formatDistance = (meters) => meters < 160.9344
+  ? `${Math.round(meters * 3.28084)} ft`
+  : `${(meters / 1609.344).toFixed(1)} mi`;
 export const formatDuration = (seconds) => {
   const totalMinutes = Math.max(1, Math.round(seconds / 60));
   const hours = Math.floor(totalMinutes / 60);
