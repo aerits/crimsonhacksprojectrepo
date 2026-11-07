@@ -159,13 +159,57 @@ test('navigation turns receive one random configured after-turn phrase', async (
   assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true })).status, 200);
 });
 
+test('custom turn phrases join the preset pool without leaking into later requests', async (t) => {
+  const spoken = [];
+  const presets = { afterTurn: ['Preset phrase.'] };
+  const api = await withServer(t, { config, phrases: presets, random: () => 0.999, fetcher: async (_url, options) => {
+    spoken.push(JSON.parse(options.body).text);
+    return new Response(Uint8Array.of(73, 68, 51));
+  } });
+  assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true,
+    customAfterTurnPhrases: ['  Personal   encouragement.  '] })).status, 200);
+  assert.match(spoken[0], /Turn left\. Personal encouragement\.$/);
+  assert.equal((await api.post({ text: 'Turn right.', voiceId: 'velvet', afterTurnPhrase: true })).status, 200);
+  assert.match(spoken[1], /Turn right\. Preset phrase\.$/);
+  assert.deepEqual(presets.afterTurn, ['Preset phrase.']);
+});
+
+test('voice previews do not append custom or preset phrases', async (t) => {
+  const api = await withServer(t, { config, phrases: { afterTurn: ['Preset phrase.'] }, fetcher: async (_url, options) => {
+    const text = JSON.parse(options.body).text;
+    assert.ok(text.endsWith('Preview exactly.'));
+    assert.ok(!text.includes('Personal phrase.'));
+    return new Response(Uint8Array.of(73, 68, 51));
+  } });
+  assert.equal((await api.post({ text: 'Preview exactly.', voiceId: 'velvet',
+    customAfterTurnPhrases: ['Personal phrase.'] })).status, 200);
+});
+
+test('invalid personal phrase lists are rejected before synthesis', async (t) => {
+  let calls = 0;
+  const api = await withServer(t, { config, fetcher: async () => { calls += 1; return new Response('audio'); } });
+  for (const customAfterTurnPhrases of [null, 'text', {}, [42], [''], ['x'.repeat(161)], Array(21).fill('Hello')]) {
+    assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true, customAfterTurnPhrases })).status, 400);
+  }
+  assert.equal(calls, 0);
+});
+
+test('a full list of Unicode phrases fits the bounded request body', async (t) => {
+  const customAfterTurnPhrases = Array.from({ length: 20 }, (_, index) => String(index).padStart(2, '0') + '好'.repeat(158));
+  const api = await withServer(t, { config, random: () => 0.999, fetcher: async (_url, options) => {
+    assert.ok(JSON.parse(options.body).text.endsWith(customAfterTurnPhrases.at(-1)));
+    return new Response(Uint8Array.of(73, 68, 51));
+  } });
+  assert.equal((await api.post({ text: '左'.repeat(600), voiceId: 'velvet', afterTurnPhrase: true, customAfterTurnPhrases })).status, 200);
+});
+
 test('invalid input and missing voice configuration never call Fish', async (t) => {
   const api = await withServer(t, { config: {}, fetcher: () => { throw new Error('Must not call Fish'); } });
   for (const body of [null, {}, { text: '  ' }, { text: 42 }, { text: 'x'.repeat(601) }, { text: 'Hi', voiceId: 'unknown' }]) {
     assert.equal((await api.post(body)).status, 400);
   }
   assert.equal((await api.post({ text: 'Hi', voiceId: 'velvet' })).status, 503);
-  assert.equal((await api.post({ text: 'x'.repeat(5000) })).status, 413);
+  assert.equal((await api.post({ text: 'x'.repeat(50000) })).status, 413);
 });
 
 test('Fish errors are safe and actionable', async (t) => {

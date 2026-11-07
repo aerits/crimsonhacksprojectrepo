@@ -7,6 +7,7 @@ import { formatDistance, formatDuration } from './utils/directions.js';
 import { addressSearchOrigin } from './utils/location.js';
 import { setupTabs } from './ui/tabs.js';
 import { createVoicePicker } from './ui/voices.js';
+import { createPhraseSettings } from './ui/phrases.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
@@ -59,6 +60,18 @@ document.querySelector('#app').innerHTML = `
             <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
           </div>
         </fieldset>
+        <details class="phrase-settings">
+          <summary>After-turn phrases <span id="phrase-count" class="tiny"></span></summary>
+          <p id="phrase-help" class="hint">Your phrases join the built-in collection after spoken directions. Save up to 20 phrases in this browser.</p>
+          <form id="phrase-form">
+            <label for="custom-phrase">Your phrase</label>
+            <textarea id="custom-phrase" rows="3" maxlength="160" required placeholder="You’ve got this, one turn at a time." aria-describedby="phrase-help phrase-characters phrase-status"></textarea>
+            <div class="phrase-editor-footer"><span id="phrase-characters" class="tiny"></span><div><button id="save-phrase" type="submit" class="secondary">Add phrase</button><button id="cancel-phrase" type="button" class="text-button" hidden>Cancel</button></div></div>
+          </form>
+          <p id="phrase-status" class="hint" role="status"></p>
+          <p id="phrases-empty" class="hint">No custom phrases yet. Built-in phrases will keep you company.</p>
+          <ul id="custom-phrases" class="custom-phrases" aria-label="Custom after-turn phrases"></ul>
+        </details>
         <fieldset class="trivia-group">
           <legend>Roadside trivia</legend>
           <p class="hint">On a quiet, steady stretch, we’ll share a note about the place around you no more than once every 18 minutes.</p>
@@ -111,6 +124,7 @@ const audio = new Audio();
 audio.preload = 'none';
 audio.volume = 0.7;
 const speech = createSpeechService(audio, voiceStatus);
+const phraseSettings = createPhraseSettings();
 let voices = [];
 let selectedVoice;
 const selectedPlaces = { start: null, end: null };
@@ -224,7 +238,7 @@ function playSimulationStep() {
     map?.setSimulationPoint({ lat, lng });
   }
   const voice = voices.find((item) => item.id === selectedVoice);
-  if (voice?.configured) speech.speak(step.instruction, selectedVoice, { afterTurnPhrase: true });
+  if (voice?.configured) speech.speak(step.instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases() });
   $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
 }
 
@@ -522,7 +536,7 @@ $('#simulate').addEventListener('click', () => {
   scheduleSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
-  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, { afterTurnPhrase: true });
+  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases() });
 });
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);

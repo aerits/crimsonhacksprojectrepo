@@ -70,3 +70,22 @@ test('autoplay rejection reports how to retry playback', async (t) => {
   assert.match(audio.src, /^blob:/);
   service.stop();
 });
+
+test('personal phrases travel only with turn speech and reflect the next request', async (t) => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  const bodies = [];
+  globalThis.fetch = async (_url, options) => {
+    bodies.push(JSON.parse(options.body));
+    return new Response('audio');
+  };
+  const service = createSpeechService(fakeAudio());
+  await service.speak('Turn left.', 'velvet', { afterTurnPhrase: true, customAfterTurnPhrases: ['Keep going.'] });
+  await service.speak('Turn right.', 'velvet', { afterTurnPhrase: true, customAfterTurnPhrases: ['Updated phrase.'] });
+  await service.speak('Hello.', 'velvet', { customAfterTurnPhrases: ['Keep going.'] });
+  assert.deepEqual(bodies[0].customAfterTurnPhrases, ['Keep going.']);
+  assert.deepEqual(bodies[1].customAfterTurnPhrases, ['Updated phrase.']);
+  assert.equal(bodies[2].customAfterTurnPhrases, undefined);
+  assert.equal(bodies[2].afterTurnPhrase, undefined);
+  service.stop();
+});
