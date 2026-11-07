@@ -642,6 +642,13 @@ details li { margin-bottom: 7px; }
   /* Mobile navigation stays as compact icon buttons in every view. */
   .topbar .view-tabs, .topbar.map-mode .view-tabs { display: none; }
   .topbar:not(.map-mode) .map-actions, .topbar.map-mode .map-actions { display: flex; }
+
+  /* Leave a little runway beneath the final control so the floating return
+     action never covers it, including on phones with a home indicator. */
+  .voice-library, .settings-page {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
 }
 
 /* During live guidance, preserve the map as the primary surface. The route
