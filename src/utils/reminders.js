@@ -1,0 +1,1 @@
+export function createReminder({ now = () => Date.now() } = {}) { let startedAt; let lastAt; return { start() { startedAt = now(); lastAt = startedAt; }, stop() { startedAt = undefined; }, due(minutes, enabled) { const time = now(); if (!enabled || startedAt === undefined || time - lastAt < minutes * 60_000) return false; lastAt = time; return true; } }; }

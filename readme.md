@@ -56,6 +56,12 @@ This is a route planner and manual spoken route preview. It does not track drivi
 
 Leaflet loads from a CDN, map tiles come from OpenStreetMap, and routes come from the public OSRM demo service; internet access is required. Use production map and routing providers before deploying for sustained usage. Current coordinates are sent to OSRM when planning a route. The server binds to localhost by default. Add authentication and per-user rate limits before exposing the paid TTS endpoint publicly. This scaffold has no deployment configuration.
 
+## Route comfort features
+
+Sun-glare notes are calculated locally from the planned departure time, route maneuver coordinates, and standard solar-position math; no sun-position API is used. They are planning aids only and can differ from actual conditions, visibility, route progress, weather, and road geometry.
+
+Saved Home, Work, and favorite coordinates plus the theme are stored only in this browser's `localStorage`; they are not sent to the server. Hydration/posture reminders use elapsed time after starting ambient guidance, not real driving telemetry. AirNow and UDOT features send route/start/destination coordinates only to the app server, which forwards provider requests using `AIRNOW_API_KEY` and `UDOT_API_KEY`; see the providers' current data and privacy terms. The app has no NWS integration, so it does not parse or display NWS forecasts.
+
 ## References
 
 - [Fish Audio text-to-speech API](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech)

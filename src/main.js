@@ -2,6 +2,9 @@ import { createMap } from './services/map.js';
 import { getRoute } from './services/routing.js';
 import { createSpeechService } from './services/speech.js';
 import { createAmbientTrivia } from './services/trivia.js';
+import { sunGlare } from './utils/sun.js';
+import { loadSavedPlaces, saveSavedPlaces, upsertPlace, removePlace } from './utils/saved-places.js';
+import { createReminder } from './utils/reminders.js';
 import { parseCoordinates, formatDistance, formatDuration } from './utils/directions.js';
 
 document.querySelector('#app').innerHTML = `
@@ -18,9 +21,9 @@ document.querySelector('#app').innerHTML = `
         <label for="destination-preset">Canyon & ski destination</label>
         <select id="destination-preset"><option value="">Choose a preset</option><option value="littleCottonwood">Little Cottonwood</option><option value="bigCottonwood">Big Cottonwood</option><option value="parkCity">Park City</option><option value="snowbasin">Snowbasin</option></select>
         <label for="start">Starting point <span>A</span></label>
-        <div class="input-row"><input id="start" name="start" value="33.2140, -87.5391" placeholder="Latitude, longitude" required /><button type="button" data-pick="start" class="pick" aria-label="Pick starting point on map">⌖</button></div>
+        <div class="input-row"><input id="start" name="start" value="33.2140, -87.5391" placeholder="Latitude, longitude" required /><button type="button" data-pick="start" class="pick" aria-label="Pick starting point on map">⌖</button></div><div id="start-places" class="quick-places"></div>
         <label for="end">Your destination <span>B</span></label>
-        <div class="input-row"><input id="end" name="end" value="33.1940, -87.5624" placeholder="Latitude, longitude" required /><button type="button" data-pick="end" class="pick" aria-label="Pick destination on map">⌖</button></div>
+        <div class="input-row"><input id="end" name="end" value="33.1940, -87.5624" placeholder="Latitude, longitude" required /><button type="button" data-pick="end" class="pick" aria-label="Pick destination on map">⌖</button></div><div id="end-places" class="quick-places"></div>
         <div class="route-options"><button type="button" id="locate" class="text-button">⌖ Use my location</button><button type="button" id="swap" class="text-button">⇅ Swap</button></div>
         <button type="submit" class="primary" id="plan">Find my soft route <span>↗</span></button>
         <p class="hint">Enter coordinates or use ⌖ to pick on the map.</p>
@@ -55,6 +58,8 @@ document.querySelector('#app').innerHTML = `
           <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
+        <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label for="wellness-interval" class="hint">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status"></p><button id="hear-wellness" type="button" class="text-button" disabled>Hear this</button></fieldset>
+        <fieldset class="trivia-group"><legend>Saved places</legend><div class="saved-actions"><button id="save-home" type="button" class="text-button">Set Home from destination</button><button id="save-work" type="button" class="text-button">Set Work from destination</button><button id="save-favorite" type="button" class="text-button">Add favorite</button></div><div id="saved-places"></div></fieldset>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -66,6 +71,7 @@ document.querySelector('#app').innerHTML = `
         <div class="section-title"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="journey-heading"></h2></div><span class="small-pill">Route preview</span></div>
         <p class="hint">Step through the route and hear each direction.</p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
+        <div id="glare-note" class="glare-note" hidden><span>☀ Sun glare likely — sunglasses on, sweetie.</span><button id="hear-glare" type="button" class="text-button">Hear this</button></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
         <button type="button" id="start-guidance" class="ambient-guidance" disabled>Start ambient guidance</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
@@ -94,6 +100,8 @@ let triviaMuted = false;
 let locationWatcher;
 let lastPosition;
 const ambientTrivia = createAmbientTrivia();
+const reminder = createReminder();
+let savedPlaces = loadSavedPlaces();
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -105,6 +113,21 @@ try {
   const savedTheme = localStorage.getItem('softly-theme');
   if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
 } catch { /* Storage may be unavailable in privacy-focused browsers. */ }
+
+function renderSavedPlaces() {
+  const list = $('#saved-places'); list.replaceChildren();
+  for (const place of savedPlaces) {
+    const row = document.createElement('div'); row.className = 'saved-place';
+    const name = document.createElement('span'); name.textContent = place.name;
+    const rename = document.createElement('button'); rename.className = 'text-button'; rename.textContent = 'Rename'; rename.onclick = () => { const next = prompt('A new name for this place?', place.name); if (next?.trim()) { savedPlaces = upsertPlace(savedPlaces, { ...place, name: next.trim() }); saveSavedPlaces(savedPlaces); renderSavedPlaces(); } };
+    const remove = document.createElement('button'); remove.className = 'text-button'; remove.textContent = 'Delete'; remove.onclick = () => { savedPlaces = removePlace(savedPlaces, place.id); saveSavedPlaces(savedPlaces); renderSavedPlaces(); };
+    row.append(name, rename, remove); list.append(row);
+  }
+  for (const kind of ['start', 'end']) {
+    const picks = $(`#${kind}-places`); picks.replaceChildren(...savedPlaces.map((place) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'text-button'; button.textContent = place.name; button.onclick = () => { invalidateRoute(); updatePoint(kind, place); status(`${place.name} selected. Find a route when you’re ready.`); }; return button; }));
+  }
+}
+function saveDestination(id, fallback) { try { const point = parseCoordinates($('#end').value); savedPlaces = upsertPlace(savedPlaces, { id, name: fallback, ...point }); saveSavedPlaces(savedPlaces); renderSavedPlaces(); } catch { status('Choose a valid destination before saving it.'); } }
 
 function invalidateRoute() {
   request?.abort();
@@ -123,6 +146,7 @@ function stopAmbientGuidance() {
   if (locationWatcher !== undefined) navigator.geolocation?.clearWatch(locationWatcher);
   locationWatcher = undefined;
   ambientTrivia.reset();
+  reminder.stop();
   $('#start-guidance').textContent = 'Start ambient guidance';
 }
 
@@ -175,6 +199,8 @@ function showStep() {
   $('#previous').disabled = stepIndex === 0;
   $('#next').disabled = stepIndex === route.steps.length - 1;
   $('#speak').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
+  $('#glare-note').hidden = !step.glare;
+  $('#hear-glare').disabled = !step.glare || !voices.find((voice) => voice.id === selectedVoice)?.configured;
   if (step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
     map?.focus({ lat, lng });
@@ -255,11 +281,13 @@ $('#route-form').addEventListener('submit', async (event) => {
     if (request !== current) return;
     if (!result.steps.length) throw new Error('No directions returned. Try different points.');
     route = result;
+    let elapsed = 0;
+    route.steps.forEach((step, index) => { const location = step.maneuver.location; const next = route.steps[index + 1]?.maneuver.location; step.glare = location && next ? sunGlare({ lat: location[1], lng: location[0] }, { lat: next[1], lng: next[0] }, Date.now() + elapsed * 1000).glare : false; elapsed += step.duration || 0; });
     stepIndex = 0;
     $('#journey-heading').textContent = `${formatDuration(route.duration)} · ${formatDistance(route.distance)}`;
     $('#steps').replaceChildren(...route.steps.map((step) => {
       const item = document.createElement('li');
-      item.textContent = `${step.instruction} (${formatDistance(step.distance)})`;
+      item.textContent = `${step.instruction}${step.glare ? ' · Sun glare likely' : ''} (${formatDistance(step.distance)})`;
       return item;
     }));
     $('#journey').hidden = false;
@@ -287,6 +315,7 @@ for (const [id, delta] of [['previous', -1], ['next', 1]]) $(`#${id}`).addEventL
 $('#speak').addEventListener('click', () => {
   if (route) speech.speak(`${route.steps[stepIndex].instruction} You’re doing lovely, sweetheart.`, selectedVoice);
 });
+$('#hear-glare').addEventListener('click', () => speech.speak('Sweetie, the sun will be right in your eyes, sunglasses on.', selectedVoice));
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);
   if (voice?.configured) speech.speak(voice.sample, voice.id);
@@ -297,6 +326,7 @@ $('#start-guidance').addEventListener('click', () => {
   if (navigationActive) { stopAmbientGuidance(); $('#ambient-note').textContent = 'Ambient guidance paused.'; return; }
   if (!navigator.geolocation) return status('Live guidance needs location access in this browser.');
   navigationActive = true;
+  reminder.start();
   $('#start-guidance').textContent = 'Pause ambient guidance';
   $('#ambient-note').textContent = 'Watching for a calm stretch of road. Trivia begins after five minutes above 45 mph with no maneuver within five miles.';
   locationWatcher = navigator.geolocation.watchPosition((position) => { lastPosition = position; considerAmbientTrivia(position); }, () => {
@@ -305,6 +335,11 @@ $('#start-guidance').addEventListener('click', () => {
   }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
 });
 setInterval(() => { if (lastPosition) considerAmbientTrivia(lastPosition); }, 60_000);
+setInterval(() => { if (reminder.due(Number($('#wellness-interval').value), navigationActive && $('#wellness').checked)) { $('#wellness-note').textContent = 'Time for a sip of water, love. Let your shoulders soften too.'; $('#hear-wellness').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured; } }, 30_000);
+$('#hear-wellness').addEventListener('click', () => speech.speak('Time for a sip of water, love. Let your shoulders soften too.', selectedVoice));
+$('#save-home').addEventListener('click', () => saveDestination('home', 'Home'));
+$('#save-work').addEventListener('click', () => saveDestination('work', 'Work'));
+$('#save-favorite').addEventListener('click', () => { const name = prompt('What shall we call this favorite?'); if (name?.trim()) saveDestination(`favorite-${Date.now()}`, name.trim()); });
 $('#skip-trivia').addEventListener('click', () => { speech.stop(); ambientTrivia.skip(); $('#ambient-note').textContent = 'Skipped. We’ll wait before sharing another note.'; });
 $('#mute-trivia').addEventListener('click', () => {
   triviaMuted = !triviaMuted;
@@ -352,4 +387,6 @@ async function loadVoices() {
   } catch (error) { voiceStatus(error.message); }
 }
 loadVoices();
+renderSavedPlaces();
+if (new Date().getHours() < 12 && savedPlaces.some((place) => place.id === 'home')) status('Good morning, sweetie, where are we off to?');
 window.addEventListener('pagehide', () => { speech.stop(); request?.abort(); stopAmbientGuidance(); });

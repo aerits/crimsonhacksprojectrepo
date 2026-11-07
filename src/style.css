@@ -71,6 +71,8 @@ audio { width: 100%; height: 32px; }
 .theme-group { border-top: 1px solid var(--line) !important; margin-top: 6px !important; padding-top: 15px !important; }
 .trivia-group { border-top: 1px solid var(--line) !important; margin-top: 15px !important; padding-top: 15px !important; }
 .trivia-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; }
+.saved-actions, .quick-places { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 7px; }
+.saved-place { display: flex; gap: 8px; align-items: center; padding-top: 7px; font-size: 10px; }
 .theme-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 9px; }
 .theme-options label { position: relative; cursor: pointer; }
 .theme-options input { position: absolute; opacity: 0; }
@@ -99,6 +101,7 @@ audio { width: 100%; height: 32px; }
 #instruction { font-size: 13px; line-height: 1.5; margin: 5px 0 0; }
 .step-actions { display: grid; grid-template-columns: 38px 1fr 38px; gap: 8px; }
 .ambient-guidance { width: 100%; margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); color: var(--purple); font-size: 11px; }
+.glare-note { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 10px; padding: 8px; background: #f7e8b8; color: #715b1d; border-radius: 8px; font-size: 10px; }
 details { margin-top: 15px; font-size: 11px; color: #7c8372; }
 details ol { max-height: 160px; overflow-y: auto; padding-left: 20px; line-height: 1.7; }
 details li { margin-bottom: 7px; }
