@@ -194,6 +194,7 @@ let map;
 let simulationTimer;
 let simulationRunning = false;
 let locationRequestId = 0;
+let locatingCurrentPosition = false;
 let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
@@ -532,11 +533,17 @@ function useCurrentLocation({ userInitiated = false } = {}) {
   const input = $('#start');
   const locate = $('#locate');
   const requestId = ++locationRequestId;
+  locatingCurrentPosition = true;
+  resetAddressSearch('start');
+  invalidateRoute();
+  selectedPlaces.start = null;
   if (!navigator.geolocation) {
+    locatingCurrentPosition = false;
     if (input.value.startsWith('Finding your')) input.value = '';
     return status('GPS is not available in this browser. Enter a starting address instead.');
   }
   if (window.isSecureContext === false) {
+    locatingCurrentPosition = false;
     if (input.value.startsWith('Finding your')) input.value = '';
     return status('GPS requires HTTPS (or localhost). Open this app securely, then try again.');
   }
@@ -546,6 +553,7 @@ function useCurrentLocation({ userInitiated = false } = {}) {
   navigator.geolocation.getCurrentPosition(({ coords }) => {
     if (requestId !== locationRequestId) return;
     locate.disabled = false;
+    locatingCurrentPosition = false;
     if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) {
       input.value = '';
       return status('GPS returned an invalid position. Try again or enter a starting address.');
@@ -558,10 +566,11 @@ function useCurrentLocation({ userInitiated = false } = {}) {
     map?.setLiveLocation(place);
     map?.focus(place);
     status('Starting from your GPS location. Search for a destination to begin.');
-    refreshSuggestions();
+    refreshSuggestions(['end']);
   }, (error) => {
     if (requestId !== locationRequestId) return;
     locate.disabled = false;
+    locatingCurrentPosition = false;
     input.value = '';
     status(locationErrorMessage(error));
   }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
@@ -647,6 +656,11 @@ async function searchAddress(kind, automatic = false) {
   const input = $('#' + kind);
   const query = input.value.trim();
   if (!query) throw new Error('Enter a ' + (kind === 'start' ? 'starting address' : 'destination') + ' first.');
+  if (kind === 'start' && (locatingCurrentPosition || (selectedPlaces.start?.isCurrentLocation && query === selectedPlaces.start.label))) {
+    resetAddressSearch('start');
+    if (!automatic) status('Your GPS location is already set as the starting point. Search for a destination to continue.');
+    return;
+  }
   resetAddressSearch(kind);
   const controller = new AbortController();
   suggestionRequests[kind] = controller;
@@ -677,6 +691,7 @@ async function searchAddress(kind, automatic = false) {
 
 function scheduleSuggestions(kind) {
   resetAddressSearch(kind);
+  if (kind === 'start' && (locatingCurrentPosition || selectedPlaces.start?.isCurrentLocation)) return;
   if ($('#' + kind).value.trim().length < 3) return;
   suggestionTimers[kind] = setTimeout(() => searchAddress(kind, true), 350);
 }
@@ -692,6 +707,7 @@ function refreshSuggestions(kinds = ['start', 'end']) {
 for (const kind of ['start', 'end']) $('#' + kind).addEventListener('input', () => {
   if (kind === 'start') {
     locationRequestId += 1;
+    locatingCurrentPosition = false;
     $('#locate').disabled = false;
   }
   invalidateRoute();
