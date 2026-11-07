@@ -750,7 +750,7 @@ $('#cancel-route').addEventListener('click', () => {
   $('#route-form').classList.remove('collapsed');
   $('#edit-route').hidden = true;
   $('#end').focus();
-  status('Route cancelled. Update your addresses whenever youâ€™re ready.');
+  status("Route cancelled. Update your addresses whenever you're ready.");
 });
 
 $('#route-form').addEventListener('submit', async (event) => {
