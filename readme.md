@@ -30,7 +30,7 @@ Node server → Fish Audio /v1/tts with server-only API key + reference_id
 Fish Audio → MP3 bytes → Node server → browser playback
 ```
 
-`config.json` is the committed default configuration: host, port, Fish model, and six public voice IDs. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
+`config.json` is the committed default configuration: host, port, Fish model, and six public voice IDs. The first Mommy voice is the highest-use nurturing/ASMR result in the public Fish Audio catalog at the time of configuration. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
 
 The default synthesis model is `s2.1-pro`; change `fish.model` in `config.json` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
 

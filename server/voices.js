@@ -2,8 +2,8 @@
 export function getVoices(config = {}) {
   const voiceIds = config.fish?.voices || {};
   return [
-    { id: 'velvet', name: 'Mommy ASMR', initial: 'M', color: '#e5d9ed', mood: 'Warm & reassuring',
-      referenceId: voiceIds.velvet, speed: 0.85, cue: '[soft tone][calm]',
+    { id: 'velvet', name: 'Mommy', initial: 'M', color: '#e5d9ed', mood: 'Top-rated & expressive',
+      referenceId: voiceIds.velvet, speed: 0.88, cue: '[soft tone][calm]',
       sample: 'Take a little breath, sweetheart. I’ll guide you, one turn at a time.' },
     { id: 'honey', name: 'Mommy', initial: 'M', color: '#f3dfb4', mood: 'Sweet & encouraging',
       referenceId: voiceIds.honey, speed: 0.95, cue: '[soft tone][happy]',
