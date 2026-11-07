@@ -1,0 +1,28 @@
+{
+  "name": "wayvo-navigation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "node --test",
+    "check": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "lucide-react": "^0.468.0",
+    "dotenv": "^17.2.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2",
+    "@vitejs/plugin-react": "^5.1.1"
+  }
+}
