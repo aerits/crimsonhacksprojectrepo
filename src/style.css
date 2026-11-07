@@ -68,6 +68,8 @@ audio { width: 100%; height: 32px; }
 .switch-row input:checked + .switch-control::after { transform: translateX(14px); }
 .switch-row input:focus-visible + .switch-control { outline: 3px solid #b59ac6; outline-offset: 3px; }
 .theme-group { border-top: 1px solid var(--line) !important; margin-top: 6px !important; padding-top: 15px !important; }
+.trivia-group { border-top: 1px solid var(--line) !important; margin-top: 15px !important; padding-top: 15px !important; }
+.trivia-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; }
 .theme-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 9px; }
 .theme-options label { position: relative; cursor: pointer; }
 .theme-options input { position: absolute; opacity: 0; }
@@ -90,6 +92,7 @@ audio { width: 100%; height: 32px; }
 .turn-icon { width: 43px; height: 43px; flex-shrink: 0; border-radius: 12px; background: #e9e1ef; display: grid; place-items: center; font-size: 27px; color: var(--purple); }
 #instruction { font-size: 13px; line-height: 1.5; margin: 5px 0 0; }
 .step-actions { display: grid; grid-template-columns: 38px 1fr 38px; gap: 8px; }
+.ambient-guidance { width: 100%; margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--surface); color: var(--purple); font-size: 11px; }
 details { margin-top: 15px; font-size: 11px; color: #7c8372; }
 details ol { max-height: 160px; overflow-y: auto; padding-left: 20px; line-height: 1.7; }
 details li { margin-bottom: 7px; }
