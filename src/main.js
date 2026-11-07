@@ -631,9 +631,14 @@ function selectMapDestination(place) {
   }
 }
 
+function selectedMapCategories() {
+  return [...document.querySelectorAll('#map-category-filter input:checked')].map((input) => input.value);
+}
+
 $('#map-category-filter').addEventListener('change', () => {
-  const categories = new Set([...document.querySelectorAll('#map-category-filter input:checked')].map((input) => input.value));
+  const categories = new Set(selectedMapCategories());
   map?.addLandmarkMarkers(selectMapDestination, categories);
+  for (const kind of ['start', 'end']) if ($('#' + kind).value.trim()) scheduleSuggestions(kind);
 });
 
 async function searchAddress(kind, automatic = false) {
@@ -649,7 +654,7 @@ async function searchAddress(kind, automatic = false) {
   button.disabled = true;
   if (!automatic) status('Searching for your ' + (kind === 'start' ? 'starting address' : 'destination') + '…');
   try {
-    const { results } = await searchAddresses(query, { origin, signal });
+    const { results } = await searchAddresses(query, { origin, categories: selectedMapCategories(), signal });
     if (signal.aborted || suggestionRequests[kind] !== controller || input.value.trim() !== query) return;
     renderAddressResults(kind, results, origin, automatic ? null
       : 'Choose the ' + (kind === 'start' ? 'starting address' : 'destination') + ' that looks right.');

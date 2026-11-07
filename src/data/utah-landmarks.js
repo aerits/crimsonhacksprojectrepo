@@ -17,10 +17,11 @@ export const utahMapDestinations = [
 
 const normalize = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-export function findUtahLandmarks(query) {
+export function findUtahLandmarks(query, categories) {
   const needle = normalize(query);
   if (!needle) return [];
-  return landmarks.map((landmark) => {
+  const candidates = categories ? utahMapDestinations.filter((place) => categories.has(place.category)) : landmarks;
+  return candidates.map((landmark) => {
     const names = [landmark.name, ...landmark.aliases].map(normalize);
     const score = names.reduce((best, name) => {
       if (name === needle) return 0;

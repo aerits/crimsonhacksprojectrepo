@@ -64,6 +64,11 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
       if (req.method === 'GET' && url.pathname === '/api/geocode') {
         const query = url.searchParams.get('q')?.trim();
         if (!query || query.length > 200) return json(res, 400, { error: 'Enter an address, place, or city up to 200 characters.' });
+        const categoryText = url.searchParams.get('categories');
+        const categories = categoryText ? new Set(categoryText.split(',').filter(Boolean)) : null;
+        if (categories && [...categories].some((category) => !['parks', 'trails', 'landmarks'].includes(category))) {
+          return json(res, 400, { error: 'Choose valid map place categories.' });
+        }
         let origin;
         if (url.searchParams.has('lat') || url.searchParams.has('lng')) {
           const lat = url.searchParams.get('lat');
@@ -77,7 +82,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         // app rather than accepting an arbitrary global provider ordering.
         const rankingOrigin = origin || UTAH_SEARCH_ORIGIN;
         // A query near one location must never reuse matches or distances from another.
-        const cacheKey = JSON.stringify([query.toLowerCase(), origin?.lat, origin?.lng]);
+        const cacheKey = JSON.stringify([query.toLowerCase(), origin?.lat, origin?.lng, categoryText]);
         const cached = geocodeCache.get(cacheKey);
         if (cached) return json(res, 200, cached);
         const wait = Math.max(0, nextGeocodeAt - Date.now());
@@ -105,7 +110,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           return { lat, lng, label: [properties.name, street, locality].filter(Boolean).join(', ') };
         })
           .filter((place) => isValidPoint(place) && place.label);
-        const landmarkMatches = findUtahLandmarks(query);
+        const landmarkMatches = findUtahLandmarks(query, categories);
         const photonLabels = photonResults.map((place) => place.label.toLowerCase());
         for (const place of photonResults) {
           const landmark = landmarkMatches.find(({ name }) => place.label.toLowerCase().startsWith(name.toLowerCase()));
