@@ -158,6 +158,12 @@ details li { margin-bottom: 7px; }
 :root[data-theme='dark'] .sidebar { background: linear-gradient(155deg, #30243b, #2b202e); border-color: var(--line); }
 :root[data-theme='dark'] .settings-page { background: radial-gradient(ellipse at 92% 0%, #3a2c45 0, transparent 46%), linear-gradient(145deg, #211a29, #2b202e); }
 :root[data-theme='dark'] .settings-page-heading > div { background: #30263ae8; border-color: var(--line); }
+:root[data-theme='dark'] .settings-page .settings { background: #382d43; border-color: #756080; box-shadow: 0 12px 32px #100b162e; }
+:root[data-theme='dark'] .settings-page .settings :is(legend, .affirmation-label, .switch-row, .phrase-settings summary, .hint, .tiny) { color: #e5d7eb; }
+:root[data-theme='dark'] .settings-page .settings :is(select, textarea) { background: #211a29; border-color: #756080; color: #f6eff8; }
+:root[data-theme='dark'] .settings-page .settings :is(select, textarea)::placeholder { color: #cdbdd4; }
+:root[data-theme='dark'] .settings-page .theme-options span { background: #30263a; border-color: #756080; color: #efe6f3; }
+:root[data-theme='dark'] .settings-page .theme-options input:checked + span { background: #513d60; border-color: #d9b9eb; color: #fff7ff; }
 :root[data-theme='dark'] .card, :root[data-theme='dark'] .secondary, :root[data-theme='dark'] #voice-select, :root[data-theme='dark'] .address-result-list, :root[data-theme='dark'] .library-heading > .secondary { background: #30263a; border-color: var(--line); color: #f0e8f3; }
 :root[data-theme='dark'] .input-row { background: #382d43; border-color: var(--line); }
 :root[data-theme='dark'] .input-row input, :root[data-theme='dark'] .dev-tts textarea { color: #f0e8f3; }
