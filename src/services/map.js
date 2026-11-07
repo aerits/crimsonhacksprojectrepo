@@ -1,5 +1,16 @@
 import { utahMapDestinations } from '../data/utah-landmarks.js';
 
+const ROUTE_COLORS = Object.freeze({
+  light: '#9471b8',
+  pink: '#d75a89',
+  verity: '#f4cc28',
+  dark: '#c8a6dd',
+});
+
+export function routeColorForTheme(theme) {
+  return ROUTE_COLORS[theme] || ROUTE_COLORS.light;
+}
+
 export function createMap(element) {
   const L = window.L;
   if (!L) throw new Error('The map library could not load. Check your internet connection and reload.');
@@ -109,9 +120,10 @@ export function createMap(element) {
     clearSimulationPoint() { cancelAnimationFrame(simulationAnimation); simulationMarker?.remove(); simulationMarker = null; },
     setLiveLocation,
     clearLiveLocation() { cancelAnimationFrame(liveAnimation); liveMarker?.remove(); liveMarker = null; },
-    drawRoute(geometry) {
+    setRouteTheme(theme) { routeLayer?.setStyle({ color: routeColorForTheme(theme) }); },
+    drawRoute(geometry, theme) {
       routeLayer?.remove();
-      routeLayer = L.geoJSON(geometry, { style: { color: '#9471b8', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
+      routeLayer = L.geoJSON(geometry, { style: { color: routeColorForTheme(theme), weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
       map.fitBounds(routeLayer.getBounds(), { padding: [45, 45] });
     },
     focus(point, zoom = 15) { map.flyTo(point, zoom, { duration: 0.45, easeLinearity: 0.25 }); },
