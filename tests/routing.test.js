@@ -32,6 +32,16 @@ test('OSRM requests use longitude first and flatten route legs', async () => {
   assert.equal(route.steps[1].instruction, 'You have arrived at your destination.');
 });
 
+test('routing preferences are sent as OSRM exclusions', async () => {
+  await getRoute({ lat: 33, lng: -87 }, { lat: 34, lng: -88 }, {
+    avoid: ['toll', 'motorway', 'ferry'],
+    fetcher: async (url) => {
+      assert.equal(url.searchParams.get('exclude'), 'toll,motorway,ferry');
+      return Response.json({ code: 'Ok', routes: [{ distance: 42, duration: 10, geometry: {}, legs: [{ steps: [] }] }] });
+    },
+  });
+});
+
 test('routing failures produce useful errors', async () => {
   const point = { lat: 0, lng: 0 };
   await assert.rejects(getRoute(point, point, { fetcher: async () => Response.json({ code: 'NoRoute' }) }), /No driving route/);
