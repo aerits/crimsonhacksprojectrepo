@@ -720,6 +720,7 @@ details li { margin-bottom: 7px; }
 #app .topbar .brand-mark { width: 32px; height: 32px; margin-right: 8px; border-radius: 10px; }
 
 @media (max-width: 760px) {
+  #app .topbar.map-mode { padding-inline: 10px; }
   #app .topbar .brand { font-size: 18px; letter-spacing: -.8px; }
   #app .topbar .brand-mark { width: 28px; height: 28px; margin-right: 6px; }
 }
