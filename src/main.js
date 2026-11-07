@@ -16,7 +16,7 @@ import { utahStateParks, utahTrails } from './data/utah-outdoors.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span>mommy maps<span class="brand-dot">.</span></a>
+    <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span><span id="brand-name">mommy maps</span><span class="brand-dot">.</span></a>
     <div class="map-actions" aria-label="Map options"><button id="open-voices" type="button" class="map-action voice-map-action" aria-label="Open voice library"><img src="/images/voice-guide.svg" alt="" aria-hidden="true" /></button><button id="open-settings" type="button" class="map-action" aria-label="Open settings">⚙</button></div>
     <nav class="view-tabs" role="tablist" aria-label="App views">
       <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
@@ -106,7 +106,7 @@ document.querySelector('#app').innerHTML = `
         <fieldset class="trivia-group">
           <legend>Roadside trivia</legend>
           <p class="hint">On a quiet, steady stretch, we’ll share a note about the place around you no more than once every 18 minutes.</p>
-          <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
+          <label class="switch-row trivia-toggle" for="mute-trivia"><span>Mute trivia</span><input id="mute-trivia" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
         <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><label for="utah-trails" class="hint">Trail ideas</label><select id="utah-trails"><option value="">Choose a trail idea</option></select><p id="outdoor-note" class="hint">Choose an outdoor spot, then use its official page to plan before setting a route.</p></fieldset>
@@ -286,6 +286,9 @@ function selectVoice(id) {
   const portrait = voicePortrait(voice, voices.indexOf(voice));
   $('#header-voice-portrait').src = portrait.src;
   $('#header-voice-portrait').alt = portrait.alt;
+  const isVerity = voice.id === 'verity';
+  $('#brand-name').textContent = isVerity ? 'verity maps' : 'mommy maps';
+  $('.brand').setAttribute('aria-label', isVerity ? 'Verity Maps home' : 'Mommy Maps home');
   $('#selected-voice-name').textContent = voice.name?.trim() || 'Your selected guide';
   speech.stop();
   voicePicker.setSelected(id);
@@ -445,9 +448,10 @@ function renderSavedPlaces() {
   const list = $('#saved-places');
   list.replaceChildren(...savedPlaces.map((place) => {
     const item = document.createElement('li');
-    const use = document.createElement('button'); use.type = 'button'; use.className = 'text-button'; use.textContent = `Use ${place.name}: ${place.label}`;
+    item.className = 'saved-place-item';
+    const use = document.createElement('button'); use.type = 'button'; use.className = 'text-button saved-place-use'; use.textContent = `Use ${place.name}: ${place.label}`;
     use.addEventListener('click', () => selectPlace('end', place));
-    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-button'; remove.textContent = 'Remove';
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-button saved-place-remove'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove saved ${place.name}`);
     remove.addEventListener('click', () => { savedPlaces = removePlace(savedPlaces, place.id); saveSavedPlaces(savedPlaces); renderSavedPlaces(); });
     item.append(use, remove); return item;
   }));
@@ -944,11 +948,8 @@ $('#wellness').addEventListener('change', () => {
   wellnessReminder.reset();
   $('#wellness-note').textContent = $('#wellness').checked ? 'Gentle check-ins will start while this page is open.' : 'Optional check-ins are off.';
 });
-$('#skip-trivia').addEventListener('click', () => { speech.stop(); ambientTrivia.skip(); $('#ambient-note').textContent = 'Skipped. We’ll wait before sharing another note.'; });
-$('#mute-trivia').addEventListener('click', () => {
-  triviaMuted = !triviaMuted;
-  $('#mute-trivia').textContent = triviaMuted ? 'Unmute trivia' : 'Mute trivia';
-  $('#mute-trivia').setAttribute('aria-pressed', String(triviaMuted));
+$('#mute-trivia').addEventListener('change', () => {
+  triviaMuted = $('#mute-trivia').checked;
   if (triviaMuted) speech.stop();
   $('#ambient-note').textContent = triviaMuted ? 'Roadside trivia is muted.' : 'Roadside trivia is ready when you start ambient guidance.';
 });
