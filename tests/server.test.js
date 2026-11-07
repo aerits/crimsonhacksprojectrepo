@@ -36,6 +36,29 @@ test('voice list exposes setup status without keys or provider IDs', async (t) =
   assert.equal(voices[2].configured, false);
 });
 
+test('address search returns a map point and caches repeat requests', async (t) => {
+  let calls = 0;
+  const api = await withServer(t, { fetcher: async (url, options) => {
+    calls += 1;
+    assert.equal(url.hostname, 'nominatim.openstreetmap.org');
+    assert.equal(url.pathname, '/search');
+    assert.equal(url.searchParams.get('q'), 'Bryant-Denny Stadium');
+    assert.equal(url.searchParams.get('format'), 'jsonv2');
+    assert.equal(options.headers['User-Agent'], 'Mommy-Maps/0.1');
+    return Response.json([{ lat: '33.2083', lon: '-87.5504', display_name: 'Bryant-Denny Stadium, Tuscaloosa, Alabama' }]);
+  } });
+  const path = '/api/geocode?q=Bryant-Denny%20Stadium';
+  assert.deepEqual(await (await api.get(path)).json(), { lat: 33.2083, lng: -87.5504, label: 'Bryant-Denny Stadium, Tuscaloosa, Alabama' });
+  assert.equal((await api.get(path)).status, 200);
+  assert.equal(calls, 1);
+});
+
+test('address search rejects missing input and no matches', async (t) => {
+  const api = await withServer(t, { fetcher: async () => Response.json([]) });
+  assert.equal((await api.get('/api/geocode')).status, 400);
+  assert.equal((await api.get('/api/geocode?q=not-a-real-place')).status, 404);
+});
+
 test('server sends selected Fish voice and returns binary MP3', async (t) => {
   let calls = 0;
   const bytes = Uint8Array.of(73, 68, 51, 0, 1, 2);

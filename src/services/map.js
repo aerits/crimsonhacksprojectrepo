@@ -1,4 +1,4 @@
-export function createMap(element, onPick) {
+export function createMap(element) {
   const L = window.L;
   if (!L) throw new Error('The map library could not load. Check your internet connection and reload.');
   const map = L.map(element, { zoomControl: false }).setView([33.2098, -87.5532], 14);
@@ -8,7 +8,6 @@ export function createMap(element, onPick) {
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   const markers = {};
   let routeLayer;
-  map.on('click', ({ latlng }) => onPick(latlng));
   return {
     setPoint(kind, point) {
       markers[kind]?.remove();

@@ -31,9 +31,7 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .route-form label span { color: #91829b; }
 .input-row { display: flex; background: #f8f7f3; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .input-row input { width: 100%; min-width: 0; background: transparent; border: 0; padding: 12px; color: #4b4f45; font-size: 12px; }
-.pick { border: 0; background: transparent; padding: 0 11px; color: #8a7995; font-size: 22px; }
-.pick.active { background: #e8deed; }
-.route-options { display: flex; justify-content: space-between; margin: 8px 0 16px; }
+.route-options { display: flex; justify-content: flex-end; margin: 8px 0 16px; }
 .text-button { border: 0; background: transparent; color: #84718f; font-size: 11px; padding: 4px 0; }
 .primary { background: var(--purple); border: 0; border-radius: 9px; color: white; padding: 13px 15px; font-size: 12px; font-weight: 500; }
 .route-form > .primary { display: flex; justify-content: space-between; width: 100%; }

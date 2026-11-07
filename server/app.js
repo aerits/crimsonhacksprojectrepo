@@ -29,11 +29,36 @@ export function createApp({ config = {}, fetcher = fetch } = {}) {
   const voices = getVoices(config);
   const fish = config.fish || {};
   let active = 0;
+  let nextGeocodeAt = 0;
+  const geocodeCache = new Map();
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
       if (req.method === 'GET' && url.pathname === '/api/voices') {
         return json(res, 200, publicVoices(voices, fish.apiKey));
+      }
+      if (req.method === 'GET' && url.pathname === '/api/geocode') {
+        const query = url.searchParams.get('q')?.trim();
+        if (!query || query.length > 200) return json(res, 400, { error: 'Enter an address, place, or city up to 200 characters.' });
+        const cached = geocodeCache.get(query.toLowerCase());
+        if (cached) return json(res, 200, cached);
+        const wait = Math.max(0, nextGeocodeAt - Date.now());
+        nextGeocodeAt = Math.max(Date.now(), nextGeocodeAt) + 1000;
+        if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+        const searchUrl = new URL('https://nominatim.openstreetmap.org/search');
+        searchUrl.search = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1' });
+        const upstream = await fetcher(searchUrl, { headers: { Accept: 'application/json', 'User-Agent': 'Mommy-Maps/0.1' } });
+        if (!upstream.ok) {
+          await upstream.body?.cancel();
+          return json(res, 502, { error: 'Address search is unavailable. Please try again.' });
+        }
+        const [place] = await upstream.json();
+        const lat = Number(place?.lat);
+        const lng = Number(place?.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
+        const result = { lat, lng, label: place.display_name };
+        geocodeCache.set(query.toLowerCase(), result);
+        return json(res, 200, result);
       }
       if (req.method === 'POST' && url.pathname === '/api/tts') {
         if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Use application/json.' });
