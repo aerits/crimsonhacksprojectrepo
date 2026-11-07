@@ -78,6 +78,9 @@ input[type=range] { accent-color: #9580a1; width: 130px; }
 .turn-icon { width: 43px; height: 43px; flex-shrink: 0; border-radius: 12px; background: #e9e1ef; display: grid; place-items: center; font-size: 27px; color: var(--purple); }
 #instruction { font-size: 13px; line-height: 1.5; margin: 5px 0 0; }
 .step-actions { display: grid; grid-template-columns: 38px 1fr 38px; gap: 8px; }
+.simulation-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 11px; }
+.simulation-controls label { color: #85887e; font-size: 10px; }
+.simulation-controls select { margin-left: 5px; border: 1px solid var(--line); border-radius: 6px; padding: 5px; background: #fffefa; color: #645c68; font: inherit; font-size: 10px; }
 details { margin-top: 15px; font-size: 11px; color: #7c8372; }
 details ol { max-height: 160px; overflow-y: auto; padding-left: 20px; line-height: 1.7; }
 details li { margin-bottom: 7px; }

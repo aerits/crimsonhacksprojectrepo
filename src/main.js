@@ -50,6 +50,8 @@ document.querySelector('#app').innerHTML = `
         <p class="hint">Step through the route and hear each direction.</p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
+        <div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="4000">Relaxed</option><option value="2000" selected>Normal</option><option value="800">Quick</option></select></label></div>
+        <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction on the map.</p>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
@@ -70,8 +72,31 @@ let route = null;
 let stepIndex = 0;
 let request;
 let map;
+let simulationTimer;
+let simulationRunning = false;
+
+function stopSimulation(message) {
+  clearTimeout(simulationTimer);
+  simulationTimer = undefined;
+  simulationRunning = false;
+  $('#simulate').textContent = '▷ Simulate route';
+  if (message) $('#simulation-status').textContent = message;
+}
+
+function scheduleSimulationStep() {
+  const delay = Number($('#simulation-speed').value);
+  simulationTimer = setTimeout(() => {
+    if (!simulationRunning || !route) return;
+    if (stepIndex >= route.steps.length - 1) return stopSimulation('Simulation complete. You’ve arrived.');
+    stepIndex += 1;
+    showStep();
+    $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
+    scheduleSimulationStep();
+  }, delay);
+}
 
 function invalidateRoute() {
+  stopSimulation();
   request?.abort();
   request = null;
   route = null;
@@ -206,9 +231,22 @@ $('#route-form').addEventListener('submit', async (event) => {
 
 for (const [id, delta] of [['previous', -1], ['next', 1]]) $(`#${id}`).addEventListener('click', () => {
   if (!route) return;
+  stopSimulation();
   speech.stop();
   stepIndex = Math.max(0, Math.min(route.steps.length - 1, stepIndex + delta));
   showStep();
+});
+$('#simulate').addEventListener('click', () => {
+  if (!route) return;
+  if (simulationRunning) return stopSimulation('Simulation paused.');
+  if (stepIndex >= route.steps.length - 1) {
+    stepIndex = 0;
+    showStep();
+  }
+  simulationRunning = true;
+  $('#simulate').textContent = 'Ⅱ Pause simulation';
+  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
+  scheduleSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
   if (route) speech.speak(`${route.steps[stepIndex].instruction} You’re doing lovely, sweetheart.`, selectedVoice);
@@ -259,4 +297,4 @@ async function loadVoices() {
   } catch (error) { voiceStatus(error.message); }
 }
 loadVoices();
-window.addEventListener('pagehide', () => { speech.stop(); request?.abort(); });
+window.addEventListener('pagehide', () => { stopSimulation(); speech.stop(); request?.abort(); });
