@@ -32,7 +32,7 @@ document.querySelector('#app').innerHTML = `
         <div class="input-row"><input id="start" name="start" value="Finding your current location…" placeholder="Street address, place, or city" autocomplete="off" aria-controls="start-results" required /><button id="locate" type="button" class="location-search" aria-label="Use my GPS location" title="Use my GPS location">⌖</button><button type="button" class="address-search" data-search="start">Search</button></div>
         <div id="start-results" class="address-results" aria-live="polite"></div>
         <label for="end">Your destination <span>B</span></label>
-        <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="off" aria-controls="end-results" required /><button type="button" class="address-search" data-search="end">Search</button></div>
+        <div class="input-row"><input id="end" name="end" value="" placeholder="Street address, place, or city" autocomplete="off" aria-controls="end-results" required /><button id="clear-end" type="button" class="clear-address" aria-label="Clear destination" title="Clear destination" hidden>×</button><button type="button" class="address-search" data-search="end">Search</button></div>
         <div id="end-results" class="address-results" aria-live="polite"></div>
         <div class="quick-destinations" aria-label="Saved destinations"><button id="go-home" type="button" class="secondary">Home</button><button id="go-work" type="button" class="secondary">Work</button><button id="go-favorite" type="button" class="secondary">Favorite</button></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇆ Swap</button></div>
@@ -131,7 +131,7 @@ document.querySelector('#app').innerHTML = `
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
         <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Simulation speed <select id="simulation-speed"><option value="120">120 mph</option><option value="300" selected>300 mph</option><option value="600">600 mph</option><option value="relative-30">Route-relative (30×)</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
-        <button type="button" id="start-navigation" class="ambient-guidance" disabled>Start Navigation</button>
+        <div class="journey-actions"><button type="button" id="start-navigation" class="ambient-guidance" disabled>Start Navigation</button><button type="button" id="cancel-route" class="secondary">Cancel route</button></div>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
@@ -289,7 +289,7 @@ function startDrivingFollow() {
   stopDrivingFollow();
   if (!navigator.geolocation) return;
   drivingLocationWatch = navigator.geolocation.watchPosition(({ coords }) => {
-    const point = { lat: coords.latitude, lng: coords.longitude };
+    const point = { lat: coords.latitude, lng: coords.longitude, label: 'Your current location', isCurrentLocation: true };
     currentLocation = point;
     map?.setLiveLocation(point);
     if (!simulationRunning) map?.follow(point, 17);
@@ -549,7 +549,7 @@ function useCurrentLocation({ userInitiated = false } = {}) {
       input.value = '';
       return status('GPS returned an invalid position. Try again or enter a starting address.');
     }
-    const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your GPS location' };
+    const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your current location', isCurrentLocation: true };
     currentLocation = place;
     selectedPlaces.start = place;
     input.value = place.label;
@@ -613,6 +613,7 @@ function selectPlace(kind, place) {
   invalidateRoute();
   selectedPlaces[kind] = place;
   $('#' + kind).value = place.label;
+  if (kind === 'end') updateClearDestination();
   resetAddressSearch(kind);
   map?.setPoint(kind, place);
   map?.focus(place);
@@ -695,6 +696,7 @@ for (const kind of ['start', 'end']) $('#' + kind).addEventListener('input', () 
   invalidateRoute();
   const changedOrigin = kind === 'start' && selectedPlaces.start !== null;
   selectedPlaces[kind] = null;
+  if (kind === 'end') updateClearDestination();
   status('Your addresses changed. Search for a new route when you’re ready.');
   scheduleSuggestions(kind);
   if (changedOrigin) refreshSuggestions(['end']);
@@ -708,21 +710,47 @@ document.querySelectorAll('[data-search]').forEach((button) => button.addEventLi
 $('#swap').addEventListener('click', () => {
   invalidateRoute();
   const start = $('#start').value;
-  const swappingCurrentLocation = selectedPlaces.start === currentLocation;
+  const startWasCurrentLocation = selectedPlaces.start?.isCurrentLocation;
   $('#start').value = $('#end').value;
-  $('#end').value = swappingCurrentLocation ? 'Your GPS location' : start;
   [selectedPlaces.start, selectedPlaces.end] = [selectedPlaces.end, selectedPlaces.start];
-  if (swappingCurrentLocation) selectedPlaces.end = currentLocation;
+  if (startWasCurrentLocation && currentLocation) {
+    selectedPlaces.end = currentLocation;
+    $('#end').value = currentLocation.label;
+  } else $('#end').value = start;
+  updateClearDestination();
   resetAddressSearch('start');
   resetAddressSearch('end');
   refreshSuggestions();
   status('Swapped. Let’s find the way back.');
 });
 
+function updateClearDestination() {
+  $('#clear-end').hidden = !$('#end').value.trim();
+}
+
+$('#clear-end').addEventListener('click', () => {
+  invalidateRoute();
+  selectedPlaces.end = null;
+  $('#end').value = '';
+  resetAddressSearch('end');
+  updateClearDestination();
+  $('#end').focus();
+  status('Destination cleared. Choose where you’d like to go.');
+});
+updateClearDestination();
+
 $('#edit-route').addEventListener('click', () => {
   $('#route-form').classList.remove('collapsed');
   $('#edit-route').hidden = true;
   $('#end').focus();
+});
+
+$('#cancel-route').addEventListener('click', () => {
+  invalidateRoute();
+  $('#route-form').classList.remove('collapsed');
+  $('#edit-route').hidden = true;
+  $('#end').focus();
+  status('Route cancelled. Update your addresses whenever youâ€™re ready.');
 });
 
 $('#route-form').addEventListener('submit', async (event) => {
