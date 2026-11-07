@@ -289,6 +289,7 @@ function selectVoice(id) {
   const isVerity = voice.id === 'verity';
   $('#brand-name').textContent = isVerity ? 'verity maps' : 'mommy maps';
   $('.brand').setAttribute('aria-label', isVerity ? 'Verity Maps home' : 'Mommy Maps home');
+  document.title = isVerity ? 'Verity Maps' : 'Mommy Maps';
   $('#selected-voice-name').textContent = voice.name?.trim() || 'Your selected guide';
   speech.stop();
   voicePicker.setSelected(id);
