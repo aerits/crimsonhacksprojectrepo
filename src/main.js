@@ -150,8 +150,11 @@ function scheduleSimulationStep() {
 
 function playSimulationStep() {
   const step = route.steps[stepIndex];
-  showStep();
-  if (step.maneuver.location) {
+  showStep({ focus: false });
+  const duration = Number($('#simulation-speed').value);
+  if (step.geometry?.coordinates?.length > 1) {
+    map?.animateSimulationPath(step.geometry.coordinates, duration);
+  } else if (step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
     map?.setSimulationPoint({ lat, lng });
   }
@@ -172,14 +175,14 @@ function invalidateRoute() {
   $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
 }
 
-function showStep() {
+function showStep({ focus = true } = {}) {
   const step = route.steps[stepIndex];
   $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} · ${formatDistance(step.distance)}`;
   $('#instruction').textContent = step.instruction;
   $('#previous').disabled = stepIndex === 0;
   $('#next').disabled = stepIndex === route.steps.length - 1;
   $('#speak').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
-  if (step.maneuver.location) {
+  if (focus && step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
     map?.focus({ lat, lng });
   }

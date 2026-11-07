@@ -9,6 +9,18 @@ export function createMap(element) {
   const markers = {};
   let routeLayer;
   let simulationMarker;
+  let simulationAnimation;
+  const pointAt = (from, to, amount) => ({
+    lat: from.lat + (to.lat - from.lat) * amount,
+    lng: from.lng + (to.lng - from.lng) * amount,
+  });
+  const segmentLength = (from, to) => Math.hypot(to.lat - from.lat, (to.lng - from.lng) * Math.cos((from.lat + to.lat) * Math.PI / 360));
+  const setSimulationPoint = (point) => {
+    if (!simulationMarker) {
+      simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#ce82a7', fillOpacity: 1 })
+        .addTo(map).bindTooltip('Simulated location', { direction: 'top' });
+    } else simulationMarker.setLatLng(point);
+  };
   return {
     resize() { map.invalidateSize({ pan: false }); },
     setPoint(kind, point) {
@@ -18,13 +30,32 @@ export function createMap(element) {
       }) }).addTo(map).bindTooltip(kind === 'start' ? 'Starting point' : 'Destination');
     },
     clearRoute() { routeLayer?.remove(); routeLayer = null; },
-    setSimulationPoint(point) {
-      if (!simulationMarker) {
-        simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#ce82a7', fillOpacity: 1 })
-          .addTo(map).bindTooltip('Simulated location', { direction: 'top' });
-      } else simulationMarker.setLatLng(point);
+    setSimulationPoint,
+    animateSimulationPath(coordinates, duration) {
+      cancelAnimationFrame(simulationAnimation);
+      const points = coordinates.map(([lng, lat]) => ({ lat, lng }));
+      if (points.length < 2) return setSimulationPoint(points[0]);
+      const lengths = points.slice(1).map((point, index) => segmentLength(points[index], point));
+      const total = lengths.reduce((sum, length) => sum + length, 0);
+      if (!total) return setSimulationPoint(points.at(-1));
+      const startedAt = performance.now();
+      const frame = (now) => {
+        const distance = Math.min(1, (now - startedAt) / duration) * total;
+        let travelled = 0;
+        for (let index = 0; index < lengths.length; index += 1) {
+          if (travelled + lengths[index] >= distance) {
+            setSimulationPoint(pointAt(points[index], points[index + 1], (distance - travelled) / lengths[index]));
+            break;
+          }
+          travelled += lengths[index];
+        }
+        if (distance < total) simulationAnimation = requestAnimationFrame(frame);
+        else setSimulationPoint(points.at(-1));
+      };
+      setSimulationPoint(points[0]);
+      simulationAnimation = requestAnimationFrame(frame);
     },
-    clearSimulationPoint() { simulationMarker?.remove(); simulationMarker = null; },
+    clearSimulationPoint() { cancelAnimationFrame(simulationAnimation); simulationMarker?.remove(); simulationMarker = null; },
     drawRoute(geometry) {
       routeLayer?.remove();
       routeLayer = L.geoJSON(geometry, { style: { color: '#9471b8', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
