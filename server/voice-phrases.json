@@ -1,0 +1,6 @@
+{
+  "closure": "Sweetie, UDOT reports a closure near {location}. Please check the details before you head that way.",
+  "incident": "Sweetie, there’s an incident near {location}, so let’s take it easy.",
+  "construction": "Love, UDOT reports construction near {location}. We’ll give ourselves a little extra patience.",
+  "default": "Sweetie, UDOT has an update near {location}."
+}

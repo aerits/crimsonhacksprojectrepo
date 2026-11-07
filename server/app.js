@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, extname, sep } from 'node:path';
 import { getVoices, publicVoices } from './voices.js';
+import { getAirQuality, getRouteConditions } from './conditions.js';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
@@ -11,12 +12,12 @@ const json = (res, status, body) => {
   res.end(JSON.stringify(body));
 };
 
-async function bodyOf(req) {
+async function bodyOf(req, maxBytes = 4096) {
   let body = '';
   req.setEncoding('utf8');
   for await (const chunk of req.iterator({ destroyOnReturn: false })) {
     body += chunk;
-    if (Buffer.byteLength(body) > 4096) {
+    if (Buffer.byteLength(body) > maxBytes) {
       req.resume();
       throw Object.assign(new Error('Request too large.'), { status: 413 });
     }
@@ -81,6 +82,19 @@ export function createApp({ env = process.env, fetcher = fetch } = {}) {
           if (!res.destroyed) json(res, error.name === 'TimeoutError' ? 504 : 502, { error: 'Speech generation failed or timed out. Please try again.' });
         } finally { active -= 1; res.off('close', abort); }
         return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/conditions') {
+        if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Use application/json.' });
+        const body = await bodyOf(req, 512 * 1024);
+        try { return json(res, 200, await getRouteConditions({ geometry: body?.geometry, destinationId: body?.destinationId, apiKey: env.UDOT_API_KEY, fetcher })); }
+        catch { return json(res, 502, { error: 'UDOT conditions are unavailable right now.' }); }
+      }
+      if (req.method === 'POST' && url.pathname === '/api/air-quality') {
+        if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Use application/json.' });
+        const body = await bodyOf(req);
+        if (!body?.start || !body?.end || !Number.isFinite(body.start.lat) || !Number.isFinite(body.start.lng) || !Number.isFinite(body.end.lat) || !Number.isFinite(body.end.lng)) return json(res, 400, { error: 'Start and destination coordinates are required.' });
+        try { return json(res, 200, await getAirQuality({ start: body.start, end: body.end, apiKey: env.AIRNOW_API_KEY, fetcher, baseUrl: env.AIRNOW_API_URL || undefined })); }
+        catch { return json(res, 502, { error: 'AirNow is unavailable right now.' }); }
       }
       if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'API endpoint not found.' });
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Method not allowed.' });

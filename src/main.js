@@ -15,6 +15,8 @@ document.querySelector('#app').innerHTML = `
       <div class="intro"><p class="eyebrow">MAKE YOURSELF COMFORTABLE</p><h1>Let’s take the<br><em>soft way home.</em></h1><p>Your route, a reassuring voice, and a little less rush.</p></div>
       <form id="route-form" class="card route-form">
         <div class="section-title"><h2>Where are we going?</h2><span class="small-pill">Driving</span></div>
+        <label for="destination-preset">Canyon & ski destination</label>
+        <select id="destination-preset"><option value="">Choose a preset</option><option value="littleCottonwood">Little Cottonwood</option><option value="bigCottonwood">Big Cottonwood</option><option value="parkCity">Park City</option><option value="snowbasin">Snowbasin</option></select>
         <label for="start">Starting point <span>A</span></label>
         <div class="input-row"><input id="start" name="start" value="33.2140, -87.5391" placeholder="Latitude, longitude" required /><button type="button" data-pick="start" class="pick" aria-label="Pick starting point on map">⌖</button></div>
         <label for="end">Your destination <span>B</span></label>
@@ -68,6 +70,7 @@ document.querySelector('#app').innerHTML = `
         <button type="button" id="start-guidance" class="ambient-guidance" disabled>Start ambient guidance</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
+      <section id="conditions" class="conditions" hidden aria-labelledby="conditions-heading"><div class="section-title"><h2 id="conditions-heading">Conditions on your route</h2><span class="tiny">UDOT</span></div><p id="canyon-status" class="hint"></p><div id="condition-list"></div><p id="air-quality" class="hint"></p></section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
     </section>
   </main>`;
@@ -85,6 +88,7 @@ let route = null;
 let stepIndex = 0;
 let request;
 let map;
+let selectedDestination;
 let navigationActive = false;
 let triviaMuted = false;
 let locationWatcher;
@@ -137,6 +141,33 @@ function updatePoint(kind, point) {
   map?.setPoint(kind, point);
 }
 
+const presets = { littleCottonwood: { lat: 40.5808, lng: -111.6375 }, bigCottonwood: { lat: 40.6195, lng: -111.589 }, parkCity: { lat: 40.6461, lng: -111.498 }, snowbasin: { lat: 41.2166, lng: -111.856 } };
+async function loadConditions(start, end, geometry) {
+  const [conditions, air] = await Promise.all([
+    fetch('/api/conditions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ geometry, destinationId: selectedDestination }) }).then((response) => response.json()),
+    fetch('/api/air-quality', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ start, end }) }).then((response) => response.json()),
+  ]);
+  const panel = $('#conditions');
+  panel.hidden = false;
+  const list = $('#condition-list');
+  list.replaceChildren(...(conditions.alerts || []).map((alert) => {
+    const item = document.createElement('article'); item.className = `condition severity-${alert.severity}`;
+    const copy = document.createElement('p'); copy.textContent = `${alert.location}: ${alert.description}`;
+    const hear = document.createElement('button'); hear.className = 'text-button'; hear.textContent = 'Hear this'; hear.disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
+    hear.addEventListener('click', () => speech.speak(alert.phrase, selectedVoice)); item.append(copy, hear); return item;
+  }));
+  if (!conditions.configured) list.textContent = 'Add UDOT_API_KEY to enable official route conditions.';
+  if (conditions.canyonStatus) $('#canyon-status').textContent = conditions.canyonStatus.alerts.length ? `UDOT has ${conditions.canyonStatus.alerts.length} reported canyon update${conditions.canyonStatus.alerts.length === 1 ? '' : 's'}.` : 'UDOT has no matching canyon closure or traction-law report in this response. Check UDOT before travel.';
+  else $('#canyon-status').textContent = '';
+  if (selectedDestination) { const avalanche = document.createElement('a'); avalanche.href = 'https://utahavalanchecenter.org/'; avalanche.target = '_blank'; avalanche.rel = 'noreferrer'; avalanche.textContent = 'Utah Avalanche Center forecast'; $('#canyon-status').append(' ', avalanche); }
+  const readings = [air.start, air.destination].filter(Boolean); const unhealthy = readings.find((reading) => reading.aqi >= 101);
+  $('#air-quality').replaceChildren();
+  if (!air.configured) $('#air-quality').textContent = 'Add AIRNOW_API_KEY to enable air quality.';
+  else if (unhealthy) { $('#air-quality').append(`The air’s not great out there, maybe stay in today, love. AQI ${unhealthy.aqi} (${unhealthy.category}). `); const link = document.createElement('a'); link.href = 'https://www.airnow.gov/'; link.target = '_blank'; link.rel = 'noreferrer'; link.textContent = 'AirNow'; $('#air-quality').append(link, ' · Not medical advice.'); }
+  else if (readings.length) $('#air-quality').textContent = `AirNow AQI — start: ${air.start?.aqi ?? 'unavailable'}, destination: ${air.destination?.aqi ?? 'unavailable'}.`;
+  map?.setConditions(conditions.alerts);
+}
+
 function showStep() {
   const step = route.steps[stepIndex];
   $('#step-count').textContent = `DIRECTION ${stepIndex + 1} OF ${route.steps.length} · ${formatDistance(step.distance)}`;
@@ -184,6 +215,14 @@ $('#swap').addEventListener('click', () => {
   status('Swapped. Let’s find the way back.');
 });
 
+$('#destination-preset').addEventListener('change', (event) => {
+  selectedDestination = event.target.value || undefined;
+  if (!selectedDestination) return;
+  updatePoint('end', presets[selectedDestination]);
+  invalidateRoute();
+  status('Destination selected. Find your route when you’re ready.');
+});
+
 $('#locate').addEventListener('click', () => {
   if (!navigator.geolocation) return status('Location isn’t available in this browser. Pick a point on the map.');
   const inputAtRequest = $('#start').value;
@@ -227,6 +266,7 @@ $('#route-form').addEventListener('submit', async (event) => {
     $('#start-guidance').disabled = false;
     showStep();
     map?.drawRoute(route.geometry);
+    loadConditions(start, end, route.geometry).catch(() => { $('#conditions').hidden = false; $('#condition-list').textContent = 'Conditions could not be loaded right now.'; });
     status('Your route is ready. Take it one turn at a time.');
   } catch (error) {
     if (request === current && error.name !== 'AbortError') status(error.name === 'TimeoutError' ? 'Routing took too long. Please try again.' : error.message);

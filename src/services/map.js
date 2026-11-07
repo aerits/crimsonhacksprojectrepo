@@ -7,6 +7,7 @@ export function createMap(element, onPick) {
   }).addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   const markers = {};
+  const conditionMarkers = [];
   let routeLayer;
   map.on('click', ({ latlng }) => onPick(latlng));
   return {
@@ -17,6 +18,13 @@ export function createMap(element, onPick) {
       }) }).addTo(map).bindTooltip(kind === 'start' ? 'Starting point' : 'Destination');
     },
     clearRoute() { routeLayer?.remove(); routeLayer = null; },
+    setConditions(alerts = []) {
+      conditionMarkers.splice(0).forEach((marker) => marker.remove());
+      alerts.forEach((alert) => {
+        if (!Number.isFinite(alert.lat) || !Number.isFinite(alert.lng)) return;
+        conditionMarkers.push(L.circleMarker([alert.lat, alert.lng], { radius: 8, color: alert.severity >= 4 ? '#a64d48' : '#b9863b', fillOpacity: 0.9 }).addTo(map).bindPopup(`<strong>${alert.location}</strong><br>${alert.description}`));
+      });
+    },
     drawRoute(geometry) {
       routeLayer?.remove();
       routeLayer = L.geoJSON(geometry, { style: { color: '#75608e', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);

@@ -31,6 +31,7 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .route-form label { display: flex; justify-content: space-between; font-size: 10px; color: #777c70; margin: 14px 0 6px; }
 .route-form label span { color: #91829b; }
 .input-row { display: flex; background: var(--input); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--input); color: var(--text); font-size: 12px; }
 .input-row input { width: 100%; min-width: 0; background: transparent; border: 0; padding: 12px; color: var(--text); font-size: 12px; }
 .pick { border: 0; background: transparent; padding: 0 11px; color: #8a7995; font-size: 22px; }
 .pick.active { background: #e8deed; }
@@ -84,6 +85,11 @@ audio { width: 100%; height: 32px; }
 .map-label div > span { display: block; font-size: 9px; color: #929487; margin-top: 3px; }
 .map-status { position: absolute; left: 25px; top: 100px; max-width: calc(100% - 50px); border-radius: 9px; padding: 9px 13px; font-size: 11px; background: var(--overlay); color: #6d765e; }
 .journey { position: absolute; bottom: 65px; left: 25px; width: min(390px, calc(100% - 85px)); background: var(--overlay); backdrop-filter: blur(12px); border: 1px solid var(--line); padding: 22px; border-radius: 16px; box-shadow: 0 10px 45px #39453318; }
+.conditions { position: absolute; top: 145px; right: 25px; width: min(340px, calc(100% - 50px)); max-height: 48vh; overflow-y: auto; background: var(--overlay); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: 0 10px 45px #39453318; }
+.conditions .section-title { margin-bottom: 9px; }
+.condition { border-left: 3px solid #b9863b; padding: 8px 0 8px 10px; margin-top: 8px; }
+.condition.severity-4 { border-left-color: #a64d48; }
+.condition p { font-size: 11px; line-height: 1.45; margin: 0 0 4px; }
 [hidden] { display: none !important; }
 .journey .section-title { margin: 0; }
 .journey .eyebrow { margin-bottom: 7px; }
