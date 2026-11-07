@@ -15,7 +15,7 @@ import { createReminder } from './utils/reminders.js';
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
     <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark"><img id="header-voice-portrait" src="/images/guide-luna.png" alt="Selected navigation voice" /></span>mommy maps<span class="brand-dot">.</span></a>
-    <div class="map-actions" aria-label="Map options"><button id="open-voices" type="button" class="map-action" aria-label="Open voice library">♫</button><button id="open-settings" type="button" class="map-action" aria-label="Open settings">⚙</button></div>
+    <div class="map-actions" aria-label="Map options"><button id="open-voices" type="button" class="map-action voice-map-action" aria-label="Open voice library"><img src="/images/voice-guide.svg" alt="" aria-hidden="true" /></button><button id="open-settings" type="button" class="map-action" aria-label="Open settings">⚙</button></div>
     <nav class="view-tabs" role="tablist" aria-label="App views">
       <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
       <button id="voices-tab" type="button" role="tab" aria-selected="false" aria-controls="voices-panel" data-tab="voices" tabindex="-1">Voice library</button>

@@ -34,6 +34,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .view-tabs button[aria-selected=true] { background: #e9ddf2; color: #65467f; box-shadow: 0 2px 5px #87619c0b; }
 .map-actions { display: none; margin-left: auto; gap: 8px; }
 .map-action { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--purple-dark); font-size: 17px; line-height: 1; }
+.map-action img { display: block; width: 18px; height: 18px; margin: auto; filter: invert(33%) sepia(18%) saturate(1554%) hue-rotate(232deg) brightness(93%) contrast(87%); }
 .topbar.map-mode .view-tabs { display: flex; margin-left: auto; }
 .topbar.map-mode .prototype, .topbar.map-mode .map-actions { display: none; }
 .prototype { margin-left: auto; font-size: 9px; letter-spacing: 1.3px; color: #936a86; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
