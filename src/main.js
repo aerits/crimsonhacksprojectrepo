@@ -131,7 +131,7 @@ document.querySelector('#app').innerHTML = `
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
         <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Simulation speed <select id="simulation-speed"><option value="120">120 mph</option><option value="300" selected>300 mph</option><option value="600">600 mph</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
-        <button type="button" id="start-guidance" class="ambient-guidance" disabled>Start ambient guidance</button>
+        <button type="button" id="start-navigation" class="ambient-guidance" disabled>Start Navigation</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
@@ -342,18 +342,19 @@ function invalidateRoute() {
   $('#journey').hidden = true;
   $('#plan').disabled = false;
   $('#plan').innerHTML = 'Show my route on the map <span>↗</span>';
-  stopAmbientGuidance();
-  $('#start-guidance').disabled = true;
+  stopNavigation();
+  $('#start-navigation').disabled = true;
   $('#conditions-note').hidden = true;
   $('#glare-note').hidden = true;
 }
 
-function stopAmbientGuidance() {
+function stopNavigation() {
   navigationActive = false;
+  stopDrivingFollow();
   if (locationWatcher !== undefined) navigator.geolocation?.clearWatch(locationWatcher);
   locationWatcher = undefined;
   ambientTrivia.reset();
-  $('#start-guidance').textContent = 'Start ambient guidance';
+  $('#start-navigation').textContent = 'Start Navigation';
 }
 
 function considerAmbientTrivia(position) {
@@ -746,19 +747,15 @@ $('#route-form').addEventListener('submit', async (event) => {
     $('#journey').hidden = false;
     $('#route-form').classList.add('collapsed');
     $('#edit-route').hidden = false;
-    $('#start-guidance').disabled = false;
+    $('#start-navigation').disabled = false;
     showStep();
     map?.drawRoute(route.geometry);
     loadConditions(start, end, route);
     if (window.matchMedia('(max-width: 760px)').matches) {
       requestAnimationFrame(() => $('#journey').scrollIntoView({ behavior: 'smooth', block: 'end' }));
     }
-    startDrivingFollow();
-    const voice = voices.find((item) => item.id === selectedVoice);
-    if (voice?.configured) {
-      speech.speak(`Your route to ${destinationName(end.label)} is ready. It will take about ${estimatedDuration}. You should arrive around ${arrivalTime}. Let's get going.`, selectedVoice);
-    }
-    status(`Your route is ready. ${estimatedDuration} to ${destinationName(end.label)}.`);
+    $('#ambient-note').textContent = 'Route preview ready. Start navigation when you’re ready to begin guidance.';
+    status(`Your route preview is ready. ${estimatedDuration} to ${destinationName(end.label)}. Select Start Navigation when you’re ready.`);
   } catch (error) {
     if (request === current && error.name !== 'AbortError') status(error.name === 'TimeoutError' ? 'Routing took too long. Please try again.' : error.message);
   } finally {
@@ -808,16 +805,29 @@ for (const id of ['volume', 'library-volume']) $('#'+id).addEventListener('input
 });
 $('#library-stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
 $('#retry-voices').addEventListener('click', loadVoices);
-$('#start-guidance').addEventListener('click', () => {
-  if (navigationActive) { stopAmbientGuidance(); $('#ambient-note').textContent = 'Ambient guidance paused.'; return; }
-  if (!navigator.geolocation) return status('Live guidance needs location access in this browser.');
+$('#start-navigation').addEventListener('click', () => {
+  if (!route) return;
+  if (navigationActive) {
+    stopNavigation();
+    speech.stop();
+    $('#ambient-note').textContent = 'Navigation paused. Your route preview is still on the map.';
+    status('Navigation paused. Select Start Navigation when you’re ready to continue.');
+    return;
+  }
   navigationActive = true;
-  $('#start-guidance').textContent = 'Pause ambient guidance';
+  $('#start-navigation').textContent = 'Stop Navigation';
+  startDrivingFollow();
   $('#ambient-note').textContent = 'Watching for a calm stretch of road. Trivia begins after five minutes above 45 mph with no maneuver within five miles.';
-  locationWatcher = navigator.geolocation.watchPosition((position) => { lastPosition = position; considerAmbientTrivia(position); }, () => {
-    stopAmbientGuidance();
+  locationWatcher = navigator.geolocation?.watchPosition((position) => { lastPosition = position; considerAmbientTrivia(position); }, () => {
+    stopNavigation();
     $('#ambient-note').textContent = 'We couldn’t read your live location, so ambient guidance is paused.';
   }, { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 });
+  const voice = voices.find((item) => item.id === selectedVoice);
+  const end = selectedPlaces.end;
+  if (voice?.configured && end) {
+    speech.speak(`Navigation started. Your route to ${destinationName(end.label)} will take about ${formatDuration(route.duration)}. You should arrive around ${formatArrivalTime(route.duration)}. Let's get going.`, selectedVoice);
+  }
+  status('Navigation started. Follow the route when you’re ready.');
 });
 setInterval(() => { if (lastPosition) considerAmbientTrivia(lastPosition); }, 60_000);
 setInterval(() => {
@@ -877,5 +887,5 @@ window.addEventListener('pagehide', () => {
   request?.abort();
   resetAddressSearch('start');
   resetAddressSearch('end');
-  stopAmbientGuidance();
+  stopNavigation();
 });
