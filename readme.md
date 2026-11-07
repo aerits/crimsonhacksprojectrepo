@@ -1,92 +1,103 @@
 # Mommy Maps
 
-A JavaScript maps app with comforting mommy ASMR navigation voices. This first scaffold searches addresses, plans driving routes, and lets you preview each direction with server-generated Fish Audio speech.
+Mommy Maps is a local JavaScript driving-route prototype with address autocomplete, Leaflet maps, Fish Audio navigation voices, personal after-turn phrases, ambient roadside trivia, and a development-only route simulator.
+
+It can plan and preview a route; it is not production navigation software.
 
 ## Run
 
-Requires Node.js 22.9 or newer. There are no npm dependencies to install.
+Requires Node.js 22.9 or later and a modern browser. There are no npm dependencies.
 
 ```sh
 cp config.local.example.json config.local.json
-# Add your Fish Audio API key to config.local.json.
+# Add fish.apiKey to config.local.json to enable generated voice playback.
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. The app requests your browser location for the starting point and leaves the destination empty. Type any other starting address or a destination to see suggestions before using the Search buttons, then select a result and use the arrows and **Hear this turn** to preview the route. Audio plays directly from the voice controls.
+Open <http://127.0.0.1:3000>.
 
-Run `npm run dev:simulate` to expose **Simulate route** in the route preview. It automatically advances through each turn and plays the selected voice’s route guidance. A pink marker moves smoothly along each route segment to show the simulated location. Choose a relaxed, normal, or quick pace. Each simulated direction sends a Fish Audio TTS request and may consume provider credit. The controls stay hidden under `npm start` and `npm run dev`.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Watch and run the local server. |
+| `npm run dev:simulate` | Also expose the route simulator. |
+| `npm start` | Run without watching or simulator controls. |
+| `npm test` | Run all Node tests. |
 
-Choose your navigation voice from the dropdown on **Your journey**. Open **Voice library** to compare each voice’s mood and sample phrase, preview configured voices, or select a voice for the route. Selection and listening volume stay in sync across both tabs. Switching to the library pauses an active simulation; returning keeps your addresses and route. Tabs support the arrow, Home, and End keys.
+`config.json` is the committed default configuration. `config.local.json` is Git-ignored and overrides it at startup. Keep Fish API keys only in the local file.
 
-The map and routing work without Fish credentials. Voices show **Setup needed** until configured. `npm start` runs without file watching. `npm test` runs the Node test suite.
+## Using the app
 
-## Developer TTS testing
+1. Allow browser location access, or enter a starting address.
+2. Type a destination. Suggestions appear after three characters; choose a result before planning the route.
+3. Optionally avoid tolls, highways/freeways, or ferries, then choose **Show my route on the map**.
+4. Review turns with the arrow buttons or use **Hear this turn**.
 
-Open **Developer: test TTS** at the bottom of **Voice library**, enter up to 600 characters, choose a configured voice, and select **Generate with selected voice**. It uses the production `/api/tts` endpoint, so each test is a Fish Audio request and may consume provider credit.
+Address results come from Photon. When an origin is known, results are ranked by straight-line distance; destination searches prioritize the selected start and start searches prioritize GPS. The five closest unique matches are shown. Distances are estimates, not driving distances.
 
-## Voices and server-side TTS
+Routes come from OSRM and are displayed with Leaflet/OpenStreetMap. During a planned route, GPS can update a live marker and smoothly follow it. On small screens, the directions panel becomes a compact bottom sheet so the map remains visible.
+
+## Voices, phrases, and audio
+
+The browser never receives the Fish Audio key:
 
 ```text
-Browser → POST /api/tts { text, voiceId }
-Node server → Fish Audio /v1/tts with server-only API key + reference_id
-Fish Audio → MP3 bytes → Node server → browser playback
+Browser → POST /api/tts → Node server → Fish Audio → MP3 → browser Audio playback
 ```
 
-`config.json` is the committed default configuration: host, port, Fish model, and six public voice IDs. The first Mommy voice is the highest-use nurturing/ASMR result in the public Fish Audio catalog at the time of configuration. Put the Fish API key in the ignored `config.local.json`; its nested values override `config.json` at startup. Each voice slot can use a different voice.
+Six voice personas are configured by default: Velvet, Honey, Luna, Willow, Rose, and Ember. Configure the API key and voice IDs under `fish` in the config files. Persona text, delivery cues, and speeds are in `server/voices.js`; the browser discovers safe metadata from `GET /api/voices`.
 
-`voice-phrases.json` contains 24 built-in after-turn phrases. Open **User settings → After-turn phrases** to add, edit, or remove up to 20 personal phrases, each up to 160 characters. Changes save automatically in this browser; if storage is unavailable, they remain usable for the current visit. Blank phrases and duplicates are rejected.
+The app uses an in-memory `Audio` object, not a visible HTML player. Previews, route turns, ambient trivia, and Developer TTS testing can consume Fish Audio credit. The Voice library compares and previews configured voices; its selected voice and volume stay synchronized with the journey view.
 
-Whenever navigation or the simulator speaks a direction, the server randomly selects one phrase from the built-in and personal collections and appends it after the instruction. Changes apply to the next spoken direction. Custom phrases are sent with that request, validated on the server, and never added to the shared preset list. Only the selected phrase is sent to Fish Audio with the direction. Voice previews and developer TTS tests use only their entered text.
+`voice-phrases.json` contains shared after-turn and affirmation presets. In **User settings → After-turn phrases**, users can add, edit, and remove up to 20 personal phrases, each up to 160 characters. They are normalized, deduplicated, and stored in browser local storage when possible. Route and simulator speech sends the current personal list only with that request; the server validates it, selects one phrase from the built-in, selected affirmation, and personal pools, then appends it to the spoken instruction. Previews and Developer TTS use their supplied text unchanged.
 
-The default synthesis model is `s2.1-pro`; change `fish.model` in `config.json` if your account or voices need another compatible S2 model. The server adds soft delivery cues and a slower speaking speed. Actual voice quality depends on the reference voice and Fish model. Preview each voice before using it.
+Choose Neutral, Girl, Boy, or Enby under **After-turn encouragement**. The selected encouragement style and theme are stored locally when browser storage is available.
 
-Add further voices in `server/voices.js`, referencing a new entry under `fish.voices` in the configuration. The client discovers them from `GET /api/voices`. API keys and provider IDs stay on the server. The app makes a paid provider request only when you press a speech button; the client plays the resulting audio directly. Text is sent to Fish Audio for synthesis.
+## Simulator and ambient trivia
 
-## Address search
+Run `npm run dev:simulate` to show **Simulate route**. It advances route steps at relaxed, normal, or quick pace, animates a pink marker along route geometry, follows that marker, and speaks each instruction. It is hidden for `npm run dev` and `npm start`.
 
-Address suggestions appear after three characters through the server’s `/api/geocode` endpoint, which uses Photon’s search-as-you-type geocoder. The **Search** buttons are also available to repeat a lookup. Select the intended match before submitting a route.
+**Start ambient guidance** starts a high-accuracy location watch. On a sustained, roughly highway-speed stretch with a long distance before the next maneuver, it can speak a nearby regional fact. It waits five minutes before the first note and at least 18 minutes between notes. Use **Mute trivia** or **Skip next note** to control it. This is an experimental heuristic, not driving guidance.
 
-When a location is known, the app asks Photon for nearby matches, sorts them by straight-line distance, and shows the closest five with a distance badge beside the full address. Destination searches use the selected starting point, falling back to browser location. Starting-address searches use browser location. The caption identifies the reference point; these distances are estimates, not driving distances. Changing the start refreshes open destination suggestions, and stale searches are canceled when you type, select, or swap addresses.
+## Themes and accessibility
 
-If location access is unavailable, address search still works without distance badges. Select a starting address to enable nearby destination results. Address text and the reference coordinates (when available) are sent to Photon. The server caches results separately for each query and reference point, retaining up to 200 searches. Use a production geocoding provider before deploying at scale.
+Light, Pink, Verity, and Dark themes are available. Pink and Verity use decorative SVG assets documented in [ATTRIBUTIONS.md](ATTRIBUTIONS.md). Journey and Voice library are keyboard-accessible tabs; status updates, phrase editing, and controls include accessible labels and live regions.
 
-Speech requests accept up to 600 instruction characters plus 20 custom phrases of up to 160 characters each, with a 32 KB request body limit. Synthesis is limited to two concurrent synthesis jobs, a 60-second provider timeout, and 8 MB per audio response. Stopping audio or changing the route aborts the client request and asks the server to cancel its upstream request. Cancellation may happen after provider work has begun. Generated audio is held in memory for the response and not written to disk. There is no browser speech synthesis fallback.
+## API and limits
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/voices` | Public voice metadata and configuration status. |
+| `GET /api/runtime` | Whether the simulator is enabled. |
+| `GET /api/geocode?q=…&lat=…&lng=…` | Photon-backed address suggestions. |
+| `POST /api/tts` | Fish Audio speech for a configured voice. |
+
+The server caches up to 200 geocoding lookups, rate-limits upstream geocoding to roughly one request per second, allows two concurrent TTS jobs, applies a 60-second TTS timeout, limits audio to 8 MB, and accepts JSON bodies up to 32 KB. Audio is held in memory for the response, not written to disk.
 
 ## Structure
 
 ```text
-index.html                 Browser entry; pinned Leaflet CDN assets
-server/
-  index.js                 Node HTTP server startup
-  app.js                   Static app + voice API + Fish Audio integration
-  voices.js                Voice registry and delivery settings
-src/
-  main.js                  Route planner, voice picker and preview controls
-  style.css                Responsive lavender-and-pink app layout
-  ui/tabs.js               Keyboard-accessible journey / library tabs
-  ui/voices.js             Synchronized voice dropdown and voice library
-  ui/phrases.js            Custom after-turn phrase editor
-  services/phrase-preferences.js  Browser-local phrase storage
-  utils/phrases.js          Shared custom phrase limits and validation
-  services/map.js          Leaflet map, points and route rendering
-  services/routing.js      OSRM driving route adapter
-  services/speech.js       Fetch generated audio, cancel and play
-  utils/directions.js      Coordinates, maneuver text and formatting
-  utils/location.js        Search reference points and straight-line distance
-tests/                     Routing and HTTP API tests with mocked Fish responses
+config.json / config.local.json       Runtime defaults and local overrides
+voice-phrases.json                    Shared phrase and affirmation presets
+ATTRIBUTIONS.md                       Decorative asset licensing notes
+server/                               Config, HTTP API, Fish TTS, voice registry
+src/main.js                           Route planner, GPS, settings, simulator, trivia
+src/services/                         Map, routing, search, speech, trivia, storage
+src/ui/                               Tabs, voice library, phrase editor
+src/utils/                            Directions, location, phrase validation
+public/images/                        Voice art and theme decorations
+tests/                                Node tests for APIs and client services
 ```
 
-## Prototype boundaries
+## Prototype boundaries and privacy
 
-This is a route planner and manual spoken route preview. It does not track driving progress, reroute automatically, provide traffic data, or issue background navigation prompts. Current location sets the starting point and helps rank address suggestions. Those features can build on the route and speech services.
+Mommy Maps does not reroute, provide traffic, guarantee road legality or safety, work offline, or replace attention to the road. It requires internet access for Leaflet assets, OpenStreetMap tiles, Photon, OSRM, and Fish Audio when voice playback is used.
 
-Leaflet loads from a CDN, map tiles come from OpenStreetMap, addresses are searched with Photon, and routes come from the public OSRM demo service; internet access is required. Use production map, geocoding, and routing providers before deploying for sustained usage. Resolved coordinates are sent to OSRM when planning a route. The server binds to localhost by default. Add authentication and per-user rate limits before exposing the paid TTS endpoint publicly. This scaffold has no deployment configuration.
+Address searches are sent to Photon, route coordinates to OSRM, and spoken text plus the selected Fish reference ID to Fish Audio. GPS remains in the browser except when used as a route endpoint or Photon location bias. Personal phrases remain browser-local except for applicable TTS requests. The server binds to localhost by default; add authentication, per-user limits, production providers, monitoring, and privacy controls before public deployment.
 
 ## References
 
 - [Fish Audio text-to-speech API](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech)
-- [Fish Audio delivery and emotion cues](https://docs.fish.audio/developer-guide/core-features/emotions)
-- [OSRM HTTP API](https://project-osrm.org/docs/v26.6.1/http.html)
-- [Photon search API and location bias](https://github.com/komoot/photon/blob/master/docs/api-v1.md)
+- [OSRM HTTP API](https://project-osrm.org/docs/v5.24.0/api/)
+- [Photon API](https://github.com/komoot/photon/blob/master/docs/api-v1.md)
 - [Leaflet quick start](https://leafletjs.com/examples/quick-start/)
 - [OpenStreetMap tile usage policy](https://operations.osmfoundation.org/policies/tiles/)

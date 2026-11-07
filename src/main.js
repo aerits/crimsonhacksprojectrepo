@@ -53,9 +53,9 @@ document.querySelector('#app').innerHTML = `
           <label class="affirmation-label" for="affirmation-style">After-turn encouragement
             <select id="affirmation-style">
               <option value="neutral">Neutral</option>
-              <option value="girl">Good girl</option>
-              <option value="boy">Good boy</option>
-              <option value="enby">Good enby</option>
+              <option value="girl">Girl</option>
+              <option value="boy">Boy</option>
+              <option value="enby">Enby</option>
             </select>
           </label>
         </fieldset>
