@@ -13,6 +13,7 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SOURCE = resolve(ROOT, 'src');
 const PUBLIC = resolve(ROOT, 'public');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const UTAH_SEARCH_ORIGIN = { lat: 40.7649, lng: -111.8421 };
 const json = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(body));
@@ -72,6 +73,9 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
             return json(res, 400, { error: 'Search location needs a valid latitude and longitude.' });
           }
         }
+        // When a device location is unavailable, stay useful for this Utah-first
+        // app rather than accepting an arbitrary global provider ordering.
+        const rankingOrigin = origin || UTAH_SEARCH_ORIGIN;
         // A query near one location must never reuse matches or distances from another.
         const cacheKey = JSON.stringify([query.toLowerCase(), origin?.lat, origin?.lng]);
         const cached = geocodeCache.get(cacheKey);
@@ -80,10 +84,10 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         nextGeocodeAt = Math.max(Date.now(), nextGeocodeAt) + 1000;
         if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
         const searchUrl = new URL('https://photon.komoot.io/api/');
-        searchUrl.search = new URLSearchParams({ q: query, limit: origin ? '20' : '5', lang: 'en' });
-        if (origin) {
-          searchUrl.searchParams.set('lat', origin.lat);
-          searchUrl.searchParams.set('lon', origin.lng);
+        searchUrl.search = new URLSearchParams({ q: query, limit: '20', lang: 'en' });
+        if (rankingOrigin) {
+          searchUrl.searchParams.set('lat', rankingOrigin.lat);
+          searchUrl.searchParams.set('lon', rankingOrigin.lng);
           searchUrl.searchParams.set('zoom', '13');
           searchUrl.searchParams.set('location_bias_scale', '0.1');
         }
@@ -101,20 +105,22 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
           return { lat, lng, label: [properties.name, street, locality].filter(Boolean).join(', ') };
         })
           .filter((place) => isValidPoint(place) && place.label);
+        const landmarkMatches = findUtahLandmarks(query);
         const photonLabels = photonResults.map((place) => place.label.toLowerCase());
-        const landmarks = findUtahLandmarks(query)
+        for (const place of photonResults) {
+          const landmark = landmarkMatches.find(({ name }) => place.label.toLowerCase().startsWith(name.toLowerCase()));
+          if (landmark) place.landmarkScore = landmark.score;
+        }
+        const landmarks = landmarkMatches
           .filter(({ name }) => !photonLabels.some((label) => label.startsWith(name.toLowerCase())))
           .map(({ name, lat, lng, score }) => ({
             lat, lng, label: `${name}, Utah`, landmarkScore: score,
           }));
         const results = [...landmarks, ...photonResults].filter((place) => isValidPoint(place) && place.label);
-        if (origin) {
-          for (const place of results) place.distanceMeters = distanceBetween(origin, place);
-          results.sort((a, b) => (a.landmarkScore ?? Infinity) - (b.landmarkScore ?? Infinity)
-            || a.distanceMeters - b.distanceMeters);
-        } else {
-          results.sort((a, b) => (a.landmarkScore ?? Infinity) - (b.landmarkScore ?? Infinity));
-        }
+        for (const place of results) place.distanceMeters = distanceBetween(rankingOrigin, place);
+        results.sort((a, b) => (a.landmarkScore ?? Infinity) - (b.landmarkScore ?? Infinity)
+          || a.distanceMeters - b.distanceMeters
+          || a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
         if (!results.length) return json(res, 404, { error: 'No address match found. Try adding a city or state.' });
         const labels = new Set();
         const uniqueResults = results.filter((place) => {

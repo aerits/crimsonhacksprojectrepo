@@ -587,7 +587,9 @@ details li { margin-bottom: 7px; }
 .compact-journey .route-options { margin: 3px 0 6px; }
 .compact-journey .route-form > .primary { padding: 10px 12px; }
 .compact-journey .route-form.collapsed { display: none; }
-.edit-route { border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px; background: var(--surface); color: var(--purple-dark); font-size: 12px; font-weight: 600; box-shadow: 0 5px 18px #30203f22; }
+.compact-journey .sidebar:has(.route-form.collapsed) { width: auto; }
+:root[data-theme='dark'] #journey-panel.compact-journey .sidebar { background: transparent; }
+.edit-route { display: inline-flex; align-items: center; gap: 6px; width: auto; border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px; background: var(--surface); color: var(--purple-dark); font-size: 12px; font-weight: 600; box-shadow: 0 5px 18px #30203f22; }
 .compact-journey .map-label { display: none; }
 .compact-journey .map-status { top: auto; bottom: 20px; left: 14px; max-width: min(480px, calc(100% - 28px)); padding: 8px 11px; box-shadow: 0 3px 12px #30203f22; }
 .compact-journey .map-note { display: none; }

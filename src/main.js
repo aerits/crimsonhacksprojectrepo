@@ -39,7 +39,7 @@ document.querySelector('#app').innerHTML = `
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
-      <button id="edit-route" type="button" class="edit-route" hidden>⌕ Edit route</button>
+      <button id="edit-route" type="button" class="edit-route" aria-label="Edit route" hidden>⌕ <span>Edit route</span></button>
       <section id="voice-section" class="voice-section" aria-labelledby="voice-heading">
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
         <label class="voice-select-label" for="voice-select">Your navigation voice</label>

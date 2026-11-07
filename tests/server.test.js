@@ -48,12 +48,15 @@ test('address search returns a map point and caches repeat requests', async (t) 
     assert.equal(url.hostname, 'photon.komoot.io');
     assert.equal(url.pathname, '/api/');
     assert.equal(url.searchParams.get('q'), 'University of Utah');
-    assert.equal(url.searchParams.get('limit'), '5');
+    assert.equal(url.searchParams.get('limit'), '20');
+    assert.equal(url.searchParams.get('lat'), '40.7649');
+    assert.equal(url.searchParams.get('lon'), '-111.8421');
     assert.equal(options.headers['User-Agent'], 'Mommy-Maps/0.1');
     return Response.json({ features: [{ geometry: { coordinates: [-111.8421, 40.7649] }, properties: { name: 'University of Utah', city: 'Salt Lake City', state: 'Utah', country: 'United States' } }] });
   } });
   const path = '/api/geocode?q=University%20of%20Utah';
-  assert.deepEqual(await (await api.get(path)).json(), { results: [{ lat: 40.7649, lng: -111.8421, label: 'University of Utah, Salt Lake City, Utah, United States' }] });
+  const first = await (await api.get(path)).json();
+  assert.deepEqual(first.results[0], { lat: 40.7649, lng: -111.8421, label: 'University of Utah, Salt Lake City, Utah, United States', distanceMeters: 0 });
   assert.equal((await api.get(path)).status, 200);
   assert.equal(calls, 1);
 });
@@ -108,6 +111,19 @@ test('nearby search biases the provider and returns the closest five with distan
   assert.ok(results.every((place, index) => index === 0 || place.distanceMeters >= results[index - 1].distanceMeters));
 });
 
+test('unlocated searches fall back to Utah distance and use name as the final tie-breaker', async (t) => {
+  const api = await withServer(t, { fetcher: async () => Response.json({ features: [
+    addressFeature(139.76, 35.68, 'Burger King Tokyo'),
+    addressFeature(-111.8421, 40.7649, 'Burger King Salt Lake'),
+    addressFeature(-111.84, 40.76, 'Zeta Cafe'),
+    addressFeature(-111.84, 40.76, 'Alpha Cafe'),
+  ] }) });
+  const { results } = await (await api.get('/api/geocode?q=Burger%20King')).json();
+  assert.equal(results[0].label.startsWith('Burger King Salt Lake'), true);
+  assert.equal(results.at(-1).label.startsWith('Burger King Tokyo'), true);
+  assert.deepEqual(results.slice(1, 3).map((place) => place.label.split(',')[0]), ['Alpha Cafe', 'Zeta Cafe']);
+});
+
 test('cache keeps distances and nearby candidates separate for each origin and for unlocated searches', async (t) => {
   let calls = 0;
   const api = await withServer(t, { fetcher: async () => {
@@ -122,7 +138,7 @@ test('cache keeps distances and nearby candidates separate for each origin and f
   assert.deepEqual(await (await api.get('/api/geocode?q=main&lat=0&lng=0')).json(), first);
   assert.equal(calls, 2);
   const unlocated = await (await api.get('/api/geocode?q=Main')).json();
-  assert.equal(unlocated.results[0].distanceMeters, undefined);
+  assert.ok(unlocated.results[0].distanceMeters > 0);
   assert.equal(calls, 3);
 });
 
