@@ -343,7 +343,7 @@ details li { margin-bottom: 7px; }
 
 /* Keep the phone route sheet compact so the map stays useful. */
 @media (max-width: 460px) {
-  .journey { max-height: 220px; padding: 18px 14px 10px; }
+  .journey { max-height: 220px; padding: 18px 14px 10px; overflow-y: hidden; }
   .journey h2 { font-size: 18px; }
   .journey .small-pill { display: none; }
   .current-step { margin: 8px 0; }
