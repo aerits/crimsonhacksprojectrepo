@@ -3,14 +3,19 @@ import { getRoute } from './services/routing.js';
 import { searchAddresses } from './services/geocoding.js';
 import { createSpeechService } from './services/speech.js';
 import { formatDistance, formatDuration } from './utils/directions.js';
+import { setupTabs } from './ui/tabs.js';
+import { createVoicePicker } from './ui/voices.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
     <a class="brand" href="/" aria-label="Mommy Maps home"><span class="brand-mark">m</span>mommy maps<span class="brand-dot">.</span></a>
-    <span class="tagline">A little guidance. A lot of comfort.</span>
+    <nav class="view-tabs" role="tablist" aria-label="App views">
+      <button id="journey-tab" type="button" role="tab" aria-selected="true" aria-controls="journey-panel" data-tab="journey">Your journey</button>
+      <button id="voices-tab" type="button" role="tab" aria-selected="false" aria-controls="voices-panel" data-tab="voices" tabindex="-1">Voice library</button>
+    </nav>
     <span class="prototype"><span></span> EARLY EXPLORER</span>
   </header>
-  <main class="workspace">
+  <main id="journey-panel" class="workspace" role="tabpanel" aria-labelledby="journey-tab">
     <aside class="sidebar">
       <div class="intro"><p class="eyebrow">MAKE YOURSELF COMFORTABLE</p><h1>Let’s take the<br><em>soft way home.</em></h1><p>Your route, a reassuring voice, and a little less rush.</p></div>
       <form id="route-form" class="card route-form">
@@ -26,18 +31,13 @@ document.querySelector('#app').innerHTML = `
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
       <section class="voice-section" aria-labelledby="voice-heading">
-        <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><span class="tiny">MOMMY ASMR</span></div>
-        <div id="voices" class="voices"><p class="hint">Loading your guides…</p></div>
+        <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
+        <label class="voice-select-label" for="voice-select">Your navigation voice</label>
+        <div class="voice-select-wrap"><select id="voice-select" aria-describedby="voice-summary" disabled><option>Loading your guides…</option></select></div>
+        <p id="voice-summary" class="voice-summary">A little company for the road.</p>
         <div class="voice-actions"><button id="sample" type="button" class="secondary" disabled>▷ Hear a little hello</button><button id="stop" type="button" class="text-button">Stop audio</button></div>
         <label for="volume" class="volume-label">Listening volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
         <p id="voice-status" class="hint" role="status">Choose the voice you’d like beside you.</p>
-        <details class="dev-tts">
-          <summary>Developer: test TTS</summary>
-          <label for="tts-test-text">Test text</label>
-          <textarea id="tts-test-text" maxlength="600">Testing one, two, three. This is a calm navigation voice check.</textarea>
-          <button id="tts-test" type="button" class="secondary">Generate with selected voice</button>
-          <p class="hint">Uses the selected voice and the same server endpoint as route guidance.</p>
-        </details>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
     </aside>
@@ -56,17 +56,35 @@ document.querySelector('#app').innerHTML = `
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
     </section>
-  </main>`;
+  </main>
+  <section id="voices-panel" class="voice-library" role="tabpanel" aria-labelledby="voices-tab" hidden>
+    <div class="library-heading"><div><p class="eyebrow">A LITTLE COMPANY FOR THE ROAD</p><h1>Find your kind <em>of calm.</em></h1><p>Meet your guides. A different voice, the same gentle way home.</p></div><button id="back-to-route" type="button" class="secondary">Back to my route ↗</button></div>
+    <div class="library-section-heading"><h2>Good company comes in a few voices.</h2><p id="library-selection">Choose a little company for the road.</p></div>
+    <div id="voice-gallery" class="voice-gallery"><p class="library-empty">Getting your guides ready…</p></div>
+    <div class="library-player"><span class="player-symbol" aria-hidden="true">♫</span><div class="library-player-copy"><strong>A little hello, before you go.</strong><p id="library-voice-status" role="status">Preview a voice to find your favorite.</p></div><label for="library-volume" class="volume-label">Volume <input id="library-volume" type="range" min="0" max="1" step="0.05" value="0.7" /></label><button id="library-stop" type="button" class="secondary">Stop preview</button></div>
+    <div class="library-note"><p>AI-generated voices, made for a softer journey. Voice previews need a configured Fish Audio connection.</p><button id="retry-voices" type="button" class="text-button" hidden>Retry loading voices ↻</button></div>
+    <details class="dev-tts">
+      <summary>Developer: test TTS</summary>
+      <label for="tts-test-text">Test text</label>
+      <textarea id="tts-test-text" maxlength="600">Testing one, two, three. This is a calm navigation voice check.</textarea>
+      <button id="tts-test" type="button" class="secondary">Generate with selected voice</button>
+      <p class="hint">Uses the selected voice and the same server endpoint as route guidance.</p>
+    </details>
+    <p class="library-footer">A little guidance. A lot of comfort. <span aria-hidden="true">♡</span></p>
+  </section>`;
 
 const $ = (selector) => document.querySelector(selector);
 const status = (message) => { $('#map-status').textContent = message; };
-const voiceStatus = (message) => { $('#voice-status').textContent = message; };
+const voiceStatus = (message) => {
+  $('#voice-status').textContent = message;
+  $('#library-voice-status').textContent = message;
+};
 const audio = new Audio();
 audio.preload = 'none';
 audio.volume = 0.7;
 const speech = createSpeechService(audio, voiceStatus);
 let voices = [];
-let selectedVoice = 'velvet';
+let selectedVoice;
 const selectedPlaces = { start: null, end: null };
 let route = null;
 let stepIndex = 0;
@@ -76,6 +94,28 @@ let simulationTimer;
 let simulationRunning = false;
 const suggestionTimers = {};
 const suggestionRequests = {};
+
+const activateTab = setupTabs((name) => {
+  if (name === 'voices' && simulationRunning) stopSimulation('Simulation paused while you browse voices.');
+  if (name === 'journey') requestAnimationFrame(() => map?.resize());
+});
+$('#browse-voices').addEventListener('click', () => activateTab('voices', { focus: true }));
+$('#back-to-route').addEventListener('click', () => activateTab('journey', { focus: true }));
+const voicePicker = createVoicePicker({
+  select: $('#voice-select'), summary: $('#voice-summary'), gallery: $('#voice-gallery'),
+  selection: $('#library-selection'), onSelect: selectVoice,
+  onPreview: (voice) => speech.speak(voice.sample, voice.id),
+});
+function selectVoice(id) {
+  const voice = voices.find((item) => item.id === id);
+  if (!voice) return;
+  selectedVoice = id;
+  speech.stop();
+  voicePicker.setSelected(id);
+  $('#sample').disabled = !voice.configured;
+  voiceStatus(voice.configured ? voice.name + ' is here for you.' : 'This voice needs a Fish Audio connection before it can play.');
+  if (route) showStep();
+}
 
 function stopSimulation(message) {
   clearTimeout(simulationTimer);
@@ -321,38 +361,30 @@ $('#tts-test').addEventListener('click', () => {
   speech.speak(text, voice.id);
 });
 $('#stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
-$('#volume').addEventListener('input', (event) => { audio.volume = Number(event.target.value); });
+for (const id of ['volume', 'library-volume']) $('#'+id).addEventListener('input', (event) => {
+  audio.volume = Number(event.target.value);
+  $('#volume').value = event.target.value;
+  $('#library-volume').value = event.target.value;
+});
+$('#library-stop').addEventListener('click', () => { speech.stop(); voiceStatus('A little quiet. Play again whenever you like.'); });
+$('#retry-voices').addEventListener('click', loadVoices);
 
 async function loadVoices() {
+  $('#retry-voices').disabled = true;
   try {
     voices = await speech.voices();
-    selectedVoice = voices.find((voice) => voice.configured)?.id || voices[0]?.id;
-    $('#voices').replaceChildren(...voices.map((voice) => {
-      const label = document.createElement('label');
-      label.className = 'voice-card';
-      const radio = document.createElement('input');
-      radio.type = 'radio'; radio.name = 'voice'; radio.value = voice.id; radio.checked = voice.id === selectedVoice;
-      const avatar = document.createElement('span');
-      avatar.className = 'avatar'; avatar.style.background = voice.color; avatar.textContent = voice.initial;
-      const copy = document.createElement('span');
-      const name = document.createElement('strong'); name.textContent = voice.name;
-      const mood = document.createElement('small'); mood.textContent = voice.mood;
-      copy.append(name, mood);
-      const badge = document.createElement('span'); badge.className = 'voice-badge'; badge.textContent = voice.configured ? 'READY' : 'SETUP';
-      label.append(radio, avatar, copy, badge);
-      radio.addEventListener('change', () => {
-        selectedVoice = voice.id;
-        speech.stop();
-        $('#sample').disabled = !voice.configured;
-        voiceStatus(voice.configured ? `${voice.name} is here for you.` : 'Add this voice’s Fish Audio ID and API key in config.local.json, then restart the server.');
-        if (route) showStep();
-      });
-      return label;
-    }));
-    const configured = voices.some((voice) => voice.configured);
-    $('#sample').disabled = !configured;
-    if (!configured) voiceStatus('Voice setup needed: add your Fish Audio API key and voice IDs to config.local.json, then restart.');
-  } catch (error) { voiceStatus(error.message); }
+    selectedVoice = voices.find((voice) => voice.id === selectedVoice)?.id || voices.find((voice) => voice.configured)?.id || voices[0]?.id;
+    voicePicker.render(voices, selectedVoice);
+    $('#retry-voices').hidden = voices.length > 0;
+    $('#sample').disabled = !voices.find((voice) => voice.id === selectedVoice)?.configured;
+    if (selectedVoice) selectVoice(selectedVoice);
+    else voiceStatus('No voices are available yet. Open the voice library to retry.');
+  } catch (error) {
+    voicePicker.showError(error.message);
+    $('#sample').disabled = true;
+    $('#retry-voices').hidden = false;
+    voiceStatus(error.message);
+  } finally { $('#retry-voices').disabled = false; }
 }
 loadVoices();
 window.addEventListener('pagehide', () => { stopSimulation(); speech.stop(); request?.abort(); });
