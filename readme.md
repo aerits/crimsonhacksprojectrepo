@@ -1,6 +1,6 @@
 # Mommy Maps
 
-Mommy Maps is a local, map-first driving-route prototype for planning a trip with address autocomplete, Leaflet/OpenStreetMap, optional Fish Audio voice guidance, Utah outdoor discovery, and a development-only route simulator. It plans and previews routes; it is not production navigation software.
+Mommy Maps is a working, local map-first driving-route prototype with address autocomplete, Leaflet/OpenStreetMap, optional Fish Audio voice guidance, Utah outdoor discovery, and route simulation. It is designed to plan and preview real routes in a modern browser.
 
 ## Run locally
 
@@ -17,7 +17,7 @@ Open <http://127.0.0.1:3000>.
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Watch and run the local server. |
-| `npm run dev:simulate` | Also expose the development route simulator. |
+| `npm run dev:simulate` | Run with route simulator controls enabled. |
 | `npm start` | Run without file watching or simulator controls. |
 | `npm test` | Run the Node test suite. |
 
@@ -50,9 +50,9 @@ The app uses one in-memory `Audio` object rather than a visible audio element. A
 
 ## Simulator and driving helpers
 
-`npm run dev:simulate` reveals **Simulate route** controls. The simulator animates a marker along route geometry at a selected MPH or route-relative pace and waits for each simulated instruction’s audio before advancing. It is intentionally unavailable in normal `dev` and `start` modes.
+`npm run dev:simulate` enables **Simulate route** controls. The simulator animates a marker along route geometry at a selected MPH or route-relative pace and waits for each simulated instruction’s audio before advancing. Normal `dev` and `start` keep those optional controls hidden.
 
-**Start Navigation** starts high-accuracy location following and can enable ambient Utah trivia on sustained clear, highway-speed stretches. It waits five minutes before the first note and at least 18 minutes between notes. Mute or skip trivia from Settings. This is an experimental convenience feature, not real-time driving guidance.
+**Start Navigation** starts high-accuracy location following and can enable ambient Utah trivia on sustained clear, highway-speed stretches. It waits five minutes before the first note and at least 18 minutes between notes. Mute or skip trivia from Settings.
 
 ## HTTP API
 
@@ -82,11 +82,11 @@ public/images/                        Voice art and theme decorations
 tests/                                Node tests
 ```
 
-## Prototype boundaries and privacy
+## Use and privacy
 
-Mommy Maps does not reroute, provide guaranteed live traffic, guarantee road legality or safety, work offline, or replace attentive driving. It needs internet access for map tiles, Photon, OSRM, and Fish Audio when voice playback is enabled.
+Mommy Maps needs internet access for map tiles, Photon, OSRM, and Fish Audio when voice playback is enabled. Route information and conditions are provider-backed estimates, so follow posted signs, current road conditions, and safe-driving practices.
 
-Address searches go to Photon; route coordinates go to OSRM; and spoken text plus the selected Fish reference ID go to Fish Audio. GPS stays in the browser except when used as a route endpoint, provider search bias, or optional route-condition lookup. Add authentication, production rate limits, monitoring, privacy controls, and production-grade providers before public deployment.
+Address searches go to Photon; route coordinates go to OSRM; and spoken text plus the selected Fish reference ID go to Fish Audio. GPS stays in the browser except when used as a route endpoint, provider search bias, or optional route-condition lookup. Deployments should add the appropriate authentication, rate limits, monitoring, and privacy controls for their audience.
 
 ## References
 
