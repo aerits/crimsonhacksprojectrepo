@@ -129,7 +129,7 @@ document.querySelector('#app').innerHTML = `
         <p id="glare-note" class="hint" role="status" hidden>☀ Sun glare may be likely for this turn — sunglasses on.</p><p id="conditions-note" class="hint" role="status" hidden></p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
-        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Simulation speed <select id="simulation-speed"><option value="120">120 mph</option><option value="300" selected>300 mph</option><option value="600">600 mph</option></select></label></div>
+        <div id="simulation-tools" hidden><div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Simulation speed <select id="simulation-speed"><option value="120">120 mph</option><option value="300" selected>300 mph</option><option value="600">600 mph</option><option value="relative-30">Route-relative (30×)</option></select></label></div>
         <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p></div>
         <button type="button" id="start-navigation" class="ambient-guidance" disabled>Start Navigation</button>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
@@ -293,9 +293,15 @@ function startDrivingFollow() {
 }
 
 function simulationDuration(step) {
-  const mph = Number($('#simulation-speed').value);
+  const speed = $('#simulation-speed').value;
+  if (speed === 'relative-30') return Math.max(600, (step.duration || 0) * 1000 / 30);
+  const mph = Number(speed);
   const metersPerMillisecond = mph * 1609.344 / 3_600_000;
   return Math.max(600, (step.distance || 0) / metersPerMillisecond);
+}
+
+function simulationSpeedLabel() {
+  return $('#simulation-speed').value === 'relative-30' ? 'route-relative 30× speed' : $('#simulation-speed').value + ' mph';
 }
 
 function playSimulationStep() {
@@ -303,7 +309,7 @@ function playSimulationStep() {
   showStep({ focus: false });
   let duration = simulationDuration(step);
   if (step.geometry?.coordinates?.length > 1) {
-    duration = map?.animateSimulationPath(step.geometry.coordinates, Number($('#simulation-speed').value)) ?? duration;
+    duration = map?.animateSimulationPath(step.geometry.coordinates, { mph: Number($('#simulation-speed').value), duration }) ?? duration;
   } else if (step.maneuver.location) {
     const [lng, lat] = step.maneuver.location;
     map?.setSimulationPoint({ lat, lng });
@@ -312,7 +318,7 @@ function playSimulationStep() {
   const speechDone = voice?.configured
     ? speech.speak(step.instruction, selectedVoice, { ...speechOptionsForStep(step), waitForPlayback: true })
     : Promise.resolve();
-  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length} at ${$('#simulation-speed').value} mph.`;
+  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length} at ${simulationSpeedLabel()}.`;
   return { duration, speechDone };
 }
 

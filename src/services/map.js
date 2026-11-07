@@ -79,7 +79,7 @@ export function createMap(element) {
       }
     },
     setSimulationPoint,
-    animateSimulationPath(coordinates, mph) {
+    animateSimulationPath(coordinates, { mph, duration: requestedDuration } = {}) {
       cancelAnimationFrame(simulationAnimation);
       const points = coordinates.map(([lng, lat]) => ({ lat, lng }));
       if (points.length < 2) { setSimulationPoint(points[0]); return 600; }
@@ -88,7 +88,7 @@ export function createMap(element) {
       for (const length of lengths) distances.push(distances.at(-1) + length);
       const total = distances.at(-1);
       if (!total) { setSimulationPoint(points.at(-1)); return 600; }
-      const duration = Math.max(600, total / (mph * 1609.344 / 3_600_000));
+      const duration = requestedDuration ?? Math.max(600, total / (mph * 1609.344 / 3_600_000));
       const startedAt = performance.now();
       let segment = 0;
       follow(points[0], Math.max(map.getZoom(), 17));
