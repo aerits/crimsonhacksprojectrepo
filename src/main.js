@@ -106,7 +106,14 @@ document.querySelector('#app').innerHTML = `
           <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
-        <fieldset class="trivia-group"><legend>Saved places</legend><p class="hint">Save the current destination, then use it with one tap.</p><div class="trivia-actions"><button id="save-home" type="button" class="secondary">Save as home</button><button id="save-work" type="button" class="secondary">Save as work</button><button id="save-favorite" type="button" class="secondary">Save favorite</button></div><ul id="saved-places" class="custom-phrases" aria-label="Saved places"></ul></fieldset>
+        <fieldset class="trivia-group"><legend>Saved places</legend><p class="hint">Search for an address to save it for one-tap directions later.</p>
+          <div class="saved-place-editors">
+            <form class="saved-place-editor" data-place-name="Home"><label for="home-place-search">Home address</label><div class="input-row"><input id="home-place-search" type="search" autocomplete="street-address" placeholder="Search for your home address" /><button type="submit" class="address-search">Search</button></div><div id="home-place-results" class="address-results" aria-live="polite"></div></form>
+            <form class="saved-place-editor" data-place-name="Work"><label for="work-place-search">Work address</label><div class="input-row"><input id="work-place-search" type="search" autocomplete="street-address" placeholder="Search for your work address" /><button type="submit" class="address-search">Search</button></div><div id="work-place-results" class="address-results" aria-live="polite"></div></form>
+            <form class="saved-place-editor" data-place-name="Favorite"><label for="favorite-place-search">Favorite address</label><div class="input-row"><input id="favorite-place-search" type="search" autocomplete="street-address" placeholder="Search for a favorite place" /><button type="submit" class="address-search">Search</button></div><div id="favorite-place-results" class="address-results" aria-live="polite"></div></form>
+          </div>
+          <ul id="saved-places" class="custom-phrases" aria-label="Saved places"></ul>
+        </fieldset>
         <fieldset class="trivia-group"><legend>Hydration & posture</legend><label class="switch-row" for="wellness"><span>Gentle check-ins</span><input id="wellness" type="checkbox" role="switch" /><span class="switch-control" aria-hidden="true"></span></label><label class="affirmation-label" for="wellness-interval">Every <select id="wellness-interval"><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">60 minutes</option></select></label><p id="wellness-note" class="hint" role="status">Optional check-ins are off.</p></fieldset>
       </section>
       <p class="sidebar-footer">Made for the journey, not just the destination. ♡</p>
@@ -188,6 +195,7 @@ let locationRequestId = 0;
 let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
+const savedPlaceSearchRequests = {};
 let navigationActive = false;
 let triviaMuted = false;
 let locationWatcher;
@@ -399,12 +407,79 @@ function renderSavedPlaces() {
     button.title = place ? `Set destination to ${place.label}` : `Save a ${name.toLowerCase()} location in settings first.`;
   }
 }
-function saveCurrentPlace(name) {
-  const place = selectedPlaces.end;
-  if (!place) return status('Choose a destination before saving a place.');
-  savedPlaces = upsertPlace(savedPlaces, { ...place, id: name.toLowerCase(), name }); saveSavedPlaces(savedPlaces); renderSavedPlaces(); status(`${name} saved for your next trip.`);
+function savePlace(name, place) {
+  savedPlaces = upsertPlace(savedPlaces, { ...place, id: name.toLowerCase(), name });
+  saveSavedPlaces(savedPlaces);
+  renderSavedPlaces();
+  status(`${name} saved for your next trip.`);
 }
-for (const [id, name] of [['save-home', 'Home'], ['save-work', 'Work'], ['save-favorite', 'Favorite']]) $('#' + id).addEventListener('click', () => saveCurrentPlace(name));
+
+function renderSavedPlaceResults(name, results, origin) {
+  const id = name.toLowerCase();
+  const target = $('#' + id + '-place-results');
+  const note = document.createElement('p');
+  note.className = 'address-results-note';
+  note.id = id + '-place-results-note';
+  note.textContent = origin ? `Nearest matches · Straight-line distance from ${origin.label}.` : 'Choose the address you’d like to save.';
+  const list = document.createElement('ul');
+  list.className = 'address-result-list';
+  for (const place of results) {
+    const item = document.createElement('li');
+    const choose = document.createElement('button');
+    choose.type = 'button';
+    choose.setAttribute('aria-describedby', note.id);
+    const label = document.createElement('span');
+    label.className = 'address-result-label';
+    label.textContent = place.label;
+    choose.append(label);
+    if (origin && Number.isFinite(place.distanceMeters)) {
+      const distance = document.createElement('span');
+      distance.className = 'address-result-distance';
+      distance.textContent = formatDistance(place.distanceMeters) + ' away';
+      choose.append(distance);
+    }
+    choose.addEventListener('click', () => {
+      savePlace(name, place);
+      $('#' + id + '-place-search').value = place.label;
+      target.replaceChildren();
+    });
+    item.append(choose);
+    list.append(item);
+  }
+  target.replaceChildren(note, list);
+}
+
+async function searchSavedPlace(name) {
+  const id = name.toLowerCase();
+  const input = $('#' + id + '-place-search');
+  const query = input.value.trim();
+  if (!query) return status(`Enter a ${name.toLowerCase()} address first.`);
+  savedPlaceSearchRequests[id]?.abort();
+  const controller = new AbortController();
+  savedPlaceSearchRequests[id] = controller;
+  const button = document.querySelector(`[data-place-name="${name}"] button[type="submit"]`);
+  button.disabled = true;
+  status(`Searching for your ${name.toLowerCase()} address…`);
+  try {
+    const origin = addressSearchOrigin('start', null, currentLocation);
+    const { results } = await searchAddresses(query, { origin, signal: controller.signal });
+    if (controller.signal.aborted || savedPlaceSearchRequests[id] !== controller || input.value.trim() !== query) return;
+    renderSavedPlaceResults(name, results, origin);
+    status(`Choose the ${name.toLowerCase()} address that looks right.`);
+  } catch (error) {
+    if (!controller.signal.aborted && savedPlaceSearchRequests[id] === controller) status(error.message);
+  } finally {
+    if (savedPlaceSearchRequests[id] === controller) {
+      savedPlaceSearchRequests[id] = null;
+      button.disabled = false;
+    }
+  }
+}
+
+for (const form of document.querySelectorAll('.saved-place-editor')) form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  searchSavedPlace(form.dataset.placeName);
+});
 for (const [id, name] of [['go-home', 'Home'], ['go-work', 'Work'], ['go-favorite', 'Favorite']]) $('#' + id).addEventListener('click', () => {
   const place = savedPlaces.find((item) => item.id === name.toLowerCase());
   if (!place) return status(`Save a ${name.toLowerCase()} location in settings first.`);
