@@ -50,6 +50,14 @@ document.querySelector('#app').innerHTML = `
           <label class="switch-row" for="avoid-tolls"><span>Avoid Tolls</span><input id="avoid-tolls" type="checkbox" role="switch" data-avoid="toll" /><span class="switch-control" aria-hidden="true"></span></label>
           <label class="switch-row" for="avoid-highways"><span>Avoid Highways/Freeways</span><input id="avoid-highways" type="checkbox" role="switch" data-avoid="motorway" /><span class="switch-control" aria-hidden="true"></span></label>
           <label class="switch-row" for="avoid-ferries"><span>Avoid Ferries</span><input id="avoid-ferries" type="checkbox" role="switch" data-avoid="ferry" /><span class="switch-control" aria-hidden="true"></span></label>
+          <label class="affirmation-label" for="affirmation-style">After-turn encouragement
+            <select id="affirmation-style">
+              <option value="neutral">Neutral</option>
+              <option value="girl">Good girl</option>
+              <option value="boy">Good boy</option>
+              <option value="enby">Good enby</option>
+            </select>
+          </label>
         </fieldset>
         <fieldset class="theme-group">
           <legend>Theme</legend>
@@ -125,6 +133,7 @@ audio.preload = 'none';
 audio.volume = 0.7;
 const speech = createSpeechService(audio, voiceStatus);
 const phraseSettings = createPhraseSettings();
+const affirmationStyles = new Set(['neutral', 'girl', 'boy', 'enby']);
 let voices = [];
 let selectedVoice;
 const selectedPlaces = { start: null, end: null };
@@ -155,6 +164,11 @@ try {
   const savedTheme = localStorage.getItem('mommy-maps-theme');
   if (savedTheme === 'light' || savedTheme === 'pink' || savedTheme === 'verity' || savedTheme === 'dark') setTheme(savedTheme);
 } catch { /* Storage may be unavailable in privacy-focused browsers. */ }
+
+try {
+  const savedAffirmation = localStorage.getItem('mommy-maps-affirmation');
+  if (affirmationStyles.has(savedAffirmation)) $('#affirmation-style').value = savedAffirmation;
+} catch { /* The default neutral setting works without local storage. */ }
 
 async function loadRuntime() {
   try {
@@ -238,7 +252,7 @@ function playSimulationStep() {
     map?.setSimulationPoint({ lat, lng });
   }
   const voice = voices.find((item) => item.id === selectedVoice);
-  if (voice?.configured) speech.speak(step.instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases() });
+  if (voice?.configured) speech.speak(step.instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases(), affirmation: $('#affirmation-style').value });
   $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
 }
 
@@ -536,7 +550,7 @@ $('#simulate').addEventListener('click', () => {
   scheduleSimulationStep();
 });
 $('#speak').addEventListener('click', () => {
-  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases() });
+  if (route) speech.speak(route.steps[stepIndex].instruction, selectedVoice, { afterTurnPhrase: true, customAfterTurnPhrases: phraseSettings.getPhrases(), affirmation: $('#affirmation-style').value });
 });
 $('#sample').addEventListener('click', () => {
   const voice = voices.find((item) => item.id === selectedVoice);
@@ -580,6 +594,10 @@ $('#mute-trivia').addEventListener('click', () => {
 document.querySelectorAll('[data-avoid]').forEach((input) => input.addEventListener('change', () => {
   if (route) status('Navigation preferences changed. Find a new route to apply them.');
 }));
+$('#affirmation-style').addEventListener('change', () => {
+  try { localStorage.setItem('mommy-maps-affirmation', $('#affirmation-style').value); } catch { /* The choice remains active for this visit. */ }
+  status('After-turn encouragement updated.');
+});
 document.querySelectorAll('input[name="theme"]').forEach((input) => input.addEventListener('change', () => {
   if (input.checked) setTheme(input.value);
 }));

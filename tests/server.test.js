@@ -159,6 +159,15 @@ test('navigation turns receive one random configured after-turn phrase', async (
   assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true })).status, 200);
 });
 
+test('navigation turns use the selected encouragement style', async (t) => {
+  const api = await withServer(t, { config, random: () => 0, phrases: { afterTurn: [], affirmations: { enby: ['Good enby.'] } }, fetcher: async (_url, options) => {
+    assert.match(JSON.parse(options.body).text, /Turn left\. Good enby\.$/);
+    return new Response(Uint8Array.of(73, 68, 51));
+  } });
+  assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true, affirmation: 'enby' })).status, 200);
+  assert.equal((await api.post({ text: 'Turn left.', voiceId: 'velvet', afterTurnPhrase: true, affirmation: 'invalid' })).status, 400);
+});
+
 test('custom turn phrases join the preset pool without leaking into later requests', async (t) => {
   const spoken = [];
   const presets = { afterTurn: ['Preset phrase.'] };

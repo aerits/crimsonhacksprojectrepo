@@ -23,6 +23,31 @@
     "Let’s take each part as it comes.",
     "Keep it gentle, sweetheart.",
     "There’s comfort in taking things one turn at a time.",
-    "Thank you for bringing me along for the ride."
-  ]
+    "Thank you for bringing me along for the ride.",
+    "You handled that beautifully. Stay with me.",
+    "That turn looked lovely. Keep that steady pace.",
+    "You’re making this look easy."
+  ],
+  "affirmations": {
+    "girl": [
+      "Good girl. You’re doing beautifully.",
+      "That was lovely, good girl. Keep going.",
+      "You’ve got this, good girl."
+    ],
+    "boy": [
+      "Good boy. You’re doing beautifully.",
+      "That was lovely, good boy. Keep going.",
+      "You’ve got this, good boy."
+    ],
+    "enby": [
+      "Good enby. You’re doing beautifully.",
+      "That was lovely, good enby. Keep going.",
+      "You’ve got this, good enby."
+    ],
+    "neutral": [
+      "You’re doing beautifully. Keep going.",
+      "That was lovely. Keep that steady pace.",
+      "You’ve got this. I’m right here with you."
+    ]
+  }
 }

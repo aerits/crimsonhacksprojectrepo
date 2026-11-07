@@ -111,6 +111,10 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         let customPhrases;
         try { customPhrases = normalizeCustomPhrases(body.customAfterTurnPhrases); }
         catch (error) { return json(res, 400, { error: error.message }); }
+        const affirmation = body.affirmation || 'neutral';
+        if (typeof affirmation !== 'string' || !['neutral', 'girl', 'boy', 'enby'].includes(affirmation)) {
+          return json(res, 400, { error: 'Choose a valid after-turn encouragement style.' });
+        }
         const voice = voices.find((item) => item.id === body.voiceId);
         if (!voice) return json(res, 400, { error: 'Choose a valid voice.' });
         if (!fish.apiKey || !voice.referenceId) {
@@ -119,7 +123,7 @@ export function createApp({ config = {}, fetcher = fetch, phrases = voicePhrases
         if (active >= 2) return json(res, 429, { error: 'The voice server is busy. Try again shortly.' });
         // Build a per-request pool so personal phrases never affect another user's turns.
         const phrasePool = body.afterTurnPhrase === true
-          ? [...new Map([...(phrases.afterTurn || []), ...customPhrases].map((phrase) => [phrase.toLowerCase(), phrase])).values()]
+          ? [...new Map([...(phrases.afterTurn || []), ...(phrases.affirmations?.[affirmation] || []), ...customPhrases].map((phrase) => [phrase.toLowerCase(), phrase])).values()]
           : [];
         const afterTurn = phrasePool.length ? phrasePool[Math.floor(random() * phrasePool.length)] : '';
         const spokenText = voice.cue + ' ' + body.text.trim() + (afterTurn ? ' ' + afterTurn : '');

@@ -82,6 +82,8 @@ h2 { font-size: 14px; font-weight: 600; margin: 0; }
 .switch-row input:checked + .switch-control { background: var(--purple); }
 .switch-row input:checked + .switch-control::after { transform: translateX(14px); }
 .switch-row input:focus-visible + .switch-control, .theme-options input:focus-visible + span { outline: 3px solid #ac84c7; outline-offset: 3px; }
+.affirmation-label { display: grid; gap: 6px; padding: 8px 0 3px; color: #705e7c; font-size: 11px; }
+.affirmation-label select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface); color: inherit; font-size: 11px; }
 .theme-group { border-top: 1px solid var(--line) !important; margin-top: 5px !important; padding-top: 12px !important; }
 .trivia-group { border-top: 1px solid var(--line) !important; margin-top: 15px !important; padding-top: 15px !important; }
 .trivia-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; }
@@ -226,6 +228,7 @@ details li { margin-bottom: 7px; }
 :root[data-theme='verity'] .player-symbol { background: #3a3416; color: #ffe15b; }
 :root[data-theme='verity'] .library-player, :root[data-theme='verity'] .dev-tts { background: #1d1c15e8; border-color: var(--line); }
 :root[data-theme='verity'] .dev-tts summary, :root[data-theme='verity'] .dev-tts label, :root[data-theme='verity'] details { color: #d4cc9f; }
+:root[data-theme='verity'] .affirmation-label { color: #c6bd91; }
 
 /* Voice library */
 .voice-library { min-height: calc(100dvh - 88px); padding: 46px clamp(24px, 6vw, 96px) 24px; background: radial-gradient(ellipse at 90% 0%, #f8e6f1 0, transparent 48%), linear-gradient(140deg, #f6f0fc, #fdf4f9); }

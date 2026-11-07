@@ -20,7 +20,7 @@ export function createSpeechService(audio, onStatus = () => {}) {
       if (!response.ok) throw new Error('Could not load voices. Please reload.');
       return response.json();
     },
-    async speak(text, voiceId, { afterTurnPhrase = false, customAfterTurnPhrases = [] } = {}) {
+    async speak(text, voiceId, { afterTurnPhrase = false, customAfterTurnPhrases = [], affirmation } = {}) {
       stop();
       const current = generation;
       controller = new AbortController();
@@ -28,7 +28,7 @@ export function createSpeechService(audio, onStatus = () => {}) {
       try {
         const response = await fetch('/api/tts', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, voiceId, ...(afterTurnPhrase && { afterTurnPhrase: true, ...(customAfterTurnPhrases.length && { customAfterTurnPhrases }) }) }), signal: controller.signal,
+          body: JSON.stringify({ text, voiceId, ...(afterTurnPhrase && { afterTurnPhrase: true, ...(affirmation && { affirmation }), ...(customAfterTurnPhrases.length && { customAfterTurnPhrases }) }) }), signal: controller.signal,
         });
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
