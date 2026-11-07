@@ -343,6 +343,7 @@ details li { margin-bottom: 7px; }
 .settings-return { position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 20; min-height: 50px; padding: 13px 18px; box-shadow: 0 10px 28px #52396d45; }
 .settings-page #settings-content { max-width: 650px; margin: 0 auto; }
 .settings-page .settings { margin: 0; }
+.settings-page .settings + .settings { margin-top: 18px; }
 .dev-tts { margin: 24px auto 0; padding: 12px 15px; border: 1px dashed #dbc9e5; border-radius: 11px; background: #fffafd70; max-width: 1180px; }
 .dev-tts summary { color: #957ca1; font-size: 11px; }
 .dev-tts label { display: block; margin: 12px 0 6px; color: #826c90; font-size: 11px; }
@@ -711,4 +712,14 @@ details li { margin-bottom: 7px; }
     margin-bottom: 0;
     overflow: visible;
   }
+}
+
+/* This must come last: map mode has several compact-layout overrides, but
+   the logo itself should remain the same size in every app view. */
+#app .topbar .brand { font-size: 23px; }
+#app .topbar .brand-mark { width: 32px; height: 32px; margin-right: 8px; border-radius: 10px; }
+
+@media (max-width: 760px) {
+  #app .topbar .brand { font-size: 18px; letter-spacing: -.8px; }
+  #app .topbar .brand-mark { width: 28px; height: 28px; margin-right: 6px; }
 }
