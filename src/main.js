@@ -165,8 +165,8 @@ document.querySelector('#app').insertAdjacentHTML('beforeend', `
 
 const $ = (selector) => document.querySelector(selector);
 const formatArrivalTime = (durationSeconds) => new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + durationSeconds * 1000));
-const destinationName = (label) => label === 'Your GPS location'
-  ? 'your GPS location'
+const destinationName = (label) => label === 'Your GPS location' || label.startsWith('Current location')
+  ? 'your current location'
   : label.split(',')[0] || 'your destination';
 const status = (message) => { $('#map-status').textContent = message; };
 const voiceStatus = (message) => {
@@ -199,6 +199,7 @@ let simulationTimer;
 let simulationRunning = false;
 let locationRequestId = 0;
 let locatingCurrentPosition = false;
+let currentLocationTarget = 'start';
 let drivingLocationWatch;
 const suggestionTimers = {};
 const suggestionRequests = {};
@@ -288,7 +289,7 @@ function selectVoice(id) {
   $('#header-voice-portrait').src = portrait.src;
   $('#header-voice-portrait').alt = portrait.alt;
   const isVerity = voice.id === 'verity';
-  $('#brand-name').textContent = isVerity ? 'verity maps' : 'mommy maps';
+  $('#brand-name').textContent = isVerity ? 'VERITY maps' : 'mommy maps';
   $('.brand').setAttribute('aria-label', isVerity ? 'Verity Maps home' : 'Mommy Maps home');
   document.title = isVerity ? 'Verity Maps' : 'Mommy Maps';
   $('#selected-voice-name').textContent = voice.name?.trim() || 'Your selected guide';
@@ -319,7 +320,7 @@ function startDrivingFollow() {
   stopDrivingFollow();
   if (!navigator.geolocation) return;
   drivingLocationWatch = navigator.geolocation.watchPosition(({ coords }) => {
-    const point = { lat: coords.latitude, lng: coords.longitude, label: 'Your current location', isCurrentLocation: true };
+    const point = currentLocationPlace(coords);
     currentLocation = point;
     map?.setLiveLocation(point);
     if (!simulationRunning) map?.follow(point, 17);
@@ -563,11 +564,18 @@ function locationErrorMessage(error) {
   return 'Your location is unavailable. Enter a starting address or try the location button again.';
 }
 
+function currentLocationPlace(coords) {
+  const lat = coords.latitude;
+  const lng = coords.longitude;
+  return { lat, lng, label: `Current location · ${lat.toFixed(5)}, ${lng.toFixed(5)}`, isCurrentLocation: true };
+}
+
 function useCurrentLocation({ userInitiated = false } = {}) {
   const input = $('#start');
   const locate = $('#locate');
   const requestId = ++locationRequestId;
   locatingCurrentPosition = true;
+  currentLocationTarget = 'start';
   resetAddressSearch('start');
   invalidateRoute();
   selectedPlaces.start = null;
@@ -592,20 +600,25 @@ function useCurrentLocation({ userInitiated = false } = {}) {
       input.value = '';
       return status('GPS returned an invalid position. Try again or enter a starting address.');
     }
-    const place = { lat: coords.latitude, lng: coords.longitude, label: 'Your current location', isCurrentLocation: true };
+    const place = currentLocationPlace(coords);
+    const target = currentLocationTarget;
     currentLocation = place;
-    selectedPlaces.start = place;
-    input.value = place.label;
-    map?.setPoint('start', place);
+    selectedPlaces[target] = place;
+    $('#' + target).value = place.label;
+    if (target === 'end') updateClearDestination();
+    map?.setPoint(target, place);
     map?.setLiveLocation(place);
     map?.focus(place);
-    status('Starting from your GPS location. Search for a destination to begin.');
-    refreshSuggestions(['end']);
+    status(target === 'start'
+      ? 'Starting from your GPS location. Search for a destination to begin.'
+      : 'Your current location is set as the destination.');
+    refreshSuggestions(target === 'start' ? ['end'] : ['start']);
   }, (error) => {
     if (requestId !== locationRequestId) return;
     locate.disabled = false;
     locatingCurrentPosition = false;
-    input.value = '';
+    $('#' + currentLocationTarget).value = '';
+    if (currentLocationTarget === 'end') updateClearDestination();
     status(locationErrorMessage(error));
   }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
 }
@@ -762,12 +775,14 @@ $('#swap').addEventListener('click', () => {
   invalidateRoute();
   const start = $('#start').value;
   const startWasCurrentLocation = selectedPlaces.start?.isCurrentLocation;
+  const startWasLocating = locatingCurrentPosition;
   $('#start').value = $('#end').value;
   [selectedPlaces.start, selectedPlaces.end] = [selectedPlaces.end, selectedPlaces.start];
   if (startWasCurrentLocation && currentLocation) {
     selectedPlaces.end = currentLocation;
     $('#end').value = currentLocation.label;
   } else $('#end').value = start;
+  if (startWasLocating) currentLocationTarget = 'end';
   updateClearDestination();
   resetAddressSearch('start');
   resetAddressSearch('end');
