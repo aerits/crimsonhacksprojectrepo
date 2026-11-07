@@ -14,7 +14,7 @@ npm run dev
 
 Open http://127.0.0.1:3000. The map starts at the University of Utah. Search for a starting address and destination, select a result for each, then use the arrows and **Hear this turn** to preview the route. Audio plays directly from the voice controls.
 
-Use **Simulate route** in the route preview to automatically advance through each turn and focus the map on the current maneuver. Choose a relaxed, normal, or quick pace. The simulator does not generate TTS audio; use **Hear this turn** whenever you want spoken guidance.
+Use **Simulate route** in the route preview to automatically advance through each turn, focus the map on the current maneuver, and play the selected voice’s route guidance. A pink marker shows the simulated location. Choose a relaxed, normal, or quick pace. Each simulated direction sends a Fish Audio TTS request and may consume provider credit.
 
 The map and routing work without Fish credentials. Voice cards show `SETUP` until configured. `npm start` runs without file watching. `npm test` runs the Node test suite.
 

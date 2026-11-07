@@ -50,8 +50,8 @@ document.querySelector('#app').innerHTML = `
         <p class="hint">Step through the route and hear each direction.</p>
         <div class="current-step"><span class="turn-icon">↱</span><div><span id="step-count" class="tiny"></span><p id="instruction"></p></div></div>
         <div class="step-actions"><button type="button" id="previous" class="secondary" aria-label="Previous direction">←</button><button type="button" id="speak" class="primary">▷ Hear this turn</button><button type="button" id="next" class="secondary" aria-label="Next direction">→</button></div>
-        <div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="4000">Relaxed</option><option value="2000" selected>Normal</option><option value="800">Quick</option></select></label></div>
-        <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction on the map.</p>
+        <div class="simulation-controls"><button type="button" id="simulate" class="secondary">▷ Simulate route</button><label for="simulation-speed">Pace <select id="simulation-speed"><option value="14000">Relaxed</option><option value="9000" selected>Normal</option><option value="5000">Quick</option></select></label></div>
+        <p id="simulation-status" class="hint" role="status">Simulation moves through each route instruction with voice guidance.</p>
         <details><summary>All directions</summary><ol id="steps"></ol></details>
       </section>
       <span class="map-note">SLOW DOWN. YOU’RE ON YOUR WAY.</span>
@@ -79,6 +79,8 @@ function stopSimulation(message) {
   clearTimeout(simulationTimer);
   simulationTimer = undefined;
   simulationRunning = false;
+  map?.clearSimulationPoint();
+  speech.stop();
   $('#simulate').textContent = '▷ Simulate route';
   if (message) $('#simulation-status').textContent = message;
 }
@@ -89,10 +91,21 @@ function scheduleSimulationStep() {
     if (!simulationRunning || !route) return;
     if (stepIndex >= route.steps.length - 1) return stopSimulation('Simulation complete. You’ve arrived.');
     stepIndex += 1;
-    showStep();
-    $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
+    playSimulationStep();
     scheduleSimulationStep();
   }, delay);
+}
+
+function playSimulationStep() {
+  const step = route.steps[stepIndex];
+  showStep();
+  if (step.maneuver.location) {
+    const [lng, lat] = step.maneuver.location;
+    map?.setSimulationPoint({ lat, lng });
+  }
+  const voice = voices.find((item) => item.id === selectedVoice);
+  if (voice?.configured) speech.speak(step.instruction, selectedVoice);
+  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
 }
 
 function invalidateRoute() {
@@ -241,11 +254,10 @@ $('#simulate').addEventListener('click', () => {
   if (simulationRunning) return stopSimulation('Simulation paused.');
   if (stepIndex >= route.steps.length - 1) {
     stepIndex = 0;
-    showStep();
   }
   simulationRunning = true;
   $('#simulate').textContent = 'Ⅱ Pause simulation';
-  $('#simulation-status').textContent = `Simulating direction ${stepIndex + 1} of ${route.steps.length}.`;
+  playSimulationStep();
   scheduleSimulationStep();
 });
 $('#speak').addEventListener('click', () => {

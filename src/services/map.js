@@ -8,6 +8,7 @@ export function createMap(element) {
   L.control.zoom({ position: 'bottomright' }).addTo(map);
   const markers = {};
   let routeLayer;
+  let simulationMarker;
   return {
     setPoint(kind, point) {
       markers[kind]?.remove();
@@ -16,6 +17,13 @@ export function createMap(element) {
       }) }).addTo(map).bindTooltip(kind === 'start' ? 'Starting point' : 'Destination');
     },
     clearRoute() { routeLayer?.remove(); routeLayer = null; },
+    setSimulationPoint(point) {
+      if (!simulationMarker) {
+        simulationMarker = L.circleMarker(point, { radius: 9, color: '#ffffff', weight: 3, fillColor: '#e15e7a', fillOpacity: 1 })
+          .addTo(map).bindTooltip('Simulated location', { direction: 'top' });
+      } else simulationMarker.setLatLng(point);
+    },
+    clearSimulationPoint() { simulationMarker?.remove(); simulationMarker = null; },
     drawRoute(geometry) {
       routeLayer?.remove();
       routeLayer = L.geoJSON(geometry, { style: { color: '#75608e', weight: 6, opacity: 0.9, lineCap: 'round' } }).addTo(map);
