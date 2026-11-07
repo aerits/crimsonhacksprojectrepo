@@ -209,6 +209,7 @@ const wellnessReminder = createReminder();
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.querySelector(`input[name="theme"][value="${theme}"]`).checked = true;
+  map?.setRouteTheme(theme);
   try { localStorage.setItem('mommy-maps-theme', theme); } catch { /* Theme still applies for this visit. */ }
 }
 
@@ -799,7 +800,7 @@ $('#route-form').addEventListener('submit', async (event) => {
     $('#edit-route').hidden = false;
     $('#start-navigation').disabled = false;
     showStep();
-    map?.drawRoute(route.geometry);
+    map?.drawRoute(route.geometry, document.documentElement.dataset.theme);
     loadConditions(start, end, route);
     if (window.matchMedia('(max-width: 760px)').matches) {
       requestAnimationFrame(() => $('#journey').scrollIntoView({ behavior: 'smooth', block: 'end' }));
