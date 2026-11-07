@@ -1,0 +1,32 @@
+{
+  "landmarks": [
+    { "name": "Salt Lake Temple", "lat": 40.7706, "lng": -111.891, "aliases": ["temple", "salt lake temple"] },
+    { "name": "Temple Square", "lat": 40.77, "lng": -111.8911, "aliases": ["temple square"] },
+    { "name": "Utah State Capitol", "lat": 40.7775, "lng": -111.888, "aliases": ["capitol", "state capitol"] },
+    { "name": "University of Utah", "lat": 40.7649, "lng": -111.8421, "aliases": ["university", "u of u"] },
+    { "name": "Natural History Museum of Utah", "lat": 40.765, "lng": -111.8226, "aliases": ["natural history museum", "nhmu"] },
+    { "name": "Red Butte Garden", "lat": 40.7668, "lng": -111.8255, "aliases": ["red butte"] },
+    { "name": "Hogle Zoo", "lat": 40.7505, "lng": -111.8162, "aliases": ["zoo", "hogle"] },
+    { "name": "Round1 Bowling & Arcade", "lat": 40.743, "lng": -111.8998, "aliases": ["round 1", "round1", "round 1 arcade"] },
+    { "name": "This Is the Place Heritage Park", "lat": 40.7504, "lng": -111.8143, "aliases": ["this is the place", "heritage park"] },
+    { "name": "Antelope Island State Park", "lat": 41.0548, "lng": -112.2272, "aliases": ["antelope island"] },
+    { "name": "Great Salt Lake State Park", "lat": 40.7379, "lng": -112.2115, "aliases": ["great salt lake"] },
+    { "name": "Park City Mountain", "lat": 40.6514, "lng": -111.508, "aliases": ["park city", "park city mountain"] },
+    { "name": "Sundance Mountain Resort", "lat": 40.3915, "lng": -111.5815, "aliases": ["sundance"] },
+    { "name": "Arches National Park", "lat": 38.7331, "lng": -109.5925, "aliases": ["arches"] },
+    { "name": "Delicate Arch", "lat": 38.7436, "lng": -109.4993, "aliases": ["delicate arch"] },
+    { "name": "Canyonlands National Park", "lat": 38.3269, "lng": -109.8783, "aliases": ["canyonlands"] },
+    { "name": "Capitol Reef National Park", "lat": 38.2822, "lng": -111.247, "aliases": ["capitol reef"] },
+    { "name": "Bryce Canyon National Park", "lat": 37.6283, "lng": -112.1677, "aliases": ["bryce", "bryce canyon"] },
+    { "name": "Zion National Park", "lat": 37.2982, "lng": -113.0263, "aliases": ["zion"] },
+    { "name": "Bonneville Salt Flats", "lat": 40.7619, "lng": -113.8958, "aliases": ["bonneville", "salt flats"] },
+    { "name": "Monument Valley", "lat": 37.0042, "lng": -110.1735, "aliases": ["monument valley"] }
+  ],
+  "trails": [
+    { "name": "Angels Landing Trailhead", "lat": 37.2596, "lng": -112.951 },
+    { "name": "Delicate Arch Trailhead", "lat": 38.7435, "lng": -109.4997 },
+    { "name": "Navajo Loop Trailhead", "lat": 37.6287, "lng": -112.1673 },
+    { "name": "Timpanogos Trailhead", "lat": 40.427, "lng": -111.683 },
+    { "name": "Cecret Lake Trailhead", "lat": 40.5739, "lng": -111.6352 }
+  ]
+}

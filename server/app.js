@@ -12,7 +12,7 @@ import { getAirQuality, getRouteConditions } from './conditions.js';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SOURCE = resolve(ROOT, 'src');
 const PUBLIC = resolve(ROOT, 'public');
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const UTAH_SEARCH_ORIGIN = { lat: 40.7649, lng: -111.8421 };
 const json = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
