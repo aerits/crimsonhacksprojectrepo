@@ -36,10 +36,10 @@ document.querySelector('#app').innerHTML = `
         <div id="end-results" class="address-results" aria-live="polite"></div>
         <div class="quick-destinations" aria-label="Saved destinations"><button id="go-home" type="button" class="secondary">Home</button><button id="go-work" type="button" class="secondary">Work</button><button id="go-favorite" type="button" class="secondary">Favorite</button></div>
         <div class="route-options"><button type="button" id="swap" class="text-button">⇆ Swap</button></div>
+        <fieldset id="map-category-filter" class="map-category-filter"><legend>Map places</legend><label><input type="checkbox" value="parks" checked /> Parks</label><label><input type="checkbox" value="trails" checked /> Trails</label><label><input type="checkbox" value="landmarks" checked /> Landmarks</label></fieldset>
         <button type="submit" class="primary" id="plan">Show my route on the map <span>↗</span></button>
         <p class="hint">Suggestions appear as you type. Choose one for each address, then find your route.</p>
       </form>
-      <fieldset id="map-category-filter" class="map-category-filter"><legend>Map places</legend><label><input type="checkbox" value="parks" checked /> Parks</label><label><input type="checkbox" value="trails" checked /> Trails</label><label><input type="checkbox" value="landmarks" checked /> Landmarks</label></fieldset>
       <button id="edit-route" type="button" class="edit-route" aria-label="Edit route" hidden>⌕ <span>Edit route</span></button>
       <section id="voice-section" class="voice-section" aria-labelledby="voice-heading">
         <div class="section-title"><h2 id="voice-heading">A voice for your journey</h2><button id="browse-voices" class="text-button" type="button">Browse all ↗</button></div>
