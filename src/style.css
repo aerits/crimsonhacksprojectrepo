@@ -323,6 +323,7 @@ details li { margin-bottom: 7px; }
 .settings-page-heading > div { padding: 18px 20px; border: 1px solid transparent; border-radius: 16px; background: #fffafde8; box-shadow: 0 4px 18px #77568c0b; backdrop-filter: blur(8px); }
 .settings-page-heading h1 { font-size: 42px; }
 .settings-page-heading > p:last-child { margin: 11px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.settings-return { position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); z-index: 20; min-height: 50px; padding: 13px 18px; box-shadow: 0 10px 28px #52396d45; }
 .settings-page #settings-content { max-width: 650px; margin: 0 auto; }
 .settings-page .settings { margin: 0; }
 .dev-tts { margin: 24px auto 0; padding: 12px 15px; border: 1px dashed #dbc9e5; border-radius: 11px; background: #fffafd70; max-width: 1180px; }
@@ -390,6 +391,7 @@ details li { margin-bottom: 7px; }
   .settings-page-heading { align-items: stretch; flex-direction: column; gap: 14px; }
   .settings-page-heading > .secondary { align-self: flex-start; }
   .settings-page-heading h1 { font-size: 36px; }
+  .settings-return { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); min-height: 46px; padding: 11px 14px; }
   .library-heading { flex-direction: column; align-items: flex-start; gap: 20px; margin-bottom: 30px; }
   .library-heading h1 { font-size: 36px; max-width: 330px; }
   .library-heading h1 em { display: inline; }
