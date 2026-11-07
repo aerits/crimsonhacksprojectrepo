@@ -12,6 +12,7 @@ import { sunGlare } from './utils/sun.js';
 import { loadSavedPlaces, removePlace, saveSavedPlaces, upsertPlace } from './utils/saved-places.js';
 import { createReminder } from './utils/reminders.js';
 import { nationalParkPromptFor } from './data/national-park-prompts.js';
+import { utahStateParks, utahTrails } from './data/utah-outdoors.js';
 
 document.querySelector('#app').innerHTML = `
   <header class="topbar">
@@ -108,6 +109,7 @@ document.querySelector('#app').innerHTML = `
           <div class="trivia-actions"><button id="skip-trivia" type="button" class="text-button">Skip next note</button><button id="mute-trivia" type="button" class="text-button" aria-pressed="false">Mute trivia</button></div>
           <p id="ambient-note" class="hint" role="status">Start ambient guidance when you’re ready to drive.</p>
         </fieldset>
+        <fieldset class="trivia-group"><legend>Explore Utah</legend><label for="utah-parks" class="hint">Utah State Parks</label><select id="utah-parks"><option value="">Choose a park to explore</option></select><label for="utah-trails" class="hint">Trail ideas</label><select id="utah-trails"><option value="">Choose a trail idea</option></select><p id="outdoor-note" class="hint">Choose an outdoor spot, then use its official page to plan before setting a route.</p></fieldset>
         <fieldset class="trivia-group"><legend>Saved places</legend><p class="hint">Search for an address to save it for one-tap directions later.</p>
           <div class="saved-place-editors">
             <form class="saved-place-editor" data-place-name="Home"><label for="home-place-search">Home address</label><div class="input-row"><input id="home-place-search" type="search" autocomplete="street-address" placeholder="Search for your home address" /><button type="submit" class="address-search">Search</button></div><div id="home-place-results" class="address-results" aria-live="polite"></div></form>
@@ -207,6 +209,26 @@ let lastPosition;
 const ambientTrivia = createAmbientTrivia();
 let savedPlaces = loadSavedPlaces();
 const wellnessReminder = createReminder();
+
+function populateOutdoorLists() {
+  const fill = (selector, items) => $(selector).append(...items.map((name) => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    return option;
+  }));
+  fill('#utah-parks', utahStateParks);
+  fill('#utah-trails', utahTrails);
+  for (const selector of ['#utah-parks', '#utah-trails']) $(selector).addEventListener('change', (event) => {
+    if (!event.target.value) return;
+    const link = document.createElement('a');
+    link.href = 'https://stateparks.utah.gov/';
+    link.target = '_blank';
+    link.rel = 'noreferrer';
+    link.textContent = 'Open official Utah State Parks site';
+    $('#outdoor-note').replaceChildren(`Selected: ${event.target.value}. `, link);
+  });
+}
 
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -965,6 +987,7 @@ async function loadVoices() {
   } finally { $('#retry-voices').disabled = false; }
 }
 loadVoices();
+populateOutdoorLists();
 window.addEventListener('pagehide', () => {
   stopSimulation();
   stopDrivingFollow();
