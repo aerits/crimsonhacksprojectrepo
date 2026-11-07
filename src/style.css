@@ -163,8 +163,6 @@ input[type=range] { accent-color: #b18bc6; width: 124px; height: 20px; cursor: p
 .current-step { display: flex; gap: 14px; align-items: center; margin: 20px 0; }
 .turn-icon { width: 43px; height: 43px; flex-shrink: 0; border-radius: 12px; background: linear-gradient(135deg, #eadff5, #f5dfec); display: grid; place-items: center; font-size: 27px; color: var(--purple); }
 #instruction { font-size: 13px; line-height: 1.5; margin: 5px 0 0; }
-.step-actions { display: grid; grid-template-columns: 38px 1fr 38px; gap: 8px; }
-.step-actions .secondary { padding: 10px; }
 .simulation-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 11px; }
 .simulation-controls label { color: #8a7396; font-size: 10px; }
 .simulation-controls select { margin-left: 5px; border: 1px solid var(--line); border-radius: 6px; padding: 6px; background: #fffafd; color: #725b80; font-size: 10px; }
@@ -485,8 +483,6 @@ details li { margin-bottom: 7px; }
   .journey h2 { font-size: 18px; }
   .journey .small-pill { display: none; }
   .current-step { margin: 8px 0; }
-  .step-actions { gap: 6px; }
-  .step-actions .secondary, .step-actions .primary { min-height: 40px; padding: 8px; }
   .journey details { margin-top: 6px; }
 }
 /* Keep the journey view inside the viewport. Long, optional controls scroll
@@ -659,6 +655,7 @@ details li { margin-bottom: 7px; }
 #journey-panel.compact-journey .journey > .hint { display: none; }
 #journey-panel.compact-journey .journey details { margin-top: 9px; }
 #journey-panel.compact-journey .journey details ol { max-height: 94px; }
+#journey-panel.compact-journey .journey-actions { position: sticky; z-index: 5; bottom: -16px; margin-bottom: 0; padding: 9px 0 16px; background: #fffafdf5; }
 
 @media (max-width: 760px) {
   #journey-panel.compact-journey .journey { bottom: 0; left: 0; width: 100%; max-height: min(270px, calc(100% - 100px)); padding: 16px 14px 10px; border-radius: 18px 18px 0 0; border-bottom: 0; }
@@ -670,33 +667,21 @@ details li { margin-bottom: 7px; }
   #journey-panel.compact-journey .journey-actions { margin-top: 6px; }
   #journey-panel.compact-journey .journey-actions :is(.ambient-guidance, .secondary) { min-height: 36px; padding-block: 7px; }
 
-  /* Opening every direction should not grow below the bottom sheet. Keep the
-     sheet compact and place a scrollable list in the open map space above it. */
-  #journey-panel.compact-journey .journey { overflow: visible; }
+  /* Keep route actions reachable in the sheet itself. Optional directions
+     scroll beneath them instead of pushing navigation below the viewport. */
+  #journey-panel.compact-journey .journey { overflow-y: auto; overscroll-behavior: contain; }
+  #journey-panel.compact-journey .journey-actions { bottom: -10px; padding-bottom: 10px; }
   #journey-panel.compact-journey .journey details[open] {
-    position: absolute;
-    z-index: 7;
-    right: 14px;
-    bottom: calc(100% + 10px);
-    left: 14px;
-    /* Reserve room for the route controls below, including Cancel route. */
-    max-height: min(300px, calc(100dvh - 410px));
-    margin: 0;
+    position: static;
+    max-height: none;
+    margin: 9px 0 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 12px 14px;
-    background: var(--surface);
-    box-shadow: 0 10px 28px #52396d33;
   }
   #journey-panel.compact-journey .journey details[open] summary {
-    position: sticky;
-    top: -12px;
-    z-index: 1;
-    margin: -12px -14px 8px;
-    padding: 12px 14px 8px;
-    background: var(--surface);
+    position: static;
+    margin: 0 0 8px;
+    padding: 0;
   }
   #journey-panel.compact-journey .journey details[open] ol {
     max-height: none;
