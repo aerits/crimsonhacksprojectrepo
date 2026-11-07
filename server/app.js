@@ -9,7 +9,7 @@ import voicePhrases from '../voice-phrases.json' with { type: 'json' };
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SOURCE = resolve(ROOT, 'src');
 const PUBLIC = resolve(ROOT, 'public');
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml' };
 const json = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(body));

@@ -151,7 +151,7 @@ details li { margin-bottom: 7px; }
 :root[data-theme='pink'] .brand-dot, :root[data-theme='pink'] h1 em { color: #d65787; }
 :root[data-theme='pink'] .view-tabs { background: #fff1f6; border-color: #f6d7e3; }
 :root[data-theme='pink'] .view-tabs button[aria-selected=true] { background: #ffdce9; color: #9c315c; box-shadow: 0 2px 5px #c4457520; }
-:root[data-theme='pink'] .sidebar { background: linear-gradient(155deg, #ffe8f0, #fff5f8); border-color: var(--line); scrollbar-color: #edb6ca transparent; }
+:root[data-theme='pink'] .sidebar { background: url('/images/sakura-blossom-cc0.svg') right -36px bottom -32px / 170px no-repeat, linear-gradient(155deg, #ffe8f0, #fff5f8); border-color: var(--line); scrollbar-color: #edb6ca transparent; }
 :root[data-theme='pink'] .card, :root[data-theme='pink'] .secondary, :root[data-theme='pink'] #voice-select, :root[data-theme='pink'] .address-result-list { background: #fffafd; border-color: var(--line); }
 :root[data-theme='pink'] .input-row { background: #fff5f9; border-color: var(--line); }
 :root[data-theme='pink'] .input-row:focus-within { border-color: #df7ca4; }
@@ -163,10 +163,53 @@ details li { margin-bottom: 7px; }
 :root[data-theme='pink'] .turn-icon { background: linear-gradient(135deg, #ffddea, #f9c9da); color: #c54b7e; }
 :root[data-theme='pink'] .map-pin { border-color: #d75a89; color: #c34475; }
 :root[data-theme='pink'] .map-pin.end { background: #d75a89; border-color: #d75a89; }
-:root[data-theme='pink'] .voice-library { background: radial-gradient(ellipse at 90% 0%, #ffd5e5 0, transparent 48%), linear-gradient(140deg, #fff0f6, #fff8fa); }
+:root[data-theme='pink'] .voice-library { background: url('/images/sakura-blossom-cc0.svg') right 6% top 76px / 168px no-repeat, url('/images/sakura-blossom-cc0.svg') left -42px bottom 34px / 142px no-repeat, radial-gradient(ellipse at 90% 0%, #ffd5e5 0, transparent 48%), linear-gradient(140deg, #fff0f6, #fff8fa); }
 :root[data-theme='pink'] .library-card { border-color: #f1cedb; background: #fffafd; }
 :root[data-theme='pink'] .library-card.selected { border-color: #df7ca4; box-shadow: 0 0 0 2px #df7ca424, 0 10px 30px #c34d790b; }
 :root[data-theme='pink'] .library-card.selected .choose-voice { background: #c54b7e; border-color: #c54b7e; }
+
+:root[data-theme='verity'] { color-scheme: dark; color: #f8f3df; background: #11110e; --purple: #f4cc28; --purple-dark: #fff06c; --pink: #f4cc28; --muted: #c6bd91; --line: #4c492d; --surface: #1d1c15; --lavender: #37331b; --rose: #3c3719; }
+:root[data-theme='verity'] body, :root[data-theme='verity'] .voice-library { background: #11110e; color: #f8f3df; }
+:root[data-theme='verity'] .topbar { background: #181711; border-color: var(--line); }
+:root[data-theme='verity'] .brand { color: #fff8cb; }
+:root[data-theme='verity'] .brand-mark { background: #f4cc28; color: #17160f; }
+:root[data-theme='verity'] .brand-dot, :root[data-theme='verity'] h1 em { color: #f4cc28; }
+:root[data-theme='verity'] .view-tabs { background: #242215; border-color: var(--line); }
+:root[data-theme='verity'] .view-tabs button { color: #d8d09e; }
+:root[data-theme='verity'] .view-tabs button[aria-selected=true] { background: #f4cc28; color: #17160f; box-shadow: 0 2px 8px #f4cc2840; }
+:root[data-theme='verity'] .sidebar { background: url('/images/verity-smiley.svg') right -44px bottom -38px / 168px no-repeat, linear-gradient(155deg, #242114, #14140f); border-color: var(--line); scrollbar-color: #b89b25 transparent; }
+:root[data-theme='verity'] .card, :root[data-theme='verity'] .secondary, :root[data-theme='verity'] #voice-select, :root[data-theme='verity'] .address-result-list, :root[data-theme='verity'] .library-heading > .secondary { background: #1d1c15; border-color: var(--line); color: #f8f3df; }
+:root[data-theme='verity'] .input-row { background: #272518; border-color: var(--line); }
+:root[data-theme='verity'] .input-row input, :root[data-theme='verity'] .dev-tts textarea { color: #fff8d5; }
+:root[data-theme='verity'] .address-search, :root[data-theme='verity'] .location-search { background: #3a3416; color: #ffe15b; border-color: var(--line); }
+:root[data-theme='verity'] .location-search:hover:not(:disabled), :root[data-theme='verity'] .address-result-list button:hover { background: #4b4319; }
+:root[data-theme='verity'] .primary, :root[data-theme='verity'] .library-card.selected .choose-voice { background: #f4cc28; border-color: #f4cc28; color: #17160f; }
+:root[data-theme='verity'] .primary:hover:not(:disabled) { background: #fff06c; }
+:root[data-theme='verity'] .map-panel, :root[data-theme='verity'] .leaflet-container { background: #282517; }
+:root[data-theme='verity'] .leaflet-tile-pane { filter: grayscale(.88) sepia(.25) brightness(.7) contrast(1.1); }
+:root[data-theme='verity'] .map-label, :root[data-theme='verity'] .map-status, :root[data-theme='verity'] .journey, :root[data-theme='verity'] .map-note { background: #1d1c15ef; border-color: var(--line); color: #f8f3df; }
+:root[data-theme='verity'] .turn-icon { background: #3a3416; color: #ffe15b; }
+:root[data-theme='verity'] .map-pin { background: #1d1c15; border-color: #f4cc28; color: #ffe15b; }
+:root[data-theme='verity'] .map-pin.end { background: #f4cc28; border-color: #f4cc28; color: #17160f; }
+:root[data-theme='verity'] .voice-library { background: url('/images/verity-smiley.svg') right 5% top 80px / 158px no-repeat, url('/images/verity-smiley.svg') left -39px bottom 35px / 136px no-repeat, radial-gradient(ellipse at 85% 0%, #3c3617 0, transparent 48%), #11110e; }
+:root[data-theme='verity'] .library-card { border-color: #4c492d; background: #1d1c15; }
+:root[data-theme='verity'] .library-card.selected { border-color: #f4cc28; box-shadow: 0 0 0 2px #f4cc2824, 0 10px 30px #00000035; }
+:root[data-theme='verity'] .voice-card-heading h2, :root[data-theme='verity'] .library-player-copy strong { color: #fff8d5; }
+:root[data-theme='verity'] .voice-mood, :root[data-theme='verity'] .voice-quote, :root[data-theme='verity'] #library-voice-status { color: #d4cc9f; }
+:root[data-theme='verity'] button:focus-visible, :root[data-theme='verity'] input:focus-visible, :root[data-theme='verity'] select:focus-visible, :root[data-theme='verity'] textarea:focus-visible, :root[data-theme='verity'] summary:focus-visible, :root[data-theme='verity'] a:focus-visible { outline-color: #ffe15b; }
+:root[data-theme='verity'] .eyebrow, :root[data-theme='verity'] .tiny, :root[data-theme='verity'] .route-form label, :root[data-theme='verity'] .voice-select-label, :root[data-theme='verity'] .volume-label, :root[data-theme='verity'] .settings legend, :root[data-theme='verity'] .switch-row, :root[data-theme='verity'] .simulation-controls label, :root[data-theme='verity'] .map-label div > span { color: #c6bd91; }
+:root[data-theme='verity'] .route-form label span, :root[data-theme='verity'] .text-button, :root[data-theme='verity'] .voice-select-wrap::after, :root[data-theme='verity'] .voice-summary, :root[data-theme='verity'] .sidebar-footer, :root[data-theme='verity'] .library-footer, :root[data-theme='verity'] .library-footer span { color: #ffe15b; }
+:root[data-theme='verity'] .small-pill { background: #3a3416; color: #ffe15b; }
+:root[data-theme='verity'] .theme-options input:checked + span { border-color: #f4cc28; background: #3a3416; color: #fff06c; }
+:root[data-theme='verity'] .secondary, :root[data-theme='verity'] .preview-voice { color: #ffe15b; }
+:root[data-theme='verity'] .address-result-distance { background: #3a3416; color: #fff06c; }
+:root[data-theme='verity'] input[type=range] { accent-color: #f4cc28; }
+:root[data-theme='verity'] .library-section-heading h2, :root[data-theme='verity'] #library-selection, :root[data-theme='verity'] .voice-availability, :root[data-theme='verity'] .voice-availability.ready { color: #ffe15b; }
+:root[data-theme='verity'] .voice-availability, :root[data-theme='verity'] .voice-availability.ready { background: #3a3416; }
+:root[data-theme='verity'] .choose-voice { background: #3a3416; border-color: #5f571e; color: #ffe15b; }
+:root[data-theme='verity'] .player-symbol { background: #3a3416; color: #ffe15b; }
+:root[data-theme='verity'] .library-player, :root[data-theme='verity'] .dev-tts { background: #1d1c15e8; border-color: var(--line); }
+:root[data-theme='verity'] .dev-tts summary, :root[data-theme='verity'] .dev-tts label, :root[data-theme='verity'] details { color: #d4cc9f; }
 
 /* Voice library */
 .voice-library { min-height: calc(100dvh - 88px); padding: 46px clamp(24px, 6vw, 96px) 24px; background: radial-gradient(ellipse at 90% 0%, #f8e6f1 0, transparent 48%), linear-gradient(140deg, #f6f0fc, #fdf4f9); }

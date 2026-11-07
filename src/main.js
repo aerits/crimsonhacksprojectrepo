@@ -55,6 +55,7 @@ document.querySelector('#app').innerHTML = `
           <div class="theme-options" role="radiogroup" aria-label="Theme">
             <label><input type="radio" name="theme" value="light" checked /><span>Light</span></label>
             <label><input type="radio" name="theme" value="pink" /><span>Pink</span></label>
+            <label><input type="radio" name="theme" value="verity" /><span>Verity</span></label>
             <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
           </div>
         </fieldset>
@@ -138,7 +139,7 @@ function setTheme(theme) {
 
 try {
   const savedTheme = localStorage.getItem('mommy-maps-theme');
-  if (savedTheme === 'light' || savedTheme === 'pink' || savedTheme === 'dark') setTheme(savedTheme);
+  if (savedTheme === 'light' || savedTheme === 'pink' || savedTheme === 'verity' || savedTheme === 'dark') setTheme(savedTheme);
 } catch { /* Storage may be unavailable in privacy-focused browsers. */ }
 
 async function loadRuntime() {

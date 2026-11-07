@@ -185,6 +185,7 @@ test('static server serves browser assets and blocks private files', async (t) =
   assert.equal((await api.get('/')).status, 200);
   assert.match((await api.get('/src/main.js')).headers.get('content-type'), /javascript/);
   assert.match((await api.get('/images/guide-luna.png')).headers.get('content-type'), /image\/png/);
+  assert.match((await api.get('/images/sakura-blossom-cc0.svg')).headers.get('content-type'), /image\/svg\+xml/);
   for (const path of ['/config.json', '/config.local.json', '/server/app.js', '/package.json', '/.git/config', '/src/%2e%2e%2fserver/app.js']) {
     assert.equal((await api.get(path)).status, 404);
   }
